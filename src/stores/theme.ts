@@ -7,8 +7,8 @@ export const useThemeStore = defineStore("theme", () => {
 
   const toggleTheme = () => {
     isDark.value = !isDark.value
-    localStorage.setItem("theme", isDark.value ? "dark" : "light")
-    updateTheme()
+  localStorage.setItem("theme", isDark.value ? "dark" : "light")
+  updateTheme()
   }
 
   const toggleSidebar = () => {

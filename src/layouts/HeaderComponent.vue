@@ -1,127 +1,121 @@
 <template>
-  <el-header class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-0 h-16 flex items-center justify-between">
-    <!-- Left Section -->
-    <div class="flex items-center gap-4">
-      <div>
-        <h1 class="text-lg font-semibold text-gray-900 dark:text-white">
-          Good {{ greeting }}, {{ firstName }}!
-        </h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          {{ currentDate }}
-        </p>
-      </div>
+  <el-header class="header-container">
+    <!-- Left Section - Page Title -->
+    <div class="header-left">
+      <h1 class="page-title">
+        {{ getPageTitle }}
+        <span v-if="getPageCount" class="page-count">({{ getPageCount }})</span>
+      </h1>
     </div>
 
     <!-- Center - Search -->
-    <div class="flex-1 max-w-xl mx-8">
-      <el-input
-        v-model="searchQuery"
-        placeholder="Search clients, invoices, reports..."
-        :prefix-icon="Search"
-        size="large"
-        class="search-input"
-      />
+    <div class="header-center">
+      <div class="search-container">
+        <el-input
+          v-model="searchQuery"
+          placeholder="Search here..."
+          :prefix-icon="Search"
+          size="large"
+          class="search-input"
+          clearable
+        />
+      </div>
     </div>
 
     <!-- Right Section -->
-    <div class="flex items-center gap-3">
-      <!-- Theme Toggle -->
-      <el-button
-        :icon="themeStore.isDark ? Sunny : Moon"
-        circle
-        size="large"
-        @click="themeStore.toggleTheme"
-        class="theme-toggle"
-      />
+    <div class="header-right">
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <!-- Help/Info Button -->
+        <el-tooltip content="Help & Support" placement="bottom">
+          <el-button
+            :icon="QuestionFilled"
+            circle
+            size="large"
+            class="action-btn"
+            @click="openHelp"
+          />
+        </el-tooltip>
 
-      <!-- Notifications -->
-      <el-dropdown
-        trigger="click"
-        placement="bottom-end"
-        @visible-change="handleNotificationVisibility"
-      >
-        <el-badge :value="unreadNotifications" :hidden="unreadNotifications === 0">
-          <el-button :icon="Bell" circle size="large" class="notification-btn" />
-        </el-badge>
-        
-        <template #dropdown>
-          <el-dropdown-menu class="notification-dropdown">
-            <div class="notification-header">
-              <h3 class="text-lg font-semibold">Notifications</h3>
-              <el-button type="primary" link size="small">Mark all as read</el-button>
-            </div>
-            
-            <el-tabs v-model="activeNotificationTab" class="notification-tabs">
-              <el-tab-pane label="Direct" name="direct">
-                <div class="notification-list">
-                  <div
-                    v-for="notification in directNotifications"
-                    :key="notification.id"
-                    class="notification-item"
-                    :class="{ 'unread': !notification.read }"
-                  >
-                    <div class="notification-content">
-                      <div class="notification-title">{{ notification.title }}</div>
-                      <div class="notification-message">{{ notification.message }}</div>
-                      <div class="notification-actions" v-if="notification.actions">
-                        <el-button
-                          v-for="action in notification.actions"
-                          :key="action"
-                          type="primary"
-                          size="small"
-                          plain
-                        >
-                          {{ action }}
-                        </el-button>
-                      </div>
-                    </div>
-                    <div class="notification-time">{{ notification.time }}</div>
-                  </div>
-                </div>
-              </el-tab-pane>
-              
-              <el-tab-pane label="Watching" name="watching">
-                <div class="notification-list">
-                  <div class="empty-state">
-                    <el-empty description="No watching notifications" />
-                  </div>
-                </div>
-              </el-tab-pane>
-            </el-tabs>
-            
-            <div class="notification-footer">
-              <el-button type="primary" link>View all notifications</el-button>
-            </div>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
-
-      <!-- User Menu -->
-      <el-dropdown trigger="click" placement="bottom-end">
-        <div class="user-avatar-section">
-          <el-avatar :size="40" class="user-avatar">
-            <el-icon><User /></el-icon>
-          </el-avatar>
-          <div class="user-info hidden lg:block">
-            <div class="user-name">{{ currentUser.name }}</div>
-            <div class="user-email">{{ currentUser.email }}</div>
+        <!-- Notifications -->
+        <el-dropdown
+          trigger="click"
+          placement="bottom-end"
+          @visible-change="handleNotificationVisibility"
+        >
+          <div class="notification-trigger">
+            <el-badge :value="unreadNotifications" :hidden="unreadNotifications === 0" class="notification-badge">
+              <el-button
+                :icon="Bell"
+                circle
+                size="large"
+                class="action-btn"
+              />
+            </el-badge>
           </div>
-          <el-icon class="dropdown-arrow"><ArrowDown /></el-icon>
+          
+          <template #dropdown>
+            <el-dropdown-menu class="notification-dropdown">
+              <div class="notification-header">
+                <h3>Notifications</h3>
+                <el-button type="primary" link size="small">Mark all as read</el-button>
+              </div>
+              
+              <div class="notification-list">
+                <div
+  v-for="notification in recentNotifications"
+  :key="notification.id"
+  class="notification-item flex items-start gap-3"
+  :class="{ 'unread': !notification.read }"
+>
+  <el-icon class="text-blue-500 mt-1"><Bell /></el-icon>
+  <div class="notification-content">
+    <div class="notification-title">{{ notification.title }}</div>
+    <div class="notification-message">{{ notification.message }}</div>
+    <div class="notification-time">{{ notification.time }}</div>
+  </div>
+</div>
+
+              </div>
+              
+              <div class="notification-footer">
+                <el-button type="primary" link>View all notifications</el-button>
+              </div>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </div>
+
+      <!-- User Profile -->
+      <el-dropdown trigger="click" placement="bottom-end">
+        <div class="user-profile">
+          <el-avatar :size="36" class="user-avatar">
+            <img
+        :src="currentUser.avatar"
+      />
+          </el-avatar>
+          <div class="user-info">
+            <div class="user-name">{{ currentUser.name }}</div>
+            <div class="user-role">{{ currentUser.role || 'Administrator' }}</div>
+          </div>
         </div>
         
         <template #dropdown>
           <el-dropdown-menu class="user-dropdown">
             <!-- User Info Header -->
-            <div class="user-dropdown-header">
-              <el-avatar :size="48" class="user-avatar-large">
-                <el-icon><User /></el-icon>
-              </el-avatar>
-              <div class="user-details">
-                <div class="user-name-large">{{ currentUser.name }}</div>
-                <div class="user-email-small">{{ currentUser.email }}</div>
-                <div class="user-role">Administrator</div>
-              </div>
-            </div>
+            <div class="user-dropdown-header flex gap-3 items-center">
+  <el-avatar :size="48" :src="currentUser.avatar" @error="errorHandler" class="user-avatar-large" >
+    <img
+        :src="currentUser.avatar"
+      />
+    </el-avatar>
+  <div class="user-details">
+    <div class="user-name-large">{{ currentUser.name }}</div>
+    <div class="user-email">{{ currentUser.email }}</div>
+    <div class="user-role-small">{{ currentUser.role || 'Administrator' }}</div>
+  </div>
+</div>
+
             
             <el-divider class="dropdown-divider" />
             
@@ -147,10 +141,11 @@
                 <span>Dark Mode</span>
               </div>
               <el-switch
-                v-model="themeStore.isDark"
+                :model-value="themeStore.isDark"
                 @change="themeStore.toggleTheme"
                 size="small"
               />
+
             </div>
             
             <el-divider class="dropdown-divider" />
@@ -169,15 +164,14 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
+import { useClientsStore } from '@/stores/clients'
 import { 
   Search, 
   Bell, 
   User, 
-  ArrowDown, 
-  Sunny, 
   Moon, 
   Setting, 
   UserFilled, 
@@ -187,73 +181,82 @@ import {
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
-
+const clientsStore = useClientsStore()
+const errorHandler = () => true
 const searchQuery = ref('')
-const activeNotificationTab = ref('direct')
 
 const currentUser = computed(() => authStore.user || { 
+   
   name: 'Admin User', 
-  email: 'admin@ch24.com' 
+  email: 'admin@ch24.com',
+  role: 'Administrator',
+  avatar: 'https://assets-v2.lottiefiles.com/a/82411e66-1184-11ee-8cfa-d707e53cae38/bccvxj7Ogv.gif'
 })
 
-const directNotifications = ref([
+const recentNotifications = ref([
   {
     id: 1,
     title: 'New Invoice Payment',
-    message: 'Payment received for Invoice #INV-001 from TechCorp Solutions',
+    message: 'Payment received for Invoice #INV-001',
     time: '2 min ago',
-    read: false,
-    actions: ['View Invoice', 'Send Receipt']
+    read: false
   },
   {
     id: 2,
     title: 'Invoice Overdue',
     message: 'Invoice #INV-003 is now 5 days overdue',
     time: '1 hour ago',
-    read: false,
-    actions: ['Send Reminder', 'View Details']
+    read: false
   },
   {
     id: 3,
-    title: 'New Client Registration',
-    message: 'Global Retail Inc has been added to your client list',
+    title: 'New Client Added',
+    message: 'Global Retail Inc has been added',
     time: '3 hours ago',
     read: true
   }
 ])
 
 const unreadNotifications = computed(() => 
-  directNotifications.value.filter(n => !n.read).length
+  recentNotifications.value.filter(n => !n.read).length
 )
 
 const userMenuItems = [
   { name: 'My Profile', icon: UserFilled, action: () => router.push('/profile') },
   { name: 'Account Settings', icon: Setting, action: () => router.push('/settings') },
   { name: 'Billing & Plans', icon: CreditCard, action: () => router.push('/billing') },
-  { name: 'Help & Support', icon: QuestionFilled, action: () => window.open('/help', '_blank') }
+  { name: 'Help & Support', icon: QuestionFilled, action: () => openHelp() }
 ]
 
-const greeting = computed(() => {
-  const hour = new Date().getHours()
-  if (hour < 12) return 'morning'
-  if (hour < 17) return 'afternoon'
-  return 'evening'
+const getPageTitle = computed(() => {
+  const routeNames: Record<string, string> = {
+    '/': 'Dashboard',
+    '/clients': 'Clients',
+    '/agencies': 'Agencies',
+    '/ad-bookings': 'Ad Bookings',
+    '/invoices': 'Invoices',
+    '/payments': 'Payments',
+    '/reports': 'Reports',
+    '/delivery-logs': 'Delivery Logs',
+    '/settings': 'Settings'
+  }
+  return routeNames[route.path] || 'Dashboard'
 })
 
-const currentDate = computed(() => {
-  return new Date().toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  })
+const getPageCount = computed(() => {
+  if (route.path === '/clients') {
+    return clientsStore.clients.length
+  }
+  // Add other counts as needed
+  return null
 })
 
-const firstName = computed(() => {
-  return currentUser.value.name?.split(' ')[0] || 'Admin'
-})
+const openHelp = () => {
+  window.open('/help', '_blank')
+}
 
 const handleLogout = () => {
   authStore.logout()
@@ -266,28 +269,119 @@ const handleNotificationVisibility = (visible: boolean) => {
 </script>
 
 <style scoped>
-.search-input {
-  --el-input-border-radius: 12px;
+.header-container {
+  height: 64px;
+  background: #ffffff;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.theme-toggle, .notification-btn {
+.header-left {
+  flex: 0 0 auto;
+  min-width: 200px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-count {
+  font-size: 16px;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+.header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  max-width: 600px;
+  margin: 0 40px;
+}
+
+.search-container {
+  width: 100%;
+  max-width: 400px;
+}
+
+.search-input {
+  --el-input-border-radius: 8px;
+  --el-input-border-color: #e5e7eb;
+  --el-input-focus-border-color: #3b82f6;
+}
+
+.search-input :deep(.el-input__wrapper) {
+  box-shadow: none;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.search-input :deep(.el-input__wrapper:hover) {
+  border-color: #d1d5db;
+}
+
+.search-input :deep(.el-input__wrapper.is-focus) {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.header-right {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.quick-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn {
   --el-button-border-color: transparent;
   --el-button-bg-color: transparent;
-  --el-button-hover-bg-color: var(--el-fill-color-light);
+  --el-button-text-color: #6b7280;
+  --el-button-hover-bg-color: #f3f4f6;
+  --el-button-hover-text-color: #374151;
+  --el-button-hover-border-color: transparent;
 }
 
-.user-avatar-section {
+.notification-trigger {
+  position: relative;
+}
+
+.notification-badge :deep(.el-badge__content) {
+  background-color: #ef4444;
+  border: 2px solid #ffffff;
+}
+
+.user-profile {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 12px;
-  border-radius: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
 }
 
-.user-avatar-section:hover {
-  background-color: var(--el-fill-color-light);
+.user-profile:hover {
+  background-color: #f9fafb;
+  border-color: #e5e7eb;
 }
 
 .user-avatar {
@@ -297,96 +391,99 @@ const handleNotificationVisibility = (visible: boolean) => {
 .user-info {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
 }
 
 .user-name {
   font-size: 14px;
   font-weight: 600;
-  color: var(--el-text-color-primary);
+  color: #1f2937;
+  line-height: 1.2;
 }
 
-.user-email {
+.user-role {
   font-size: 12px;
-  color: var(--el-text-color-secondary);
+  color: #6b7280;
+  line-height: 1.2;
 }
 
-.dropdown-arrow {
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
-}
-
+/* Dropdown Styles */
 .notification-dropdown {
-  width: 400px;
-  max-height: 500px;
+  width: 380px;
+  max-height: 480px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
 .notification-header {
   display: flex;
-  justify-content: between;
+  justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--el-border-color-light);
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.notification-tabs {
-  --el-tabs-header-height: 40px;
+.notification-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
 }
 
 .notification-list {
-  max-height: 300px;
+  max-height: 320px;
   overflow-y: auto;
 }
 
 .notification-item {
-  display: flex;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
+  border-bottom: 1px solid #f9fafb;
   transition: background-color 0.2s;
+  cursor: pointer;
 }
 
 .notification-item:hover {
-  background-color: var(--el-fill-color-lighter);
+  background-color: #f9fafb;
 }
 
 .notification-item.unread {
-  background-color: var(--el-color-primary-light-9);
+  background-color: #eff6ff;
+  border-left: 3px solid #3b82f6;
 }
 
 .notification-content {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .notification-title {
+  font-size: 14px;
   font-weight: 600;
-  color: var(--el-text-color-primary);
-  margin-bottom: 4px;
+  color: #1f2937;
 }
 
 .notification-message {
-  font-size: 14px;
-  color: var(--el-text-color-regular);
-  margin-bottom: 8px;
-}
-
-.notification-actions {
-  display: flex;
-  gap: 8px;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.4;
 }
 
 .notification-time {
   font-size: 12px;
-  color: var(--el-text-color-secondary);
-  white-space: nowrap;
+  color: #9ca3af;
 }
 
 .notification-footer {
   padding: 12px 20px;
-  border-top: 1px solid var(--el-border-color-light);
+  border-top: 1px solid #f0f0f0;
   text-align: center;
 }
 
 .user-dropdown {
-  width: 320px;
+  width: 280px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
 .user-dropdown-header {
@@ -394,6 +491,7 @@ const handleNotificationVisibility = (visible: boolean) => {
   align-items: center;
   gap: 12px;
   padding: 20px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
 }
 
 .user-avatar-large {
@@ -405,19 +503,23 @@ const handleNotificationVisibility = (visible: boolean) => {
 }
 
 .user-name-large {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  color: var(--el-text-color-primary);
+  color: #1f2937;
+  margin-bottom: 2px;
 }
 
-.user-email-small {
-  font-size: 14px;
-  color: var(--el-text-color-regular);
+.user-email {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 2px;
 }
 
-.user-role {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
+.user-role-small {
+  font-size: 11px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .dropdown-divider {
@@ -429,10 +531,16 @@ const handleNotificationVisibility = (visible: boolean) => {
   align-items: center;
   gap: 12px;
   padding: 12px 20px;
+  transition: background-color 0.2s;
+}
+
+.user-menu-item:hover {
+  background-color: #f9fafb;
 }
 
 .menu-icon {
   font-size: 16px;
+  color: #6b7280;
 }
 
 .theme-toggle-section {
@@ -446,14 +554,89 @@ const handleNotificationVisibility = (visible: boolean) => {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 14px;
   font-weight: 500;
+  color: #374151;
 }
 
 .logout-item {
-  color: var(--el-color-danger);
+  color: #ef4444;
 }
 
-.empty-state {
-  padding: 40px 20px;
+.logout-item:hover {
+  background-color: #fef2f2;
+}
+
+/* Dark mode styles */
+.dark .header-container {
+  background: #1f2937;
+  border-bottom-color: #374151;
+}
+
+.dark .page-title {
+  color: #f9fafb;
+}
+
+.dark .page-count {
+  color: #9ca3af;
+}
+
+.dark .user-profile:hover {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+.dark .user-name {
+  color: #f9fafb;
+}
+
+.dark .user-role {
+  color: #9ca3af;
+}
+
+
+/* Soft background on dropdowns */
+.user-dropdown,
+.notification-dropdown {
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+}
+
+/* Soft shadows */
+.user-dropdown,
+.notification-dropdown {
+  box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+}
+
+/* Dropdown icons */
+.menu-icon {
+  color: #6b7280;
+  transition: color 0.2s;
+}
+
+.user-menu-item:hover .menu-icon {
+  color: #374151;
+}
+
+
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header-container {
+    padding: 0 16px;
+  }
+  
+  .header-center {
+    margin: 0 16px;
+  }
+  
+  .user-info {
+    display: none;
+  }
+  
+  .page-title {
+    font-size: 18px;
+  }
 }
 </style>
