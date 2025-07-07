@@ -1,15 +1,15 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-6">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
     <div class="max-w-7xl mx-auto space-y-8">
       <!-- Page Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">Clients</h1>
-          <p class="text-gray-600 mt-2">Manage your clients and their information</p>
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Clients</h1>
+          <p class="text-gray-600 dark:text-gray-400 mt-2">Manage your clients and their information</p>
         </div>
         <button
           @click="openCreateModal"
-          class="inline-flex items-center gap-3 bg-gray-900 text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
+          class="inline-flex items-center gap-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
         >
           <Plus class="h-5 w-5" />
           Add Client
@@ -18,45 +18,45 @@
 
       <!-- Stats Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
           <div class="flex items-center gap-4">
-            <div class="h-12 w-12 bg-blue-50 rounded-xl flex items-center justify-center">
-              <Users class="h-6 w-6 text-blue-600" />
+            <div class="h-12 w-12 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+              <Users class="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <p class="text-2xl font-bold text-gray-900">{{ clients.length }}</p>
-              <p class="text-gray-600 text-sm">Total Clients</p>
+              <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ clients.length }}</p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm">Total Clients</p>
             </div>
           </div>
         </div>
         
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
           <div class="flex items-center gap-4">
-            <div class="h-12 w-12 bg-green-50 rounded-xl flex items-center justify-center">
-              <Building2 class="h-6 w-6 text-green-600" />
+            <div class="h-12 w-12 bg-green-50 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+              <Building2 class="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <p class="text-2xl font-bold text-gray-900">{{ agencyClients }}</p>
-              <p class="text-gray-600 text-sm">Agency Clients</p>
+              <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ agencyClients }}</p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm">Agency Clients</p>
             </div>
           </div>
         </div>
         
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
           <div class="flex items-center gap-4">
-            <div class="h-12 w-12 bg-purple-50 rounded-xl flex items-center justify-center">
-              <UserCheck class="h-6 w-6 text-purple-600" />
+            <div class="h-12 w-12 bg-purple-50 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+              <UserCheck class="h-6 w-6 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <p class="text-2xl font-bold text-gray-900">{{ directClients }}</p>
-              <p class="text-gray-600 text-sm">Direct Clients</p>
+              <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ directClients }}</p>
+              <p class="text-gray-600 dark:text-gray-400 text-sm">Direct Clients</p>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Search and Filters -->
-      <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
         <div class="flex flex-col lg:flex-row gap-4">
           <!-- Search -->
           <div class="flex-1">
@@ -67,7 +67,7 @@
                 @input="handleSearch"
                 type="text"
                 placeholder="Search clients by name, email, or contact person..."
-                class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all text-gray-900 placeholder-gray-500"
+                class="w-full pl-12 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent transition-all text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 bg-white dark:bg-gray-700"
               />
             </div>
           </div>
@@ -77,7 +77,7 @@
             <select
               v-model="selectedType"
               @change="handleFilter"
-              class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-transparent text-gray-900 min-w-[160px]"
+              class="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent text-gray-900 dark:text-white min-w-[160px] bg-white dark:bg-gray-700"
             >
               <option value="">All Types</option>
               <option value="direct">Direct Client</option>
@@ -87,7 +87,7 @@
             <select
               v-model="selectedStatus"
               @change="handleFilter"
-              class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-transparent text-gray-900 min-w-[160px]"
+              class="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent text-gray-900 dark:text-white min-w-[160px] bg-white dark:bg-gray-700"
             >
               <option value="">All Status</option>
               <option value="active">Active</option>
@@ -96,7 +96,7 @@
 
             <button
               @click="resetFilters"
-              class="px-6 py-3 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-all font-medium"
+              class="px-6 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition-all font-medium"
             >
               Reset
             </button>
@@ -109,30 +109,30 @@
         <div
           v-for="client in filteredClients"
           :key="client.id"
-          class="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-lg transition-all duration-300 group relative"
+          class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300 group relative"
         >
           <!-- Client Header -->
           <div class="flex items-start justify-between mb-6">
             <div class="flex items-center gap-4">
-              <div class="h-14 w-14 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center">
-                <User class="h-7 w-7 text-gray-600" />
+              <div class="h-14 w-14 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-2xl flex items-center justify-center">
+                <User class="h-7 w-7 text-gray-600 dark:text-gray-400" />
               </div>
               <div>
-                <h3 class="font-bold text-gray-900 text-lg">{{ client.name }}</h3>
+                <h3 class="font-bold text-gray-900 dark:text-white text-lg">{{ client.name }}</h3>
                 <div class="flex items-center gap-2 mt-1">
                   <span
                     class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
                     :class="client.type === 'direct' 
-                      ? 'bg-green-50 text-green-700 border border-green-200' 
-                      : 'bg-blue-50 text-blue-700 border border-blue-200'"
+                      ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-700' 
+                      : 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-700'"
                   >
                     {{ client.type === 'direct' ? 'Direct' : 'Agency' }}
                   </span>
                   <span
                     class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
                     :class="client.status === 'active' 
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                      : 'bg-red-50 text-red-700 border border-red-200'"
+                      ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700' 
+                      : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-700'"
                   >
                     {{ client.status === 'active' ? 'Active' : 'Inactive' }}
                   </span>
@@ -144,7 +144,7 @@
             <div class="relative">
               <button
                 @click="toggleClientMenu(client.id!)"
-                class="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                class="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 opacity-0 group-hover:opacity-100 transition-all duration-200"
               >
                 <MoreVertical class="h-5 w-5" />
               </button>
@@ -152,26 +152,26 @@
               <!-- Dropdown Menu -->
               <div
                 v-if="activeClientMenu === client.id"
-                class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20"
+                class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-20"
               >
                 <button
                   @click="editClient(client)"
-                  class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                  class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
                 >
                   <Edit class="h-4 w-4" />
                   Edit Client
                 </button>
                 <button
                   @click="viewClientDetails(client)"
-                  class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                  class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
                 >
                   <Eye class="h-4 w-4" />
                   View Details
                 </button>
-                <hr class="my-2 border-gray-100">
+                <hr class="my-2 border-gray-100 dark:border-gray-700">
                 <button
                   @click="deleteClient(client.id!)"
-                  class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
+                  class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-700 flex items-center gap-3 transition-colors"
                 >
                   <Trash2 class="h-4 w-4" />
                   Delete Client
@@ -182,32 +182,32 @@
 
           <!-- Client Info -->
           <div class="space-y-4">
-            <div class="flex items-center gap-3 text-gray-600">
-              <Mail class="h-4 w-4 text-gray-400" />
+            <div class="flex items-center gap-3 text-gray-600 dark:text-gray-400">
+              <Mail class="h-4 w-4 text-gray-400 dark:text-gray-500" />
               <span class="text-sm truncate">{{ client.email }}</span>
             </div>
-            <div class="flex items-center gap-3 text-gray-600">
-              <Phone class="h-4 w-4 text-gray-400" />
+            <div class="flex items-center gap-3 text-gray-600 dark:text-gray-400">
+              <Phone class="h-4 w-4 text-gray-400 dark:text-gray-500" />
               <span class="text-sm">{{ client.phone }}</span>
             </div>
-            <div class="flex items-start gap-3 text-gray-600">
-              <MapPin class="h-4 w-4 text-gray-400 mt-0.5" />
+            <div class="flex items-start gap-3 text-gray-600 dark:text-gray-400">
+              <div class="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
               <span class="text-sm line-clamp-2">{{ client.address }}</span>
             </div>
-            <div class="flex items-center gap-3 text-gray-600">
-              <UserCheck class="h-4 w-4 text-gray-400" />
+            <div class="flex items-center gap-3 text-gray-600 dark:text-gray-400">
+              <UserCheck class="h-4 w-4 text-gray-400 dark:text-gray-500" />
               <span class="text-sm">{{ client.contactPerson }}</span>
             </div>
           </div>
 
           <!-- Client Footer -->
-          <div class="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
-            <span class="text-xs text-gray-500">
+          <div class="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <span class="text-xs text-gray-500 dark:text-gray-400">
               Added {{ formatDate(client.createdAt) }}
             </span>
             <div class="flex items-center gap-2">
               <div class="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span class="text-xs text-gray-500">Online</span>
+              <span class="text-xs text-gray-500 dark:text-gray-400">Online</span>
             </div>
           </div>
         </div>
@@ -217,17 +217,17 @@
           v-if="filteredClients.length === 0 && !clientsStore.loading"
           class="col-span-full flex flex-col items-center justify-center py-16 text-center"
         >
-          <div class="h-32 w-32 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-            <Users class="h-16 w-16 text-gray-400" />
+          <div class="h-32 w-32 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+            <Users class="h-16 w-16 text-gray-400 dark:text-gray-500" />
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">No clients found</h3>
-          <p class="text-gray-500 mb-8 max-w-md">
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No clients found</h3>
+          <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md">
             {{ searchQuery ? 'Try adjusting your search criteria or filters.' : 'Get started by adding your first client to the system.' }}
           </p>
           <button
             v-if="!searchQuery"
             @click="openCreateModal"
-            class="inline-flex items-center gap-3 bg-gray-900 text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition-all font-semibold"
+            class="inline-flex items-center gap-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-100 transition-all font-semibold"
           >
             <Plus class="h-5 w-5" />
             Add Your First Client
@@ -240,19 +240,19 @@
         <div
           v-for="n in 6"
           :key="n"
-          class="bg-white rounded-2xl border border-gray-100 p-6 animate-pulse"
+          class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 animate-pulse"
         >
           <div class="flex items-center gap-4 mb-6">
-            <div class="h-14 w-14 bg-gray-200 rounded-2xl"></div>
+            <div class="h-14 w-14 bg-gray-200 dark:bg-gray-700 rounded-2xl"></div>
             <div class="flex-1">
-              <div class="h-5 bg-gray-200 rounded-lg w-3/4 mb-2"></div>
-              <div class="h-4 bg-gray-200 rounded-lg w-1/2"></div>
+              <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4 mb-2"></div>
+              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-lg w-1/2"></div>
             </div>
           </div>
           <div class="space-y-4">
-            <div class="h-4 bg-gray-200 rounded-lg"></div>
-            <div class="h-4 bg-gray-200 rounded-lg w-5/6"></div>
-            <div class="h-4 bg-gray-200 rounded-lg w-4/6"></div>
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-lg w-5/6"></div>
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-lg w-4/6"></div>
           </div>
         </div>
       </div>
