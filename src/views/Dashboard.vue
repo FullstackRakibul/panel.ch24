@@ -19,7 +19,9 @@
         <el-card class="kpi-card" shadow="hover" @click="navigateToInvoices">
           <div class="kpi-content">
             <div class="kpi-icon invoices">
-              <el-icon size="24"><Document /></el-icon>
+              <el-icon size="24">
+                <Document />
+              </el-icon>
             </div>
             <div class="kpi-info">
               <div class="kpi-value">{{ dashboardStore.stats.totalInvoices.toLocaleString() }}</div>
@@ -34,10 +36,12 @@
         <el-card class="kpi-card" shadow="hover" @click="navigateToReports">
           <div class="kpi-content">
             <div class="kpi-icon revenue">
-              <el-icon size="24"><Money /></el-icon>
+              <el-icon size="24">
+                <Money />
+              </el-icon>
             </div>
             <div class="kpi-info">
-              <div class="kpi-value">${{ dashboardStore.stats.totalRevenue.toLocaleString() }}</div>
+              <div class="kpi-value">৳{{ dashboardStore.stats.totalRevenue.toLocaleString() }}</div>
               <div class="kpi-label">Total Revenue</div>
               <div class="kpi-change positive">+8.2% from last month</div>
             </div>
@@ -49,10 +53,12 @@
         <el-card class="kpi-card" shadow="hover" @click="navigateToPayments">
           <div class="kpi-content">
             <div class="kpi-icon due">
-              <el-icon size="24"><Clock /></el-icon>
+              <el-icon size="24">
+                <Clock />
+              </el-icon>
             </div>
             <div class="kpi-info">
-              <div class="kpi-value">${{ dashboardStore.stats.totalDue.toLocaleString() }}</div>
+              <div class="kpi-value">৳{{ dashboardStore.stats.totalDue.toLocaleString() }}</div>
               <div class="kpi-label">Amount Due</div>
               <div class="kpi-change negative">-3.1% from last month</div>
             </div>
@@ -64,10 +70,12 @@
         <el-card class="kpi-card" shadow="hover" @click="navigateToPayments">
           <div class="kpi-content">
             <div class="kpi-icon paid">
-              <el-icon size="24"><CircleCheck /></el-icon>
+              <el-icon size="24">
+                <CircleCheck />
+              </el-icon>
             </div>
             <div class="kpi-info">
-              <div class="kpi-value">${{ dashboardStore.stats.totalPaid.toLocaleString() }}</div>
+              <div class="kpi-value">৳{{ dashboardStore.stats.totalPaid.toLocaleString() }}</div>
               <div class="kpi-label">Paid Amount</div>
               <div class="kpi-change positive">+15.3% from last month</div>
             </div>
@@ -138,11 +146,7 @@
             </div>
           </template>
           <div class="activity-list">
-            <div
-              v-for="activity in recentActivities"
-              :key="activity.id"
-              class="activity-item"
-            >
+            <div v-for="activity in recentActivities" :key="activity.id" class="activity-item">
               <div class="activity-icon">
                 <el-icon :size="16">
                   <component :is="activity.icon" />
@@ -251,8 +255,8 @@ const initializeCharts = () => {
           y: {
             beginAtZero: true,
             ticks: {
-              callback: function(value) {
-                return '$' + value.toLocaleString()
+              callback: function (value) {
+                return '৳' + value.toLocaleString()
               }
             }
           }
@@ -317,8 +321,8 @@ const initializeCharts = () => {
           y: {
             beginAtZero: true,
             ticks: {
-              callback: function(value) {
-                return '$' + value.toLocaleString()
+              callback: function (value) {
+                return '৳' + value.toLocaleString()
               }
             }
           }
@@ -545,19 +549,19 @@ onMounted(() => {
   .dashboard-container {
     padding: 16px;
   }
-  
+
   .page-header {
     flex-direction: column;
     gap: 16px;
     align-items: stretch;
   }
-  
+
   .kpi-content {
     flex-direction: column;
     text-align: center;
     gap: 12px;
   }
-  
+
   .activity-item {
     flex-direction: column;
     text-align: center;
