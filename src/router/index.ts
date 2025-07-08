@@ -11,6 +11,7 @@ import Payments from "@/views/Payments.vue"
 import Reports from "@/views/Reports.vue"
 import DeliveryLogs from "@/views/DeliveryLogs.vue"
 import Settings from "@/views/Settings.vue"
+import CompanyGolas from "@/views/Goals.vue"
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,6 +27,12 @@ const router = createRouter({
       name: "Dashboard",
       component: Dashboard,
       meta: { requiresAuth: true },
+    },
+    {
+      path: "/goals",
+      name: "Goals",
+      component: CompanyGolas,
+      meta: { requiresAuth: false },
     },
     {
       path: "/clients",
@@ -82,7 +89,7 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
   ],
-})
+});
 
 // Route guard
 router.beforeEach((to, from, next) => {
