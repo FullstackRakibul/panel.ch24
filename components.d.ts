@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AgencyCard: typeof import('./src/components/ui/AgencyCard.vue')['default']
     ClientModal: typeof import('./src/components/forms/ClientModal.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
