@@ -114,14 +114,62 @@
           <el-col :span="8">
             <el-form-item label="Country" prop="country">
               <el-select v-model="form.country" placeholder="Select country" class="w-full" filterable>
-                <el-option label="United States" value="USA" />
-                <el-option label="Canada" value="Canada" />
-                <el-option label="United Kingdom" value="UK" />
-                <el-option label="Australia" value="Australia" />
-                <el-option label="Germany" value="Germany" />
-                <el-option label="France" value="France" />
-                <el-option label="Japan" value="Japan" />
-                <el-option label="Other" value="Other" />
+                <el-option label="বাংলাদেশ" value="Bangladesh">
+                  <div class="flex items-center">
+                    <el-icon class="mr-2">
+                      <Flag />
+                    </el-icon> <span>বাংলাদেশ</span>
+                  </div>
+                </el-option>
+                <el-option label="Canada" value="Canada">
+                  <div class="flex items-center">
+                    <el-icon class="mr-2">
+                      <Flag />
+                    </el-icon> <span>Canada</span>
+                  </div>
+                </el-option>
+                <el-option label="United Kingdom" value="UK">
+                  <div class="flex items-center">
+                    <el-icon class="mr-2">
+                      <Flag />
+                    </el-icon> <span>United Kingdom</span>
+                  </div>
+                </el-option>
+                <el-option label="Australia" value="Australia">
+                  <div class="flex items-center">
+                    <el-icon class="mr-2">
+                      <Flag />
+                    </el-icon> <span>Australia</span>
+                  </div>
+                </el-option>
+                <el-option label="Germany" value="Germany">
+                  <div class="flex items-center">
+                    <el-icon class="mr-2">
+                      <Flag />
+                    </el-icon> <span>Germany</span>
+                  </div>
+                </el-option>
+                <el-option label="France" value="France">
+                  <div class="flex items-center">
+                    <el-icon class="mr-2">
+                      <Flag />
+                    </el-icon> <span>France</span>
+                  </div>
+                </el-option>
+                <el-option label="Japan" value="Japan">
+                  <div class="flex items-center">
+                    <el-icon class="mr-2">
+                      <Flag />
+                    </el-icon> <span>Japan</span>
+                  </div>
+                </el-option>
+                <el-option label="Other" value="Other">
+                  <div class="flex items-center">
+                    <el-icon class="mr-2">
+                      <Flag />
+                    </el-icon> <span>Other</span>
+                  </div>
+                </el-option>
               </el-select>
             </el-form-item>
           </el-col>
@@ -227,6 +275,9 @@ import { ref, watch, computed } from 'vue'
 import type { FormInstance, UploadFile, UploadFiles } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import type { Client } from '@/stores/clients'
+import {
+  Flag 
+} from '@element-plus/icons-vue'
 import {
   User,
   UserCheck,
