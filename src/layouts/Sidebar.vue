@@ -1,8 +1,5 @@
 <template>
-  <el-aside 
-    :width="themeStore.sidebarCollapsed ? '72px' : '280px'"
-    class="sidebar-container"
-  >
+  <el-aside :width="themeStore.sidebarCollapsed ? '72px' : '275px'" class="sidebar-container">
     <!-- Logo Section -->
     <div class="logo-section">
       <div class="logo-content" :class="{ 'collapsed': themeStore.sidebarCollapsed }">
@@ -15,16 +12,10 @@
             <div class="logo-subtitle">Billing & Analytics System</div>
           </div>
         </div>
-        
+
         <!-- Collapse Toggle -->
-        <el-button
-          v-if="!themeStore.sidebarCollapsed"
-          :icon="Fold"
-          text
-          size="small"
-          class="collapse-btn"
-          @click="themeStore.toggleSidebar"
-        />
+        <el-button v-if="!themeStore.sidebarCollapsed" :icon="Fold" text size="small" class="collapse-btn"
+          @click="themeStore.toggleSidebar" />
       </div>
     </div>
 
@@ -32,26 +23,16 @@
     <div class="menu-section">
       <nav class="sidebar-nav">
         <div class="nav-group">
-          <router-link
-  v-for="item in mainMenuItems"
-  :key="item.path"
-  :to="item.path"
-  class="nav-item"
->
-  <el-tooltip
-    v-if="themeStore.sidebarCollapsed"
-    :content="item.name"
-    placement="right"
-    :show-after="500"
-  >
-    <div class="nav-item-content">
-      <el-icon class="nav-icon">
-        <component :is="item.icon" />
-      </el-icon>
-      <span v-if="!themeStore.sidebarCollapsed" class="nav-label">{{ item.name }}</span>
-    </div>
-  </el-tooltip>
-</router-link>
+          <router-link v-for="item in mainMenuItems" :key="item.path" :to="item.path" class="nav-item">
+            <el-tooltip v-if="themeStore.sidebarCollapsed" :content="item.name" placement="right" :show-after="500">
+              <div class="nav-item-content">
+                <el-icon class="nav-icon">
+                  <component :is="item.icon" />
+                </el-icon>
+                <span v-if="!themeStore.sidebarCollapsed" class="nav-label">{{ item.name }}</span>
+              </div>
+            </el-tooltip>
+          </router-link>
 
         </div>
 
@@ -59,13 +40,8 @@
         <div v-if="!themeStore.sidebarCollapsed" class="nav-section">
           <div class="section-title">Management</div>
           <div class="nav-group">
-            <router-link
-              v-for="item in managementItems"
-              :key="item.path"
-              :to="item.path"
-              class="nav-item"
-              :class="{ 'active': isActiveRoute(item.path) }"
-            >
+            <router-link v-for="item in managementItems" :key="item.path" :to="item.path" class="nav-item"
+              :class="{ 'active': isActiveRoute(item.path) }">
               <div class="nav-item-content">
                 <el-icon class="nav-icon">
                   <component :is="item.icon" />
@@ -80,13 +56,8 @@
         <div v-if="!themeStore.sidebarCollapsed" class="nav-section">
           <div class="section-title">System</div>
           <div class="nav-group">
-            <router-link
-              v-for="item in systemItems"
-              :key="item.path"
-              :to="item.path"
-              class="nav-item"
-              :class="{ 'active': isActiveRoute(item.path) }"
-            >
+            <router-link v-for="item in systemItems" :key="item.path" :to="item.path" class="nav-item"
+              :class="{ 'active': isActiveRoute(item.path) }">
               <div class="nav-item-content">
                 <el-icon class="nav-icon">
                   <component :is="item.icon" />
@@ -105,9 +76,7 @@
         <el-dropdown trigger="click" placement="top-start" :disabled="themeStore.sidebarCollapsed">
           <div class="user-profile-section">
             <el-avatar :size="36" class="user-avatar">
-              <img
-        :src="currentUser.avatar"
-      />
+              <img :src="currentUser.avatar" />
             </el-avatar>
             <div v-if="!themeStore.sidebarCollapsed" class="user-details">
               <div class="user-name">Admin User</div>
@@ -120,19 +89,25 @@
               <ArrowUp />
             </el-icon>
           </div>
-          
+
           <template #dropdown>
             <el-dropdown-menu class="user-dropdown-menu">
               <el-dropdown-item @click="goToProfile">
-                <el-icon><UserFilled /></el-icon>
+                <el-icon>
+                  <UserFilled />
+                </el-icon>
                 <span>Profile Settings</span>
               </el-dropdown-item>
               <el-dropdown-item @click="goToSettings">
-                <el-icon><Setting /></el-icon>
+                <el-icon>
+                  <Setting />
+                </el-icon>
                 <span>Account Settings</span>
               </el-dropdown-item>
               <el-dropdown-item divided @click="handleLogout">
-                <el-icon><SwitchButton /></el-icon>
+                <el-icon>
+                  <SwitchButton />
+                </el-icon>
                 <span>Sign Out</span>
               </el-dropdown-item>
             </el-dropdown-menu>
@@ -142,14 +117,8 @@
     </div>
 
     <!-- Expand Button for Collapsed State -->
-    <el-button
-      v-if="themeStore.sidebarCollapsed"
-      :icon="Expand"
-      circle
-      size="small"
-      class="expand-toggle"
-      @click="themeStore.toggleSidebar"
-    />
+    <el-button v-if="themeStore.sidebarCollapsed" :icon="Expand" circle size="small" class="expand-toggle"
+      @click="themeStore.toggleSidebar" />
   </el-aside>
 </template>
 
@@ -200,13 +169,13 @@ const managementItems = [
 ]
 
 
-const currentUser = computed(() => authStore.user || { 
-   
-   name: 'Admin User', 
-   email: 'admin@ch24.com',
-   role: 'Administrator',
-   avatar: 'https://assets-v2.lottiefiles.com/a/82411e66-1184-11ee-8cfa-d707e53cae38/bccvxj7Ogv.gif'
- })
+const currentUser = computed(() => authStore.user || {
+
+  name: 'Admin User',
+  email: 'admin@ch24.com',
+  role: 'Administrator',
+  avatar: 'https://assets-v2.lottiefiles.com/a/82411e66-1184-11ee-8cfa-d707e53cae38/bccvxj7Ogv.gif'
+})
 
 
 const systemItems = [
@@ -494,9 +463,12 @@ const handleLogout = () => {
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -556,7 +528,7 @@ const handleLogout = () => {
     z-index: 1000;
     transform: translateX(-100%);
   }
-  
+
   .sidebar-container.mobile-open {
     transform: translateX(0);
   }
