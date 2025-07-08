@@ -1,3 +1,74 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Global font family */
+* {
+  font-family: "Poppins", sans-serif;
+}
+
+/* Channel 24 Brand Colors */
+:root {
+  --ch24-primary: #a02408;
+  --ch24-primary-light: rgba(160, 36, 8, 0.1);
+  --ch24-primary-dark: #7a1c06;
+  --ch24-secondary: #f59e0b;
+  --ch24-success: #10b981;
+  --ch24-warning: #f59e0b;
+  --ch24-danger: #ef4444;
+  --ch24-info: #3b82f6;
+}
+
+/* Element Plus theme customization */
+.el-button--primary {
+  --el-button-bg-color: var(--ch24-primary);
+  --el-button-border-color: var(--ch24-primary);
+  --el-button-hover-bg-color: var(--ch24-primary-dark);
+  --el-button-hover-border-color: var(--ch24-primary-dark);
+  --el-button-active-bg-color: var(--ch24-primary-dark);
+  --el-button-active-border-color: var(--ch24-primary-dark);
+}
+
+.el-link--primary {
+  --el-link-text-color: var(--ch24-primary);
+  --el-link-hover-text-color: var(--ch24-primary-dark);
+}
+
+.el-tag--primary {
+  --el-tag-bg-color: var(--ch24-primary);
+  --el-tag-border-color: var(--ch24-primary);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(160, 36, 8, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(160, 36, 8, 0.5);
+}
+
+/* Smooth transitions */
+* {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Focus styles */
+.el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 2px rgba(160, 36, 8, 0.2) !important;
+}
+
+.el-select .el-input.is-focus .el-input__wrapper {
+  box-shadow: 0 0 0 2px rgba(160, 36, 8, 0.2) !important;
+}

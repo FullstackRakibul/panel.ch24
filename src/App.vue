@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
 import Sidebar from '@/layouts/Sidebar.vue'
 import HeaderComponent from '@/layouts/HeaderComponent.vue'
+import FooterComponent from '@/layouts/Footer.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
@@ -25,8 +26,9 @@ onMounted(() => {
         <div class="flex-1 flex flex-col overflow-hidden">
           <HeaderComponent />
           <main class="flex-1 overflow-y-auto p-6">
-            <RouterView />
+            <RouterView  :key="route.fullPath" />
           </main>
+          <FooterComponent />
         </div>
       </div>
     </template>
