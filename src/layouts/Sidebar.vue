@@ -44,7 +44,7 @@
               <el-tooltip v-if="themeStore.sidebarCollapsed" :content="item.name" placement="right" :show-after="300">
                 <div class="nav-content">
                   <el-icon class="nav-icon">
-                    <component :is="item.icon" />
+                    <component :is="item.icon" class="nav-icon" />
                   </el-icon>
                   <span v-if="!themeStore.sidebarCollapsed" class="nav-label">
                     {{ item.name }}
@@ -58,7 +58,7 @@
 
               <div v-else class="nav-content">
                 <el-icon class="nav-icon">
-                  <component :is="item.icon" />
+                  <component :is="item.icon" class="nav-icon" />
                 </el-icon>
                 <span class="nav-label">{{ item.name }}</span>
                 <el-tag v-if="item.badge" :type="item.badgeType || 'warning'" size="small" class="nav-badge">
@@ -80,7 +80,7 @@
               :class="{ 'active': isActiveRoute(item.path) }">
               <div class="nav-content">
                 <el-icon class="nav-icon">
-                  <component :is="item.icon" />
+                  <component :is="item.icon" class="nav-icon" />
                 </el-icon>
                 <span class="nav-label">{{ item.name }}</span>
                 <el-tag v-if="item.badge" :type="item.badgeType || 'warning'" size="small" class="nav-badge">
@@ -102,7 +102,7 @@
               :class="{ 'active': isActiveRoute(item.path) }">
               <div class="nav-content">
                 <el-icon class="nav-icon">
-                  <component :is="item.icon" />
+                  <component :is="item.icon" class="nav-icon" />
                 </el-icon>
                 <span class="nav-label">{{ item.name }}</span>
                 <el-tag v-if="item.badge" :type="item.badgeType || 'warning'" size="small" class="nav-badge">
@@ -258,8 +258,7 @@ const managementItems = [
 ]
 
 const systemItems = [
-  { name: 'Notifications', path: '/notifications', icon: Bell, badge: undefined, badgeType: undefined },
-  { name: 'Settings', path: '/settings', icon: Setting, badge: undefined, badgeType: undefined }
+  { name: 'Settings', path: '/settings', icon: Setting, badge: undefined, badgeType: undefined },
 ]
 
 // Check if route is active
