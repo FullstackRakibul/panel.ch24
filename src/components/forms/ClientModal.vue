@@ -1,234 +1,247 @@
 <template>
-  <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2" @click="$emit('close')">
-    <div
-      class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden transform transition-all"
-      @click.stop
-    >
-      <div class="flex items-center justify-between p-6 border-b border-gray-100">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900">
-            {{ isEdit ? 'Edit Client' : 'Add New Client' }}
-          </h2>
-          <p class="text-gray-600 mt-1">
-            {{ isEdit ? 'Update client information below' : 'Fill in the details to add a new client' }}
-          </p>
+  <el-dialog v-model="dialogVisible" :title="isEdit ? 'Edit Client' : 'Create New Client'" width="800px"
+    :close-on-click-modal="false" :close-on-press-escape="false" class="client-modal" top="5vh">
+    <template #header>
+      <div class="modal-header">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <User class="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-gray-900">
+              {{ isEdit ? 'Edit Client' : 'Create New Client' }}
+            </h2>
+            <p class="text-sm text-gray-600">
+              {{ isEdit ? 'Update client information below' : 'Fill in the details to add a new client' }}
+            </p>
+          </div>
         </div>
-        <el-button
-          @click="$emit('close')"
-          type="text"
-          class="p-2 text-gray-400 hover:text-gray-600 rounded-lg transition-all"
-        >
-          <X class="h-6 w-6" />
-        </el-button>
+      </div>
+    </template>
+
+    <el-form ref="formRef" :model="form" :rules="rules" label-position="top" size="default" class="client-form">
+      <!-- Basic Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+              <User class="w-4 h-4 text-blue-600" />
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900">Basic Information</h3>
+          </div>
+        </div>
+
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="Client Name" prop="name">
+              <el-input v-model="form.name" placeholder="Enter client name" :prefix-icon="User" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Contact Person" prop="contactPerson">
+              <el-input v-model="form.contactPerson" placeholder="Enter contact person name" :prefix-icon="UserCheck" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="Email Address" prop="email">
+              <el-input v-model="form.email" type="email" placeholder="Enter email address" :prefix-icon="Mail" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Title/Position" prop="title">
+              <el-input v-model="form.title" placeholder="e.g., CEO, CTO, Manager" :prefix-icon="Briefcase" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="Phone Number" prop="phone">
+              <el-input v-model="form.phone" placeholder="Enter phone number" :prefix-icon="Phone" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Toll-Free Number">
+              <el-input v-model="form.tollFreeNumber" placeholder="Enter toll-free number" :prefix-icon="Phone" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="Website">
+              <el-input v-model="form.website" placeholder="https://example.com" :prefix-icon="Globe" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Subject/Project">
+              <el-input v-model="form.subject" placeholder="e.g., Mobile App Design" :prefix-icon="FileText" />
+            </el-form-item>
+          </el-col>
+        </el-row>
       </div>
 
-      <div class="overflow-y-auto max-h-[calc(90vh-160px)]">
-        <el-form
-          ref="formRef"
-          :model="form"
-          :rules="rules"
-          label-position="top"
-          class="p-6 space-y-8"
-        >
-          <div class="space-y-6">
-            <div class="flex items-center gap-3 mb-6">
-              <div class="h-10 w-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                <User class="h-5 w-5 text-blue-600" />
-              </div>
-              <h3 class="text-lg font-semibold text-gray-900">Basic Information</h3>
+      <!-- Address Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
+              <MapPin class="w-4 h-4 text-green-600" />
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-              <el-form-item label="Client Name" prop="name">
-                <el-input v-model="form.name" placeholder="Enter client name" />
-              </el-form-item>
-
-              <el-form-item label="Contact Person" prop="contactPerson">
-                <el-input v-model="form.contactPerson" placeholder="Enter contact person name" />
-              </el-form-item>
-
-              <el-form-item label="Email Address" prop="email">
-                <el-input v-model="form.email" type="email" placeholder="Enter email address" />
-              </el-form-item>
-
-              <el-form-item label="Phone Number" prop="phone">
-                <el-input v-model="form.phone" type="tel" placeholder="Enter phone number" />
-              </el-form-item>
-
-              <el-form-item label="Toll-Free Number">
-                <el-input v-model="form.tollFreeNumber" placeholder="Enter toll-free number" />
-              </el-form-item>
-
-              <el-form-item label="Website">
-                <el-input v-model="form.website" placeholder="Enter website URL (e.g., https://example.com)" />
-              </el-form-item>
-            </div>
-
-            <el-form-item label="Address" prop="address">
-              <el-input
-                v-model="form.address"
-                type="textarea"
-                :rows="3"
-                placeholder="Enter complete address"
-              />
-            </el-form-item>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                <el-form-item label="City" prop="city">
-                    <el-input v-model="form.city" placeholder="Enter city" />
-                </el-form-item>
-                <el-form-item label="State" prop="state">
-                    <el-input v-model="form.state" placeholder="Enter state" />
-                </el-form-item>
-            </div>
+            <h3 class="text-lg font-semibold text-gray-900">Address Information</h3>
           </div>
+        </div>
 
-          <div class="space-y-6">
-            <div class="flex items-center gap-3 mb-6">
-              <div class="h-10 w-10 bg-purple-50 rounded-xl flex items-center justify-center">
-                <Building2 class="h-5 w-5 text-purple-600" />
-              </div>
-              <h3 class="text-lg font-semibold text-gray-900">Client Classification</h3>
-            </div>
+        <el-form-item label="Address" prop="address">
+          <el-input v-model="form.address" type="textarea" :rows="2" placeholder="Enter complete address" />
+        </el-form-item>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-              <el-form-item label="Client Type" prop="type">
-                <el-select v-model="form.type" placeholder="Select client type" class="w-full">
-                  <el-option label="Agent" value="agent"></el-option>
-                  <el-option label="Company" value="company"></el-option>
-                  <el-option label="Individual" value="individual"></el-option>
-                </el-select>
-              </el-form-item>
-
-              <el-form-item v-if="form.type === 'agent'" label="Associated Agency">
-                <el-select v-model="form.agencyId" placeholder="Select agency" class="w-full">
-                  <el-option label="Creative Agency" value="1"></el-option>
-                  <el-option label="Media Partners" value="2"></el-option>
-                  <el-option label="Digital Solutions" value="3"></el-option>
-                  <el-option label="Brand Masters" value="4"></el-option>
-                </el-select>
-              </el-form-item>
-            </div>
-          </div>
-
-          <div class="space-y-6">
-            <div class="flex items-center gap-3 mb-6">
-              <div class="h-10 w-10 bg-green-50 rounded-xl flex items-center justify-center">
-                <FileText class="h-5 w-5 text-green-600" />
-              </div>
-              <h3 class="text-lg font-semibold text-gray-900">Other Information</h3>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-              <el-form-item label="Tax ID / Registration Number">
-                <el-input
-                  v-model="form.taxId"
-                  placeholder="Enter tax ID or registration number"
-                />
-                <p class="text-sm text-gray-500 mt-2">Optional - Used for invoice generation and tax purposes</p>
-              </el-form-item>
-
-              <el-form-item label="Company Registration Date">
-                <el-date-picker
-                  v-model="form.companyRegistrationDate"
-                  type="date"
-                  placeholder="Select date"
-                  class="w-full"
-                />
-              </el-form-item>
-            </div>
-
-            <el-form-item label="Office Space Ownership">
-                <el-radio-group v-model="form.officeSpaceOwnership">
-                    <el-radio label="owned">Owned</el-radio>
-                    <el-radio label="rental">Rental</el-radio>
-                </el-radio-group>
+        <el-row :gutter="16">
+          <el-col :span="8">
+            <el-form-item label="City" prop="city">
+              <el-input v-model="form.city" placeholder="Enter city" :prefix-icon="MapPin" />
             </el-form-item>
-
-            <el-form-item label="Company Logo">
-              <el-upload
-                class="upload-demo"
-                action="#"
-                :auto-upload="false"
-                :on-change="handleLogoUpload"
-                :limit="1"
-                :file-list="form.companyLogo ? [{ name: form.companyLogo.name, url: '' }] : []"
-                :on-exceed="handleExceed"
-              >
-                <el-button type="primary">Choose File</el-button>
-                <template #tip>
-                  <div class="el-upload__tip">
-                    PNG/JPG file with a size less than 500KB.
-                  </div>
-                </template>
-              </el-upload>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="State" prop="state">
+              <el-input v-model="form.state" placeholder="Enter state" :prefix-icon="MapPin" />
             </el-form-item>
-          </div>
-        </el-form>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="Country" prop="country">
+              <el-select v-model="form.country" placeholder="Select country" class="w-full" filterable>
+                <el-option label="United States" value="USA" />
+                <el-option label="Canada" value="Canada" />
+                <el-option label="United Kingdom" value="UK" />
+                <el-option label="Australia" value="Australia" />
+                <el-option label="Germany" value="Germany" />
+                <el-option label="France" value="France" />
+                <el-option label="Japan" value="Japan" />
+                <el-option label="Other" value="Other" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
       </div>
 
-      <div class="flex items-center justify-end gap-4 p-6 border-t border-gray-100 bg-gray-50">
-        <el-button
-          @click="$emit('close')"
-          class="px-6 py-3 font-semibold"
-        >
+      <!-- Client Classification Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center">
+              <Building2 class="w-4 h-4 text-purple-600" />
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900">Client Classification</h3>
+          </div>
+        </div>
+
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="Client Type" prop="type">
+              <el-select v-model="form.type" placeholder="Select client type" class="w-full">
+                <el-option label="Agent" value="agent" />
+                <el-option label="Company" value="company" />
+                <el-option label="Individual" value="individual" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12" v-if="form.type === 'agent'">
+            <el-form-item label="Associated Agency">
+              <el-select v-model="form.agencyId" placeholder="Select agency" class="w-full">
+                <el-option label="Creative Agency" value="1" />
+                <el-option label="Media Partners" value="2" />
+                <el-option label="Digital Solutions" value="3" />
+                <el-option label="Brand Masters" value="4" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </div>
+
+      <!-- Additional Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center">
+              <FileText class="w-4 h-4 text-orange-600" />
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900">Additional Information</h3>
+          </div>
+        </div>
+
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="Tax ID / Registration Number">
+              <el-input v-model="form.taxId" placeholder="Enter tax ID or registration number"
+                :prefix-icon="FileText" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Company Registration Date">
+              <el-date-picker v-model="form.companyRegistrationDate" type="date" placeholder="Select date"
+                class="w-full" format="YYYY-MM-DD" value-format="YYYY-MM-DD" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-form-item label="Office Space Ownership">
+          <el-radio-group v-model="form.officeSpaceOwnership">
+            <el-radio label="owned">Owned</el-radio>
+            <el-radio label="rental">Rental</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+        <el-form-item label="Company Logo">
+          <el-upload class="upload-demo" action="#" :auto-upload="false" :on-change="handleLogoUpload" :limit="1"
+            :file-list="form.companyLogo ? [{ name: 'Company Logo', url: '' }] : []" :on-exceed="handleExceed">
+            <el-button type="primary" :icon="Upload">Choose File</el-button>
+            <template #tip>
+              <div class="el-upload__tip text-xs text-gray-500 mt-1">
+                PNG/JPG file with a size less than 500KB
+              </div>
+            </template>
+          </el-upload>
+        </el-form-item>
+      </div>
+    </el-form>
+
+    <template #footer>
+      <div class="modal-footer">
+        <el-button size="large" @click="handleClose">
           Cancel
         </el-button>
-        <el-button
-          type="primary"
-          @click="submitForm"
-          :disabled="loading"
-          class="px-8 py-3 font-semibold flex items-center gap-2"
-        >
-          <span v-if="loading" class="el-icon-loading animate-spin"></span>
+        <el-button type="primary" size="large" :loading="loading" :disabled="!isFormValid" @click="handleSubmit">
           {{ loading ? 'Saving...' : (isEdit ? 'Update Client' : 'Create Client') }}
         </el-button>
       </div>
-    </div>
-  </div>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
+import type { FormInstance, UploadFile, UploadFiles } from 'element-plus'
+import { ElMessage } from 'element-plus'
+import type { Client } from '@/stores/clients'
 import {
-  ElForm,
-  ElFormItem,
-  ElInput,
-  ElSelect,
-  ElOption,
-  ElRadioGroup,
-  ElRadio,
-  ElUpload,
-  ElDatePicker,
-  ElButton,
-  ElMessage, // For showing warnings about file size/type
-  type FormInstance,
-  type UploadFile,
-  type UploadFiles,
-  type UploadRawFile
-} from 'element-plus'
-import { X, User, Building2, FileText } from 'lucide-vue-next'
-
-// Define the Client interface to include new fields
-interface Client {
-  name: string
-  email: string
-  phone: string
-  address: string
-  contactPerson: string
-  type: 'agent' | 'company' | 'individual' | '' // Updated client types
-  agencyId?: string // Optional for agent type
-  taxId?: string
-  city?: string
-  state?: string
-  tollFreeNumber?: string
-  website?: string
-  companyRegistrationDate?: Date | null
-  officeSpaceOwnership?: 'owned' | 'rental' | ''
-  companyLogo?: File | null // To store the actual File object
-}
+  User,
+  UserCheck,
+  Mail,
+  Phone,
+  Globe,
+  FileText,
+  MapPin,
+  Building2,
+  Briefcase,
+  Upload
+} from 'lucide-vue-next'
 
 interface Props {
+  modelValue: boolean
   client?: Client | null
   isEdit?: boolean
   loading?: boolean
@@ -241,78 +254,111 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  close: []
+  'update:modelValue': [value: boolean]
   save: [client: Client]
 }>()
 
 const formRef = ref<FormInstance>()
+const dialogVisible = computed({
+  get: () => props.modelValue,
+  set: (value) => emit('update:modelValue', value)
+})
 
 const form = ref<Client>({
   name: '',
   email: '',
   phone: '',
   address: '',
-  contactPerson: '',
-  type: '', // Default to empty, require selection
-  taxId: '',
   city: '',
   state: '',
+  country: '',
+  type: 'company',
+  contactPerson: '',
+  title: '',
+  taxId: '',
   tollFreeNumber: '',
   website: '',
+  subject: '',
   companyRegistrationDate: null,
-  officeSpaceOwnership: '',
+  officeSpaceOwnership: 'owned',
   companyLogo: null
 })
 
-// Validation rules for Element Plus form
 const rules = {
-  name: [{ required: true, message: 'Please enter client name', trigger: 'blur' }],
-  contactPerson: [{ required: true, message: 'Please enter contact person', trigger: 'blur' }],
+  name: [
+    { required: true, message: 'Please enter client name', trigger: 'blur' }
+  ],
   email: [
     { required: true, message: 'Please enter email address', trigger: 'blur' },
-    { type: 'email', message: 'Please enter a valid email address', trigger: ['blur', 'change'] }
+    { type: 'email', message: 'Please enter a valid email address', trigger: 'blur' }
   ],
-  phone: [{ required: true, message: 'Please enter phone number', trigger: 'blur' }],
-  address: [{ required: true, message: 'Please enter address', trigger: 'blur' }],
-  city: [{ required: true, message: 'Please enter city', trigger: 'blur' }],
-  state: [{ required: true, message: 'Please enter state', trigger: 'blur' }],
-  type: [{ required: true, message: 'Please select client type', trigger: 'change' }]
+  phone: [
+    { required: true, message: 'Please enter phone number', trigger: 'blur' }
+  ],
+  address: [
+    { required: true, message: 'Please enter address', trigger: 'blur' }
+  ],
+  city: [
+    { required: true, message: 'Please enter city', trigger: 'blur' }
+  ],
+  state: [
+    { required: true, message: 'Please enter state', trigger: 'blur' }
+  ],
+  contactPerson: [
+    { required: true, message: 'Please enter contact person name', trigger: 'blur' }
+  ],
+  type: [
+    { required: true, message: 'Please select client type', trigger: 'change' }
+  ]
 }
+
+const isFormValid = computed(() => {
+  return form.value.name.trim() &&
+    form.value.email.trim() &&
+    form.value.phone.trim() &&
+    form.value.address.trim() &&
+    form.value.city.trim() &&
+    form.value.state.trim() &&
+    form.value.contactPerson.trim() &&
+    form.value.type
+})
 
 watch(() => props.client, (newClient) => {
   if (newClient) {
-    // Ensure reactivity for new fields
-    form.value = {
-      ...newClient,
-      city: newClient.city || '',
-      state: newClient.state || '',
-      tollFreeNumber: newClient.tollFreeNumber || '',
-      website: newClient.website || '',
-      companyRegistrationDate: newClient.companyRegistrationDate ? new Date(newClient.companyRegistrationDate) : null,
-      officeSpaceOwnership: newClient.officeSpaceOwnership || '',
-      companyLogo: newClient.companyLogo || null
-    }
+    form.value = { ...newClient }
   } else {
-    // Reset form for new client
-    form.value = {
-      name: '',
-      email: '',
-      phone: '',
-      address: '',
-      contactPerson: '',
-      type: '',
-      taxId: '',
-      city: '',
-      state: '',
-      tollFreeNumber: '',
-      website: '',
-      companyRegistrationDate: null,
-      officeSpaceOwnership: '',
-      companyLogo: null
-    }
+    resetForm()
   }
 }, { immediate: true })
 
+watch(() => props.modelValue, (visible) => {
+  if (visible && !props.client) {
+    resetForm()
+  }
+})
+
+const resetForm = () => {
+  form.value = {
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    country: '',
+    type: 'company',
+    contactPerson: '',
+    title: '',
+    taxId: '',
+    tollFreeNumber: '',
+    website: '',
+    subject: '',
+    companyRegistrationDate: null,
+    officeSpaceOwnership: 'owned',
+    companyLogo: null
+  }
+  formRef.value?.clearValidate()
+}
 
 const handleLogoUpload = (uploadFile: UploadFile, uploadFiles: UploadFiles) => {
   const isJPGorPNG = uploadFile.raw?.type === 'image/jpeg' || uploadFile.raw?.type === 'image/png'
@@ -320,92 +366,108 @@ const handleLogoUpload = (uploadFile: UploadFile, uploadFiles: UploadFiles) => {
 
   if (!isJPGorPNG) {
     ElMessage.error('Company logo must be JPG/PNG format!')
-    // Clear the file list if invalid type
-    form.value.companyLogo = null;
+    form.value.companyLogo = null
     return false
   }
   if (!isLt500KB) {
     ElMessage.error('Company logo size cannot exceed 500KB!')
-    // Clear the file list if too large
-    form.value.companyLogo = null;
+    form.value.companyLogo = null
     return false
   }
-  
-  // Store the raw file object
-  form.value.companyLogo = uploadFile.raw;
+
+  form.value.companyLogo = uploadFile.raw
   return true
 }
 
-const handleExceed = (files: File[], uploadFiles: UploadFiles) => {
-  ElMessage.warning(`You can only upload 1 file. Please remove the existing one before re-uploading.`)
+const handleExceed = () => {
+  ElMessage.warning('You can only upload 1 file. Please remove the existing one before re-uploading.')
 }
 
+const handleClose = () => {
+  dialogVisible.value = false
+}
 
-const submitForm = async () => {
+const handleSubmit = async () => {
   if (!formRef.value) return
-  await formRef.value.validate((valid) => {
-    if (valid) {
-      if (!props.loading) {
-        emit('save', form.value)
-      }
-    } else {
-      ElMessage.error('Please fill in all required fields correctly.')
-    }
-  })
+
+  try {
+    await formRef.value.validate()
+    emit('save', form.value)
+  } catch (error) {
+    ElMessage.error('Please fill in all required fields correctly.')
+  }
 }
 </script>
 
 <style scoped>
-/* Base styling for labels - Element Plus handles the actual input styling */
+.client-modal {
+  --el-dialog-border-radius: 16px;
+}
+
+.modal-header {
+  padding-bottom: 16px;
+}
+
+.client-form {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.form-section {
+  margin-bottom: 32px;
+}
+
+.form-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-header {
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+}
+
 :deep(.el-form-item__label) {
-  @apply text-sm font-semibold text-gray-900 mb-2; /* Adjusted mb-2 for slightly tighter spacing */
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+  margin-bottom: 8px;
 }
 
-/* Customizing Element Plus input, select, textarea borders and focus */
-:deep(.el-input__wrapper),
-:deep(.el-textarea__inner),
-:deep(.el-select__wrapper) {
-  @apply border border-gray-200 rounded-xl px-4 py-2; /* Consistent border and padding */
-  box-shadow: none !important; /* Remove default Element Plus shadow */
+:deep(.el-input__wrapper) {
+  border-radius: 8px;
 }
 
-:deep(.el-input__wrapper.is-focus),
-:deep(.el-textarea__inner:focus),
-:deep(.el-select__wrapper.is-focused) {
-  @apply ring-2 ring-gray-900 border-transparent; /* Custom focus ring */
+:deep(.el-select .el-input__wrapper) {
+  border-radius: 8px;
 }
 
-/* Adjusting ElButton styles for a more minimalist look */
-:deep(.el-button) {
-  @apply rounded-xl font-semibold; /* Consistent border-radius and font weight */
-  border: none !important; /* Remove default borders */
-  box-shadow: none !important; /* Remove default shadows */
+:deep(.el-textarea__inner) {
+  border-radius: 8px;
 }
 
-/* Primary button styles */
-:deep(.el-button--primary) {
-  @apply bg-gray-900 text-white hover:bg-gray-800;
+:deep(.el-date-editor.el-input) {
+  width: 100%;
 }
 
-/* Default button (Cancel) styles */
-:deep(.el-button:not(.el-button--primary)) {
-  @apply text-gray-700 hover:bg-gray-100 hover:text-gray-900;
-}
+@media (max-width: 768px) {
+  .client-modal {
+    --el-dialog-width: 90vw;
+  }
 
-/* File upload button styling */
-:deep(.el-upload-dragger) {
-  @apply rounded-xl border border-dashed border-gray-300;
-}
-:deep(.el-upload-list__item) {
-  @apply rounded-xl border border-gray-200;
-}
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
 
-/* Date picker input styling */
-:deep(.el-date-editor.el-input),
-:deep(.el-date-editor.el-input__wrapper) {
-    @apply w-full; /* Ensure date picker takes full width */
-}
-:deep(.el-date-editor.el-input__wrapper .el-input__inner) {
-    @apply px-0; /* Remove default inner padding to rely on wrapper padding */
+  .modal-footer .el-button {
+    width: 100%;
+  }
 }
 </style>

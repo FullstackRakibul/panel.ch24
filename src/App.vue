@@ -20,8 +20,19 @@ onErrorCaptured((error, instance, info) => {
 
 onMounted(async () => {
   try {
+    // Initialize stores
     authStore.initializeAuth()
     themeStore.initializeTheme()
+
+    // Register service worker for PWA (only in production)
+    if ('serviceWorker' in navigator && import.meta.env.PROD) {
+      try {
+        const registration = await navigator.serviceWorker.register('/sw.js')
+        console.log('SW registered: ', registration)
+      } catch (registrationError) {
+        console.log('SW registration failed: ', registrationError)
+      }
+    }
   } catch (error) {
     console.error('App initialization error:', error)
   }
@@ -30,62 +41,96 @@ onMounted(async () => {
 
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
-    <!-- Error Boundary -->
-    <Suspense>
-      <template #default>
-        <template v-if="!isLoginPage && authStore.isAuthenticated">
-          <div class="flex h-screen">
-            <Sidebar />
-            <div class="flex-1 flex flex-col overflow-hidden">
-              <HeaderComponent />
-              <main class="flex-1 overflow-y-auto p-6">
+    <!-- Main App Content -->
+    <template v-if="!isLoginPage && authStore.isAuthenticated">
+      <div class="flex h-screen">
+        <Sidebar />
+        <div class="flex-1 flex flex-col overflow-hidden">
+          <HeaderComponent />
+          <main class="flex-1 overflow-y-auto">
+            <Suspense>
+              <template #default>
                 <RouterView v-slot="{ Component, route }">
                   <Transition name="fade" mode="out-in">
                     <component :is="Component" :key="route.path" />
                   </Transition>
                 </RouterView>
-              </main>
+              </template>
+
+              <template #fallback>
+                <div class="loading-container">
+                  <div class="loading-content">
+                    <div class="loading-spinner"></div>
+                    <h2>Loading...</h2>
+                    <p>Please wait while we load the page</p>
+                  </div>
+                </div>
+              </template>
+            </Suspense>
+          </main>
+        </div>
+      </div>
+    </template>
+
+    <!-- Login Page -->
+    <template v-else>
+      <Suspense>
+        <template #default>
+          <RouterView />
+        </template>
+
+        <template #fallback>
+          <div class="loading-container">
+            <div class="loading-content">
+              <div class="loading-spinner"></div>
+              <h2>Loading Channel 24...</h2>
+              <p>Please wait while we prepare your dashboard</p>
             </div>
           </div>
         </template>
-        <template v-else>
-          <RouterView />
-        </template>
-      </template>
-
-      <template #fallback>
-        <div class="loading-screen">
-          <div class="loading-content">
-            <div class="loading-spinner"></div>
-            <p>Loading Channel 24...</p>
-          </div>
-        </div>
-      </template>
-    </Suspense>
+      </Suspense>
+    </template>
   </div>
 </template>
 
 <style scoped>
-.loading-screen {
+.loading-container {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background: #ffffff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
 }
 
 .loading-content {
   text-align: center;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f4f6;
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
   border-top: 4px solid #A02408;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 16px;
+  margin: 0 auto 24px;
+}
+
+.loading-content h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.loading-content p {
+  font-size: 16px;
+  opacity: 0.8;
 }
 
 @keyframes spin {
@@ -107,6 +152,4 @@ onMounted(async () => {
 .fade-leave-to {
   opacity: 0;
 }
-
-@media (min-width: 1024px) {}
 </style>

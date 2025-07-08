@@ -60,7 +60,7 @@ import {
 
 const agencies = ref([
   {
-    name: 'Pursuit Limited',
+    name: 'Pursuit Limited ',
     tagline: 'unlock your dreams',
     logo: 'https://www.sortlist.com/_next/image?url=https%3A%2F%2Fsortlist.gumlet.io%2Fsortlist-core-api%2Fqnryp9mccvbx7ztyz14a7t8j6zmh%3Fw%3D150%26q%3D95%26format%3Dgif&w=128&q=75',
     work: '1 work in Advertising',
