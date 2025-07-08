@@ -4,7 +4,7 @@ import axios from "axios"
 
 export const useAuthStore = defineStore("auth", () => {
   const token = ref(localStorage.getItem("token") || "")
-  const user = ref<null | { id: number; name: string; email: string; role: string }>(null)
+  const user = ref<null | { id: number; name: string; email: string; role: string ;avatar: 'https://assets-v2.lottiefiles.com/a/82411e66-1184-11ee-8cfa-d707e53cae38/bccvxj7Ogv.gif'}>(null)
   const loading = ref(false)
 
   const isAuthenticated = computed(() => !!token.value)
@@ -29,6 +29,7 @@ export const useAuthStore = defineStore("auth", () => {
           name: "Admin User",
           email: ADMIN_EMAIL,
           role: "admin",
+          avatar: 'https://assets-v2.lottiefiles.com/a/82411e66-1184-11ee-8cfa-d707e53cae38/bccvxj7Ogv.gif'
         }
 
         localStorage.setItem("token", token.value)

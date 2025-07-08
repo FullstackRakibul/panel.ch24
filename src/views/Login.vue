@@ -1,168 +1,237 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-      <div>
-        <div class="flex justify-center">
-          <img src="@/assets/CH24.png" alt="Channel 24" class="h-12 w-12" />
-        </div>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Sign in to Channel 24
-        </h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
-          Billing & Invoicing System
-        </p>
-      </div>
-
-      <!-- Demo Credentials Info -->
-      <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <Info class="h-5 w-5 text-blue-400" />
-          </div>
-          <div class="ml-3">
-            <h3 class="text-sm font-medium text-blue-800">Demo Credentials</h3>
-            <div class="mt-2 text-sm text-blue-700">
-              <p><strong>Email:</strong> admin@ch24.com</p>
-              <p><strong>Password:</strong> admin@ch24.com</p>
-            </div>
-          </div>
+  <div class="min-h-screen flex items-center justify-center bg-gray-100 sm:p-6 lg:p-8 font-inter">
+    <div class="bg-white rounded-xl shadow-md overflow-hidden flex flex-col lg:flex-row w-full max-w-6xl">
+      <!-- Left Section (Placeholder for marketing/info) -->
+      <div class="hidden lg:flex lg:w-1/2 p-8 items-center justify-center bg-gradient-to-br  relative">
+        <div class="text-center space-y-4">
+          <h2 class="text-4xl font-extrabold text-gray-900 leading-tight">
+            Welcome back!
+          </h2>
+          <p class="text-lg text-gray-700 max-w-sm mx-auto">
+            Start managing your billing and invoicing faster and better.
+          </p>
+          <!-- You can add more elements here, like illustrations or key features -->
+          <img src="https://rsssc.org/assest/img/Login.jpg" alt="Illustration" class="mt-8 max-w-xl mx-auto rounded-lg " />
         </div>
       </div>
-      
-      <form class="mt-8 space-y-6" @submit.prevent="handleLogin">
-        <div class="rounded-md shadow-sm -space-y-px">
+
+      <!-- Right Section (Login Form) -->
+      <div class="w-full lg:w-1/2 p-8 sm:p-12 flex flex-col justify-center">
+        <div class="max-w-md mx-auto w-full space-y-8">
           <div>
-            <label for="email" class="sr-only">Email address</label>
-            <input
-              id="email"
-              v-model="form.email"
-              name="email"
-              type="email"
-              autocomplete="email"
-              required
-              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-              placeholder="Email address"
-            />
+            <!-- Replaced image with text for a cleaner, minimalist look as per demo -->
+             <div class="text-center mb-6 flex flex-row items-center justify-center">
+                             <img src="@/assets/CH24.png" alt="Channel 24" class="h-16 w-16" />
+             </div>
+            
+            <p class="mt-2 font-bold text-center text-lg text-gray-600">System Dashboard
+            </p>
           </div>
-          <div>
-            <label for="password" class="sr-only">Password</label>
-            <input
-              id="password"
-              v-model="form.password"
-              name="password"
-              type="password"
-              autocomplete="current-password"
-              required
-              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-              placeholder="Password"
-            />
-          </div>
-        </div>
+          <!-- Demo Credentials Info -->
+          <!-- <el-alert title="Demo Credentials" type="info" show-icon :closable="false" class="rounded-lg">
+            <p class="text-sm"><strong>Email:</strong> admin@ch24.com</p>
+            <p class="text-sm"><strong>Password:</strong> admin@ch24.com</p>
+          </el-alert> -->
+          
+          <el-form ref="loginFormRef" :model="form" :rules="rules" class="space-y-6">
+            <el-form-item prop="email">
+              <el-input
+                v-model="form.email"
+                placeholder="Email address"
+                :prefix-icon="MessageSquare"
+                size="large"
+                class="rounded-lg"
+              />
+            </el-form-item>
 
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <input
-              id="remember-me"
-              name="remember-me"
-              type="checkbox"
-              class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-            />
-            <label for="remember-me" class="ml-2 block text-sm text-gray-900">
-              Remember me
-            </label>
-          </div>
+            <el-form-item prop="password">
+              <el-input
+                v-model="form.password"
+                type="password"
+                placeholder="Password"
+                :prefix-icon="Lock"
+                show-password
+                size="large"
+                class="rounded-lg"
+              />
+            </el-form-item>
 
-          <div class="text-sm">
-            <button
-              type="button"
-              @click="fillDemoCredentials"
-              class="font-medium text-primary hover:text-primary-dark"
-            >
-              Use demo credentials
-            </button>
-          </div>
-        </div>
+            <div class="flex items-center justify-between">
+              <el-checkbox v-model="rememberMe" label="Remember me" size="small">
+                <span class="text-sm text-gray-900">Remember me</span>
+              </el-checkbox>
 
-        <div v-if="error" class="rounded-md bg-red-50 p-4">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <AlertCircle class="h-5 w-5 text-red-400" />
+              <el-button
+                type="text"
+                @click="fillDemoCredentials"
+                class="font-medium text-primary  hover:text-blue-800 p-0 h-auto"
+              >
+                Use demo credentials
+              </el-button>
             </div>
-            <div class="ml-3">
-              <h3 class="text-sm font-medium text-red-800">
-                Login Failed
-              </h3>
-              <div class="mt-2 text-sm text-red-700">
-                <p>{{ error }}</p>
-              </div>
+
+            <el-alert v-if="error" :title="error" type="error" show-icon :closable="false" class="rounded-lg" />
+
+            <div>
+              <el-button
+                type="primary"
+                @click="submitForm"
+                :loading="loading"
+                size="large"
+                class="w-full py-2.5 rounded-lg bg-[#b94720] font-semibold tracking-wide"
+              >
+                <span v-if="loading">Signing in...</span>
+                <span v-else>Sign in</span>
+              </el-button>
             </div>
+          </el-form>
+
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-gray-500">
+              or
+            </span>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-4">
+            <el-button size="large" class="w-full flex items-center justify-center rounded-lg border border-gray-300 shadow-sm hover:bg-gray-50">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png" alt="Google" class="h-5 w-5 mr-2" />
+              Sign in with Google
+            </el-button>
+            <el-button size="large" class="w-full flex items-center justify-center rounded-lg border border-gray-300 shadow-sm hover:bg-gray-50">
+              <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTjvzC_QRv6moAhgNb5C6e3yicKgFND1g2RwA&s" alt="Facebook" class="h-5 w-5 mr-2" />
+              Sign in with Facebook
+            </el-button>
+          </div>
+
+          <!-- <div class="text-center text-sm mt-6">
+            <p class="text-gray-600">
+              Don't have an account?
+              <el-button type="text" class="text-blue-600 hover:text-blue-800 p-0 h-auto">Sign Up</el-button>
+            </p>
+          </div> -->
+
+          <div class="text-center mt-8">
+            <p class="text-xs text-gray-500">
+              © 2024 Channel 24. All rights reserved.
+            </p>
           </div>
         </div>
-
-        <div>
-          <button
-            type="submit"
-            :disabled="loading"
-            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-              <Lock class="h-5 w-5 text-primary-light group-hover:text-primary-dark" />
-            </span>
-            <span v-if="loading" class="flex items-center">
-              <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Signing in...
-            </span>
-            <span v-else>Sign in</span>
-          </button>
-        </div>
-      </form>
-
-      <div class="text-center">
-        <p class="text-xs text-gray-500">
-          © 2024 Channel 24. All rights reserved.
-        </p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { Info, AlertCircle, Lock } from 'lucide-vue-next'
+import { MessageSquare, Lock } from 'lucide-vue-next'
+import { ElForm, ElFormItem, ElInput, ElButton, ElCheckbox, ElAlert, type FormInstance } from 'element-plus'
+import 'element-plus/es/components/message/style/css' // Import ElMessage styles if you use it elsewhere
+import type { FormRules } from 'element-plus'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
-const form = ref({
+const loginFormRef = ref<FormInstance>()
+
+const form = reactive({
   email: '',
   password: ''
 })
 
+const rememberMe = ref(false) // Added remember me state
+
 const error = ref('')
 const loading = ref(false)
 
-const fillDemoCredentials = () => {
-  form.value.email = 'admin@ch24.com'
-  form.value.password = 'admin@ch24.com'
+// Validation rules for Element Plus form
+const rules: FormRules = {
+  email: [
+    {
+      required: true,
+      message: 'Please input email',
+      trigger: 'blur',
+      type: 'email' // ✅ MUST be literal
+    }
+  ],
+  password: [
+    {
+      required: true,
+      message: 'Please input password',
+      trigger: 'blur',
+      min: 6, // optional length rule
+      type: 'string'
+    }
+  ]
 }
 
-const handleLogin = async () => {
-  error.value = ''
-  loading.value = true
+const fillDemoCredentials = () => {
+  form.email = 'admin@ch24.com'
+  form.password = 'admin@ch24.com'
+}
 
-  const result = await authStore.login(form.value)
-  
-  if (result.success) {
-    router.push('/')
-  } else {
-    error.value = result.message || 'Login failed'
+
+
+const submitForm = async () => {
+  if (!loginFormRef.value) return
+
+  try {
+    await loginFormRef.value.validate()
+    error.value = ''
+    loading.value = true
+
+    const result = await authStore.login(form)
+
+    if (result.success) {
+      router.push('/')
+    } else {
+      error.value = result.message || 'Login failed'
+    }
+
+    loading.value = false
+  } catch (validationError) {
+    console.log('Validation failed!')
+    // Element Plus form validation will show error messages next to fields
   }
-  
-  loading.value = false
 }
 </script>
+
+<style scoped>
+/* Customizing Element Plus input, button, checkbox, alert for minimalist design */
+:deep(.el-input__wrapper) {
+  @apply rounded-lg px-4 py-2.5 border border-gray-200 shadow-sm;
+  box-shadow: none !important; /* Remove default Element Plus shadow */
+}
+
+:deep(.el-input__wrapper.is-focus) {
+  @apply ring-2 ring-blue-500 border-transparent; /* Custom focus ring */
+}
+
+:deep(.el-button) {
+  @apply rounded-lg font-semibold;
+  border: none !important; /* Remove default borders */
+  box-shadow: none !important; /* Remove default shadows */
+}
+
+:deep(.el-button--primary) {
+  @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+}
+
+:deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
+  @apply bg-blue-600 border-blue-600;
+}
+
+:deep(.el-checkbox__input.is-checked + .el-checkbox__label) {
+  @apply text-blue-600;
+}
+
+:deep(.el-alert) {
+  @apply rounded-lg;
+}
+
+/* Ensure the font is applied globally if not already */
+.font-inter {
+  font-family: 'Inter', sans-serif;
+}
+</style>
