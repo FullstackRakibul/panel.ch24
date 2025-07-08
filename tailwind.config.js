@@ -13,8 +13,8 @@ module.exports = {
       // Custom colors for your primary palette
       colors: {
         primary: {
-          light: "#3A83F1",
-          DEFAULT: "#1E3A8A",
+          light: "#b94720",
+          DEFAULT: "#b94720",
           dark: "#1E2B8A",
         },
         // You might also want to add shadcn/ui's default colors if not already present
