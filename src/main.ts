@@ -11,6 +11,7 @@ import App from "./App.vue"
 import router from "./router"
 
 const app = createApp(App)
+app.use(router)
 
 // Register Element Plus icons
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
@@ -18,7 +19,6 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 }
 
 app.use(createPinia())
-app.use(router)
 app.use(ElementPlus)
 
 app.mount("#app")
