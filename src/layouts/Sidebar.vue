@@ -1,5 +1,13 @@
 <template>
-  <el-aside :width="themeStore.sidebarCollapsed ? '80px' : '280px'" class="sidebar-container">
+  <el-aside :width="themeStore.sidebarCollapsed ? '80px' : '280px'" class="sidebar-container"
+    :class="{ 'mobile-open': mobileSidebarOpen }">
+    <!-- Mobile Toggle Button (Hamburger Menu) -->
+    <div class="mobile-toggle" @click="toggleMobileSidebar">
+      <el-icon :size="24">
+        <Menu />
+      </el-icon>
+    </div>
+
     <!-- Header Section -->
     <div class="sidebar-header">
       <div class="header-content" :class="{ 'collapsed': themeStore.sidebarCollapsed }">
@@ -13,10 +21,6 @@
               <p class="brand-subtitle">Billing System</p>
             </div>
           </div>
-
-          <!-- Settings Button -->
-          <el-button v-if="!themeStore.sidebarCollapsed" :icon="Setting" circle size="small" class="settings-btn"
-            @click="goToSettings" />
         </div>
 
         <!-- Search Bar -->
@@ -40,15 +44,13 @@
           <nav class="nav-menu">
             <router-link v-for="item in generalItems" :key="item.path" :to="item.path" class="nav-item"
               :class="{ 'active': isActiveRoute(item.path) }">
-
               <el-tooltip v-if="themeStore.sidebarCollapsed" :content="item.name" placement="right" :show-after="300">
                 <div class="nav-content">
                   <el-icon class="nav-icon">
-                    <component :is="item.icon" class="nav-icon" />
+                    <component :is="item.icon" />
                   </el-icon>
-                  <span v-if="!themeStore.sidebarCollapsed" class="nav-label">
-                    {{ item.name }}
-                  </span>
+                  <!-- Label and Badge only visible when not collapsed -->
+                  <span v-if="!themeStore.sidebarCollapsed" class="nav-label">{{ item.name }}</span>
                   <el-tag v-if="item.badge && !themeStore.sidebarCollapsed" :type="item.badgeType || 'warning'"
                     size="small" class="nav-badge">
                     {{ item.badge }}
@@ -58,7 +60,7 @@
 
               <div v-else class="nav-content">
                 <el-icon class="nav-icon">
-                  <component :is="item.icon" class="nav-icon" />
+                  <component :is="item.icon" />
                 </el-icon>
                 <span class="nav-label">{{ item.name }}</span>
                 <el-tag v-if="item.badge" :type="item.badgeType || 'warning'" size="small" class="nav-badge">
@@ -69,18 +71,31 @@
           </nav>
         </div>
 
-        <!-- Management Section -->
-        <div v-if="!themeStore.sidebarCollapsed" class="nav-group">
-          <div class="section-header">
+        <!-- Management Section - Always present, content adjusts -->
+        <div class="nav-group">
+          <div v-if="!themeStore.sidebarCollapsed" class="section-header">
             <span class="section-title">MANAGEMENT</span>
           </div>
 
           <nav class="nav-menu">
             <router-link v-for="item in managementItems" :key="item.path" :to="item.path" class="nav-item"
               :class="{ 'active': isActiveRoute(item.path) }">
-              <div class="nav-content">
+              <el-tooltip v-if="themeStore.sidebarCollapsed" :content="item.name" placement="right" :show-after="300">
+                <div class="nav-content">
+                  <el-icon class="nav-icon">
+                    <component :is="item.icon" />
+                  </el-icon>
+                  <span v-if="!themeStore.sidebarCollapsed" class="nav-label">{{ item.name }}</span>
+                  <el-tag v-if="item.badge && !themeStore.sidebarCollapsed" :type="item.badgeType || 'warning'"
+                    size="small" class="nav-badge">
+                    {{ item.badge }}
+                  </el-tag>
+                </div>
+              </el-tooltip>
+
+              <div v-else class="nav-content">
                 <el-icon class="nav-icon">
-                  <component :is="item.icon" class="nav-icon" />
+                  <component :is="item.icon" />
                 </el-icon>
                 <span class="nav-label">{{ item.name }}</span>
                 <el-tag v-if="item.badge" :type="item.badgeType || 'warning'" size="small" class="nav-badge">
@@ -91,18 +106,75 @@
           </nav>
         </div>
 
-        <!-- System Section -->
-        <div v-if="!themeStore.sidebarCollapsed" class="nav-group">
-          <div class="section-header">
+        <!-- Invoice Submenu - Always present, content adjusts -->
+        <!-- <div class="nav-group">
+          <div v-if="!themeStore.sidebarCollapsed" class="section-header">
+            <span class="section-title">INVOICES</span>
+          </div>
+
+          <nav class="nav-menu">
+            <router-link to="/invoices/create" class="nav-item"
+              :class="{ 'active': $route.path.startsWith('/invoices/create') }">
+              <el-tooltip v-if="themeStore.sidebarCollapsed" content="Create Invoice" placement="right"
+                :show-after="300">
+                <div class="nav-content">
+                  <el-icon class="nav-icon">
+                    <Plus />
+                  </el-icon>
+                  <span v-if="!themeStore.sidebarCollapsed" class="nav-label">Create Invoice</span>
+                </div>
+              </el-tooltip>
+              <div v-else class="nav-content">
+                <el-icon class="nav-icon">
+                  <Plus />
+                </el-icon>
+                <span class="nav-label">Create Invoice</span>
+              </div>
+            </router-link>
+            <router-link to="/invoices" class="nav-item"
+              :class="{ 'active': $route.path === '/invoices' || ($route.path.startsWith('/invoices/') && $route.path !== '/invoices/create') }">
+              <el-tooltip v-if="themeStore.sidebarCollapsed" content="Invoice List" placement="right" :show-after="300">
+                <div class="nav-content">
+                  <el-icon class="nav-icon">
+                    <List />
+                  </el-icon>
+                  <span v-if="!themeStore.sidebarCollapsed" class="nav-label">Invoice List</span>
+                </div>
+              </el-tooltip>
+              <div v-else class="nav-content">
+                <el-icon class="nav-icon">
+                  <List />
+                </el-icon>
+                <span class="nav-label">Invoice List</span>
+              </div>
+            </router-link>
+          </nav>
+        </div> -->
+
+        <!-- System Section - Always present, content adjusts -->
+        <div class="nav-group">
+          <div v-if="!themeStore.sidebarCollapsed" class="section-header">
             <span class="section-title">SYSTEM</span>
           </div>
 
           <nav class="nav-menu">
             <router-link v-for="item in systemItems" :key="item.path" :to="item.path" class="nav-item"
               :class="{ 'active': isActiveRoute(item.path) }">
-              <div class="nav-content">
+              <el-tooltip v-if="themeStore.sidebarCollapsed" :content="item.name" placement="right" :show-after="300">
+                <div class="nav-content">
+                  <el-icon class="nav-icon">
+                    <component :is="item.icon" />
+                  </el-icon>
+                  <span v-if="!themeStore.sidebarCollapsed" class="nav-label">{{ item.name }}</span>
+                  <el-tag v-if="item.badge && !themeStore.sidebarCollapsed" :type="item.badgeType || 'warning'"
+                    size="small" class="nav-badge">
+                    {{ item.badge }}
+                  </el-tag>
+                </div>
+              </el-tooltip>
+              <div v-else class="nav-content">
                 <el-icon class="nav-icon">
-                  <component :is="item.icon" class="nav-icon" />
+                  <component :is="item.icon" />
                 </el-icon>
                 <span class="nav-label">{{ item.name }}</span>
                 <el-tag v-if="item.badge" :type="item.badgeType || 'warning'" size="small" class="nav-badge">
@@ -170,14 +242,14 @@
       </div>
     </div>
 
-    <!-- Collapse Toggle -->
+    <!-- Collapse Toggle - Always visible, repositioned for better UX -->
     <el-button :icon="themeStore.sidebarCollapsed ? Expand : Fold" circle size="small" class="collapse-toggle"
       @click="themeStore.toggleSidebar" />
   </el-aside>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
@@ -200,7 +272,9 @@ import {
   SwitchButton,
   QuestionFilled,
   List,
-  WindPower
+  WindPower,
+  Plus,
+  Menu // Hamburger icon for mobile
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -209,6 +283,7 @@ const authStore = useAuthStore()
 const themeStore = useThemeStore()
 
 const searchQuery = ref('')
+const mobileSidebarOpen = ref(false) // State to control mobile sidebar visibility
 
 const currentUser = computed(() => authStore.user || {
   name: 'Admin User',
@@ -223,7 +298,6 @@ const generalItems = [
     name: 'Dashboard',
     path: '/',
     icon: HomeFilled,
-
   },
   {
     name: 'To-do List',
@@ -231,13 +305,13 @@ const generalItems = [
     icon: List,
     badge: 'Comming Soon',
     badgeType: 'warning',
-
   },
   {
     name: 'Goals',
     path: '/goals',
     icon: WindPower,
-    badge: undefined, badgeType: undefined
+    badge: undefined,
+    badgeType: undefined
   }
 ]
 
@@ -245,7 +319,7 @@ const managementItems = [
   { name: 'Clients', path: '/clients', icon: User, badge: undefined, badgeType: undefined },
   { name: 'Agencies', path: '/agencies', icon: OfficeBuilding, badge: undefined, badgeType: undefined },
   { name: 'Ad Bookings', path: '/ad-bookings', icon: Calendar, badge: undefined, badgeType: undefined },
-  { name: 'Invoices', path: '/invoices', icon: Document, badge: undefined, badgeType: undefined },
+  { name: 'Invoices', path: '/invoices', icon: List, badge: undefined, badgeType: undefined },
   {
     name: 'Payments',
     path: '/payments',
@@ -253,12 +327,16 @@ const managementItems = [
     badge: 'On Hold',
     badgeType: 'primary'
   },
-  { name: 'Reports', path: '/reports', icon: DataAnalysis, badge: undefined, badgeType: undefined },
+  {
+    name: 'Reports', path: '/reports', icon: DataAnalysis, badge: undefined, badgeType: undefined
+  },
   { name: 'Delivery Logs', path: '/delivery-logs', icon: Van, badge: undefined, badgeType: undefined }
 ]
 
 const systemItems = [
-  { name: 'Settings', path: '/settings', icon: Setting, badge: undefined, badgeType: undefined },
+  {
+    name: 'Settings', path: '/settings', icon: Setting, badge: undefined, badgeType: undefined
+  },
 ]
 
 // Check if route is active
@@ -266,11 +344,18 @@ const isActiveRoute = (path: string) => {
   return route.path === path || route.path.startsWith(path + '/')
 }
 
-
-// Navigation handlers
-const goToSettings = () => {
-  router.push('/settings')
+// Toggle mobile sidebar visibility
+const toggleMobileSidebar = () => {
+  mobileSidebarOpen.value = !mobileSidebarOpen.value
+  document.body.classList.toggle('sidebar-open', mobileSidebarOpen.value) // Add/remove class to body for overlay/scroll lock
 }
+
+// Close mobile sidebar when a route changes
+watch(route, () => {
+  if (mobileSidebarOpen.value) {
+    toggleMobileSidebar();
+  }
+});
 
 const handleUserCommand = (command: string) => {
   switch (command) {
@@ -298,13 +383,34 @@ const handleUserCommand = (command: string) => {
 .sidebar-container {
   background: #ffffff;
   border-right: 1px solid #f0f0f0;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   display: flex;
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
   font-family: 'Poppins', sans-serif;
+  z-index: 999;
+  /* Ensure sidebar is above main content */
+}
+
+/* Mobile Toggle Button (Hamburger) */
+.mobile-toggle {
+  display: none;
+  /* Hidden by default on desktop */
+  position: fixed;
+  /* Fixed position so it's always visible */
+  top: 16px;
+  left: 16px;
+  z-index: 1100;
+  /* Higher than sidebar */
+  cursor: pointer;
+  padding: 8px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: #A02408;
+  /* Icon color */
 }
 
 /* Header Section */
@@ -323,8 +429,9 @@ const handleUserCommand = (command: string) => {
 .brand-section {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   margin-bottom: 16px;
+  width: 100%;
 }
 
 .logo-wrapper {
@@ -367,19 +474,10 @@ const handleUserCommand = (command: string) => {
   line-height: 1.2;
 }
 
-.settings-btn {
-  --el-button-border-color: transparent;
-  --el-button-bg-color: transparent;
-  --el-button-text-color: #6b7280;
-  --el-button-hover-bg-color: #f3f4f6;
-  --el-button-hover-text-color: #A02408;
-  --el-button-hover-border-color: transparent;
-  flex-shrink: 0;
-}
-
 /* Search Section */
 .search-section {
   position: relative;
+  width: 100%;
 }
 
 .sidebar-search {
@@ -392,7 +490,7 @@ const handleUserCommand = (command: string) => {
   box-shadow: none;
   border: 1px solid #e5e7eb;
   background-color: #f9fafb;
-  transition: all 0.2s ease;
+  transition: all 0.5s ease;
 }
 
 .sidebar-search :deep(.el-input__wrapper:hover) {
@@ -471,6 +569,16 @@ const handleUserCommand = (command: string) => {
   position: relative;
 }
 
+/* Adjust gap and padding for collapsed state */
+.sidebar-container.is-collapsed .nav-content {
+  gap: 0;
+  /* Remove gap when collapsed */
+  justify-content: center;
+  /* Center icons when collapsed */
+  padding: 12px 0;
+  /* Adjust padding for collapsed icons */
+}
+
 .nav-item:hover .nav-content {
   background-color: #f8f9fa;
   color: #374151;
@@ -506,6 +614,8 @@ const handleUserCommand = (command: string) => {
   color: inherit;
   white-space: nowrap;
   flex: 1;
+  overflow: hidden;
+  /* Hide overflow when collapsed */
 }
 
 .nav-badge {
@@ -534,6 +644,7 @@ const handleUserCommand = (command: string) => {
   padding: 16px;
   border-top: 1px solid #f0f0f0;
   flex-shrink: 0;
+  width: 100%;
 }
 
 .user-content.collapsed {
@@ -550,6 +661,13 @@ const handleUserCommand = (command: string) => {
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100%;
+}
+
+/* Adjust user profile for collapsed state */
+.sidebar-container.is-collapsed .user-profile {
+  justify-content: center;
+  gap: 0;
+  padding: 8px 0;
 }
 
 .user-profile:hover {
@@ -608,7 +726,9 @@ const handleUserCommand = (command: string) => {
   position: absolute;
   top: 28px;
   right: -16px;
-  z-index: 10;
+  /* Positioned outside for better visibility */
+  z-index: 100;
+  /* Ensure it's above other elements */
   background: #ffffff;
   border: 1px solid #e5e7eb;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -616,6 +736,8 @@ const handleUserCommand = (command: string) => {
   --el-button-hover-text-color: #A02408;
   --el-button-hover-bg-color: #f9fafb;
   --el-button-border-color: #e5e7eb;
+  transition: all 0.3s ease;
+  /* Smooth transition */
 }
 
 /* User Dropdown */
@@ -623,6 +745,7 @@ const handleUserCommand = (command: string) => {
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   border: 1px solid #f0f0f0;
+  width: 100%;
 }
 
 .user-dropdown :deep(.el-dropdown-menu__item) {
@@ -724,11 +847,44 @@ const handleUserCommand = (command: string) => {
     top: 0;
     z-index: 1000;
     transform: translateX(-100%);
+    /* Hidden by default */
     transition: transform 0.3s ease;
+    width: 280px;
+    /* Fixed width for mobile sidebar */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    /* Shadow for mobile sidebar */
   }
 
   .sidebar-container.mobile-open {
     transform: translateX(0);
+    /* Show when open */
+  }
+
+  .mobile-toggle {
+    display: block;
+    /* Show hamburger on mobile */
+  }
+
+  .collapse-toggle {
+    display: none;
+    /* Hide desktop collapse toggle on mobile */
+  }
+
+  /* When mobile sidebar is open, prevent body scroll and add overlay */
+  body.sidebar-open {
+    overflow: hidden;
+  }
+
+  body.sidebar-open::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    /* Below sidebar, above content */
   }
 }
 

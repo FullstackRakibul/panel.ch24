@@ -10,6 +10,8 @@ declare module 'vue' {
     AgencyCard: typeof import('./src/components/ui/AgencyCard.vue')['default']
     ClientModal: typeof import('./src/components/forms/ClientModal.vue')['default']
     ClientsSkeleton: typeof import('./src/components/skeletons/ClientsSkeleton.vue')['default']
+    ContractModal: typeof import('./src/components/forms/ContractModal.vue')['default']
+    ContractViewModal: typeof import('./src/components/modals/ContractViewModal.vue')['default']
     DashboardSkeleton: typeof import('./src/components/skeletons/DashboardSkeleton.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
@@ -48,11 +50,16 @@ declare module 'vue' {
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     FallbackPage: typeof import('./src/components/FallbackPage.vue')['default']
+    InvoiceModal: typeof import('./src/components/forms/InvoiceModal.vue')['default']
+    InvoiceViewModal: typeof import('./src/components/modals/InvoiceViewModal.vue')['default']
     KPIBox: typeof import('./src/components/shared/KPIBox.vue')['default']
     PageSkeleton: typeof import('./src/components/skeletons/PageSkeleton.vue')['default']
     PWAInstallPrompt: typeof import('./src/components/PWAInstallPrompt.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     UseNumberToWords: typeof import('./src/components/ui/useNumberToWords')['default']
+  }
+  export interface ComponentCustomProperties {
+    vLoading: typeof import('element-plus/es')['ElLoadingDirective']
   }
 }
