@@ -162,10 +162,11 @@
             <div class="invoice-preview">
               <!-- Invoice Header -->
               <div class="preview-header">
-                <div class="company-info">
+                <div class="company-info flex flex-row items-center gap-5 justify-center">
+                  <img src="@/assets/CH24.png" alt="Channel 24" class="h-12 w-12"/>
                   <h2>CHANNEL 24 LTD.</h2>
-                  <p>INVOICE FOR THE MONTH OF {{ currentMonthYear }}</p>
                 </div>
+                <p>INVOICE FOR THE MONTH OF {{ currentMonthYear }}</p>
               </div>
 
               <!-- Bill To Section -->
@@ -549,7 +550,7 @@ onMounted(() => {
   font-size: 24px;
   font-weight: 700;
   margin: 0 0 8px 0;
-  color: #1e40af;
+  color: #DC6023;
 }
 
 .company-info p {
