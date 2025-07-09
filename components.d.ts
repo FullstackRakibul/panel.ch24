@@ -9,8 +9,6 @@ declare module 'vue' {
   export interface GlobalComponents {
     AgencyCard: typeof import('./src/components/ui/AgencyCard.vue')['default']
     ClientModal: typeof import('./src/components/forms/ClientModal.vue')['default']
-<<<<<<< HEAD
-=======
     ClientsSkeleton: typeof import('./src/components/skeletons/ClientsSkeleton.vue')['default']
     DashboardSkeleton: typeof import('./src/components/skeletons/DashboardSkeleton.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
@@ -49,7 +47,6 @@ declare module 'vue' {
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     FallbackPage: typeof import('./src/components/FallbackPage.vue')['default']
->>>>>>> 4e44568c2f7aced9b3fd4c8f73da9605c14f8f5b
     KPIBox: typeof import('./src/components/shared/KPIBox.vue')['default']
     PageSkeleton: typeof import('./src/components/skeletons/PageSkeleton.vue')['default']
     PWAInstallPrompt: typeof import('./src/components/PWAInstallPrompt.vue')['default']
