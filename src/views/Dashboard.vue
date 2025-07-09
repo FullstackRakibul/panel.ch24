@@ -1,156 +1,348 @@
 <template>
   <div class="dashboard-container">
-    <!-- Page Header -->
     <div class="page-header">
       <div class="header-content">
         <h1 class="page-title">Dashboard</h1>
         <p class="page-subtitle">Welcome back! Here's what's happening with your business today.</p>
       </div>
-      <el-select v-model="selectedPeriod" @change="fetchData" class="period-select">
-        <el-option label="This Month" value="month" />
-        <el-option label="This Quarter" value="quarter" />
-        <el-option label="This Year" value="year" />
-      </el-select>
+      <div class="header-actions">
+        <el-select v-model="selectedPeriod" @change="fetchData" class="period-select">
+          <el-option label="This Month" value="month" />
+          <el-option label="This Quarter" value="quarter" />
+          <el-option label="This Year" value="year" />
+        </el-select>
+        <el-button type="primary" link size="small" class="hidden sm:block">Export Report</el-button>
+      </div>
     </div>
 
-    <!-- KPI Cards -->
-    <el-row :gutter="24" class="kpi-section">
-      <el-col :xs="24" :sm="12" :lg="6">
-        <el-card class="kpi-card" shadow="hover" @click="navigateToInvoices">
+    <el-row :gutter="20" class="kpi-grid mb-8">
+      <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-5">
+        <el-card class="kpi-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl"
+          @click="navigateToReports">
           <div class="kpi-content">
-            <div class="kpi-icon invoices">
-              <el-icon size="24"><Document /></el-icon>
+            <div class="kpi-header">
+              <span class="kpi-label">Total Income <span class="kpi-period text-green-600">This month</span></span>
+              <div class="kpi-icon bg-green-100 text-green-600">
+                <el-icon size="20">
+                  <Money />
+                </el-icon>
+              </div>
             </div>
-            <div class="kpi-info">
-              <div class="kpi-value">{{ dashboardStore.stats.totalInvoices.toLocaleString() }}</div>
-              <div class="kpi-label">Total Invoices</div>
-              <div class="kpi-change positive">+12% from last month</div>
+            <div class="kpi-value text-green-700">৳{{ (dashboardStore.stats.totalIncome || 200500).toLocaleString() }}
             </div>
+            <div class="text-sm text-gray-500">Total income of this month</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-5">
+        <el-card class="kpi-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl"
+          @click="navigateToReports">
+          <div class="kpi-content">
+            <div class="kpi-header">
+              <span class="kpi-label">Total Expenses <span class="kpi-period text-red-600">This month</span></span>
+              <div class="kpi-icon bg-red-100 text-red-600">
+                <el-icon size="20">
+                  <ShoppingCart />
+                </el-icon>
+              </div>
+            </div>
+            <div class="kpi-value text-red-700">৳{{ (dashboardStore.stats.totalExpenses || 62352).toLocaleString() }}
+            </div>
+            <div class="text-sm text-gray-500">Total expense of this month</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-5">
+        <el-card class="kpi-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl"
+          @click="navigateToReports">
+          <div class="kpi-content">
+            <div class="kpi-header">
+              <span class="kpi-label">Net Profit <span class="kpi-period text-blue-600">This month</span></span>
+              <div class="kpi-icon bg-blue-100 text-blue-600">
+                <el-icon size="20">
+                  <Top />
+                </el-icon>
+              </div>
+            </div>
+            <div class="kpi-value text-blue-700">৳{{ (dashboardStore.stats.netProfit || 138148).toLocaleString() }}
+            </div>
+            <div class="text-sm text-gray-500">Total net profit of this month</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-5">
+        <el-card class="kpi-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl"
+          @click="navigateToInvoices">
+          <div class="kpi-content">
+            <div class="kpi-header">
+              <span class="kpi-label">Outstanding Invoices <span class="kpi-period text-purple-600">This
+                  month</span></span>
+              <div class="kpi-icon bg-purple-100 text-purple-600">
+                <el-icon size="20">
+                  <Document />
+                </el-icon>
+              </div>
+            </div>
+            <div class="kpi-value text-purple-700">৳{{ (dashboardStore.stats.outstandingInvoices ||
+              200500).toLocaleString() }}</div>
+            <div class="text-sm text-gray-500">Outstanding invoices of this month</div>
           </div>
         </el-card>
       </el-col>
 
-      <el-col :xs="24" :sm="12" :lg="6">
-        <el-card class="kpi-card" shadow="hover" @click="navigateToReports">
+      <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-5">
+        <el-card class="kpi-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl"
+          @click="navigateToPayments">
           <div class="kpi-content">
-            <div class="kpi-icon revenue">
-              <el-icon size="24"><Money /></el-icon>
+            <div class="kpi-header">
+              <span class="kpi-label">Upcoming Payments <span class="kpi-period text-indigo-600">This
+                  month</span></span>
+              <div class="kpi-icon bg-indigo-100 text-indigo-600">
+                <el-icon size="20">
+                  <Clock />
+                </el-icon>
+              </div>
             </div>
-            <div class="kpi-info">
-              <div class="kpi-value">${{ dashboardStore.stats.totalRevenue.toLocaleString() }}</div>
-              <div class="kpi-label">Total Revenue</div>
-              <div class="kpi-change positive">+8.2% from last month</div>
+            <div class="kpi-value text-indigo-700">৳{{ (dashboardStore.stats.upcomingPayments ||
+              150352).toLocaleString() }}</div>
+            <div class="text-sm text-gray-500">Upcoming payment of this month</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-5">
+        <el-card class="kpi-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl"
+          @click="navigateToPayments">
+          <div class="kpi-content">
+            <div class="kpi-header">
+              <span class="kpi-label">Overdues Amounts <span class="kpi-period text-orange-600">This month</span></span>
+              <div class="kpi-icon bg-orange-100 text-orange-600">
+                <el-icon size="20">
+                  <Warning />
+                </el-icon>
+              </div>
             </div>
+            <div class="kpi-value text-orange-700">৳{{ (dashboardStore.stats.overduesAmounts || 80550).toLocaleString()
+              }}</div>
+            <div class="text-sm text-gray-500">Overdues amount of this month</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-5">
+        <el-card class="kpi-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl"
+          @click="navigateToSubscription">
+          <div class="kpi-content">
+            <div class="kpi-header">
+              <span class="kpi-label">Total Subscription</span>
+              <div class="kpi-icon bg-blue-100 text-blue-600">
+                <el-icon size="20">
+                  <User />
+                </el-icon>
+              </div>
+            </div>
+            <div class="kpi-value text-blue-700">{{ (dashboardStore.stats.totalSubscription || 1255).toLocaleString() }}
+            </div>
+            <div class="text-sm text-gray-500">All time subscription user</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-5">
+        <el-card class="kpi-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl"
+          @click="navigateToSubscription">
+          <div class="kpi-content">
+            <div class="kpi-header">
+              <span class="kpi-label">Active/Inactive Subscription <span class="text-red-600">275</span></span>
+              <div class="kpi-icon bg-purple-100 text-purple-600">
+                <el-icon size="20">
+                  <User />
+                </el-icon>
+              </div>
+            </div>
+            <div class="kpi-value text-purple-700">{{ (dashboardStore.stats.activeSubscription || 980).toLocaleString()
+              }}</div>
+            <div class="text-sm text-gray-500">Active & inactive subscription users</div>
           </div>
         </el-card>
       </el-col>
 
-      <el-col :xs="24" :sm="12" :lg="6">
-        <el-card class="kpi-card" shadow="hover" @click="navigateToPayments">
+      <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-5">
+        <el-card class="kpi-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl"
+          @click="navigateToLeads">
           <div class="kpi-content">
-            <div class="kpi-icon due">
-              <el-icon size="24"><Clock /></el-icon>
+            <div class="kpi-header">
+              <span class="kpi-label">New Leads <span class="kpi-period text-teal-600">This month</span></span>
+              <div class="kpi-icon bg-teal-100 text-teal-600">
+                <el-icon size="20">
+                  <Plus />
+                </el-icon>
+              </div>
             </div>
-            <div class="kpi-info">
-              <div class="kpi-value">${{ dashboardStore.stats.totalDue.toLocaleString() }}</div>
-              <div class="kpi-label">Amount Due</div>
-              <div class="kpi-change negative">-3.1% from last month</div>
-            </div>
+            <div class="kpi-value text-teal-700">{{ (dashboardStore.stats.newLeads || 200).toLocaleString() }}</div>
+            <div class="text-sm text-gray-500">New leads of this month</div>
           </div>
         </el-card>
       </el-col>
-
-      <el-col :xs="24" :sm="12" :lg="6">
-        <el-card class="kpi-card" shadow="hover" @click="navigateToPayments">
+      <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-5">
+        <el-card class="kpi-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl"
+          @click="navigateToProjects">
           <div class="kpi-content">
-            <div class="kpi-icon paid">
-              <el-icon size="24"><CircleCheck /></el-icon>
+            <div class="kpi-header">
+              <span class="kpi-label">Ongoing / Overdue Projects <span class="text-red-600">50</span></span>
+              <div class="kpi-icon bg-yellow-100 text-yellow-600">
+                <el-icon size="20">
+                  <FolderOpened />
+                </el-icon>
+              </div>
             </div>
-            <div class="kpi-info">
-              <div class="kpi-value">${{ dashboardStore.stats.totalPaid.toLocaleString() }}</div>
-              <div class="kpi-label">Paid Amount</div>
-              <div class="kpi-change positive">+15.3% from last month</div>
+            <div class="kpi-value text-yellow-700">{{ (dashboardStore.stats.ongoingProjects || 20).toLocaleString() }}
             </div>
+            <div class="text-sm text-gray-500">Total ongoing & overdue projects</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-5">
+        <el-card class="kpi-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl"
+          @click="navigateToSubscription">
+          <div class="kpi-content">
+            <div class="kpi-header">
+              <span class="kpi-label">Subscription Expiring Soon</span>
+              <div class="kpi-icon bg-orange-100 text-orange-600">
+                <el-icon size="20">
+                  <Calendar />
+                </el-icon>
+              </div>
+            </div>
+            <div class="kpi-value text-orange-700">{{ (dashboardStore.stats.subscriptionExpiringSoon ||
+              780).toLocaleString() }}</div>
+            <div class="text-sm text-gray-500">Subscription expiring of this month</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-5">
+        <el-card class="kpi-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl"
+          @click="navigateToTickets">
+          <div class="kpi-content">
+            <div class="kpi-header">
+              <span class="kpi-label">Open / Pending Tickets <span class="text-blue-600">145</span></span>
+              <div class="kpi-icon bg-red-100 text-red-600">
+                <el-icon size="20">
+                  <Ticket />
+                </el-icon>
+              </div>
+            </div>
+            <div class="kpi-value text-red-700">{{ (dashboardStore.stats.openTickets || 220).toLocaleString() }}</div>
+            <div class="text-sm text-gray-500">Total open & pending tickets</div>
           </div>
         </el-card>
       </el-col>
     </el-row>
 
-    <!-- Charts Section -->
-    <el-row :gutter="24" class="charts-section">
-      <el-col :xs="24" :lg="12">
-        <el-card class="chart-card" shadow="hover">
+    <el-card class="chart-card mb-8 shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl">
+      <template #header>
+        <div class="chart-header">
+          <h3 class="chart-title">Monthly Wise Invoice Reports</h3>
+          <div class="chart-actions">
+            <el-select v-model="selectedReportPeriod" size="small" class="w-[120px]">
+              <el-option label="Last 12 Months" value="12month" />
+              <el-option label="Last 6 Months" value="6month" />
+            </el-select>
+            <el-button type="primary" link size="small">Export</el-button>
+          </div>
+        </div>
+      </template>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-4">
+        <div class="report-summary-item">
+          <div class="text-sm font-medium text-gray-600">Total Generated</div>
+          <div class="text-lg font-bold text-blue-700">৳{{ (dashboardStore.stats.totalGeneratedInvoices ||
+            124500).toLocaleString() }}</div>
+        </div>
+        <div class="report-summary-item">
+          <div class="text-sm font-medium text-gray-600">Total Paid</div>
+          <div class="text-lg font-bold text-green-700">৳{{ (dashboardStore.stats.totalPaidInvoices ||
+            105750).toLocaleString() }}</div>
+        </div>
+        <div class="report-summary-item">
+          <div class="text-sm font-medium text-gray-600">Total Due</div>
+          <div class="text-lg font-bold text-orange-700">৳{{ (dashboardStore.stats.totalDueInvoices ||
+            15750).toLocaleString()
+            }}</div>
+        </div>
+        <div class="report-summary-item">
+          <div class="text-sm font-medium text-gray-600">Total Cancelled</div>
+          <div class="text-lg font-bold text-red-700">৳{{ (dashboardStore.stats.totalCancelledInvoices ||
+            10000).toLocaleString() }}</div>
+        </div>
+      </div>
+    </el-card>
+
+    <el-row :gutter="20" class="charts-section mb-8">
+      <el-col :xs="24" :lg="12" class="mb-5">
+        <el-card class="chart-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl">
           <template #header>
             <div class="chart-header">
               <h3 class="chart-title">Monthly Revenue</h3>
-              <el-button type="primary" link size="small">View Details</el-button>
+              <el-button type="primary" link size="small" @click="navigateToReports">View Details</el-button>
             </div>
           </template>
           <div class="chart-container">
-            <canvas ref="revenueChart" height="300"></canvas>
+            <canvas ref="revenueChart"></canvas>
           </div>
         </el-card>
       </el-col>
 
-      <el-col :xs="24" :lg="12">
-        <el-card class="chart-card" shadow="hover">
+      <el-col :xs="24" :lg="12" class="mb-5">
+        <el-card class="chart-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl">
           <template #header>
             <div class="chart-header">
               <h3 class="chart-title">Top Clients</h3>
-              <el-button type="primary" link size="small">View All</el-button>
+              <el-button type="primary" link size="small" @click="navigateToClients">View All</el-button>
             </div>
           </template>
           <div class="chart-container">
-            <canvas ref="clientsChart" height="300"></canvas>
+            <canvas ref="clientsChart"></canvas>
           </div>
         </el-card>
       </el-col>
     </el-row>
 
-    <!-- Revenue by Agency -->
-    <el-row class="agency-section">
+    <el-row class="agency-section mb-8">
       <el-col :span="24">
-        <el-card class="chart-card" shadow="hover">
+        <el-card class="chart-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl">
           <template #header>
             <div class="chart-header">
               <h3 class="chart-title">Revenue by Agency</h3>
               <div class="chart-actions">
                 <el-button type="primary" link size="small">Export Data</el-button>
-                <el-button type="primary" link size="small">View Report</el-button>
+                <el-button type="primary" link size="small" @click="navigateToReports">View Report</el-button>
               </div>
             </div>
           </template>
           <div class="chart-container">
-            <canvas ref="agencyChart" height="300"></canvas>
+            <canvas ref="agencyChart"></canvas>
           </div>
         </el-card>
       </el-col>
     </el-row>
 
-    <!-- Recent Activity -->
-    <el-row class="activity-section">
+    <el-row class="activity-section mb-8">
       <el-col :span="24">
-        <el-card class="activity-card" shadow="hover">
+        <el-card class="activity-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl">
           <template #header>
             <div class="chart-header">
               <h3 class="chart-title">Recent Activity</h3>
-              <el-button type="primary" link size="small">View All</el-button>
+              <el-button type="primary" link size="small" @click="navigateToActivityLog">View All</el-button>
             </div>
           </template>
-          <div class="activity-list">
-            <div
-              v-for="activity in recentActivities"
-              :key="activity.id"
-              class="activity-item"
-            >
-              <div class="activity-icon">
-                <el-icon :size="16">
+          <div class="activity-list mt-4">
+            <div v-for="activity in recentActivities" :key="activity.id"
+              class="activity-item bg-gray-50 hover:bg-gray-100 rounded-lg p-4 flex items-center gap-4 transition-colors duration-200">
+              <div class="activity-icon rounded-lg bg-blue-100 text-blue-600 flex-shrink-0">
+                <el-icon :size="18">
                   <component :is="activity.icon" />
                 </el-icon>
               </div>
-              <div class="activity-content">
-                <div class="activity-description">{{ activity.description }}</div>
-                <div class="activity-time">{{ activity.time }}</div>
+              <div class="activity-content flex-grow">
+                <div class="activity-description text-sm font-medium text-gray-800">{{ activity.description }}</div>
+                <div class="activity-time text-xs text-gray-500">{{ activity.time }}</div>
               </div>
               <el-button type="primary" link size="small">View</el-button>
             </div>
@@ -172,7 +364,14 @@ import {
   CircleCheck,
   ArrowUp,
   User,
-  OfficeBuilding
+  OfficeBuilding,
+  ShoppingCart, // For Total Expenses
+  Top, // Replaced TrendingUp for Net Profit
+  Warning, // Replaced CircleOff for Overdues Amounts
+  Plus, // Replaced UserPlus for New Leads
+  FolderOpened, // Replaced FolderDot for Ongoing/Overdue Projects
+  Calendar, // Replaced CalendarClock for Subscription Expiring Soon
+  Ticket // Kept Ticket as it seems available and suitable for tickets
 } from '@element-plus/icons-vue'
 import { Chart, registerables } from 'chart.js'
 
@@ -182,6 +381,7 @@ const router = useRouter()
 const dashboardStore = useDashboardStore()
 
 const selectedPeriod = ref('month')
+const selectedReportPeriod = ref('12month') // New period selector for invoice reports
 const revenueChart = ref<HTMLCanvasElement>()
 const clientsChart = ref<HTMLCanvasElement>()
 const agencyChart = ref<HTMLCanvasElement>()
@@ -209,13 +409,21 @@ const recentActivities = ref([
     id: 4,
     description: 'Monthly report generated successfully',
     time: '5 hours ago',
-    icon: ArrowUp
+    icon: ArrowUp // Using ArrowUp as a general trend/report icon
   }
 ])
 
+// Navigation functions
 const navigateToInvoices = () => router.push('/invoices')
 const navigateToReports = () => router.push('/reports')
 const navigateToPayments = () => router.push('/payments')
+// New navigation placeholders for new KPIs
+const navigateToSubscription = () => router.push('/subscriptions')
+const navigateToLeads = () => router.push('/leads')
+const navigateToProjects = () => router.push('/projects')
+const navigateToTickets = () => router.push('/tickets')
+const navigateToClients = () => router.push('/clients')
+const navigateToActivityLog = () => router.push('/activity-log')
 
 const fetchData = async () => {
   await dashboardStore.fetchDashboardData()
@@ -226,105 +434,124 @@ const fetchData = async () => {
 const initializeCharts = () => {
   // Revenue Chart
   if (revenueChart.value) {
-    new Chart(revenueChart.value, {
-      type: 'line',
-      data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-        datasets: [{
-          label: 'Revenue',
-          data: [12000, 19000, 15000, 25000, 22000, 30000],
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          tension: 0.4,
-          fill: true
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false
-          }
+    // Destroy existing chart instance to prevent duplicates if fetchData is called multiple times
+    if ((revenueChart.value as any).chart) {
+      (revenueChart.value as any).chart.destroy();
+    }
+    const ctx = revenueChart.value.getContext('2d');
+    if (ctx) {
+      (revenueChart.value as any).chart = new Chart(ctx, { // Storing chart instance on the ref
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          datasets: [{
+            label: 'Revenue',
+            data: [12000, 19000, 15000, 25000, 22000, 30000],
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
         },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              callback: function(value) {
-                return '$' + value.toLocaleString()
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function (value) {
+                  return '৳' + value.toLocaleString()
+                }
               }
             }
           }
         }
-      }
-    })
+      });
+    }
   }
 
   // Top Clients Chart
   if (clientsChart.value) {
-    new Chart(clientsChart.value, {
-      type: 'doughnut',
-      data: {
-        labels: ['ABC Corp', 'XYZ Agency', 'Tech Solutions', 'Media Group', 'Others'],
-        datasets: [{
-          data: [30, 25, 20, 15, 10],
-          backgroundColor: [
-            '#3b82f6',
-            '#10b981',
-            '#f59e0b',
-            '#ef4444',
-            '#6b7280'
-          ]
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'bottom'
+    if ((clientsChart.value as any).chart) {
+      (clientsChart.value as any).chart.destroy();
+    }
+    const ctx = clientsChart.value.getContext('2d');
+    if (ctx) {
+      (clientsChart.value as any).chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['ABC Corp', 'XYZ Agency', 'Tech Solutions', 'Media Group', 'Others'],
+          datasets: [{
+            data: [30, 25, 20, 15, 10],
+            backgroundColor: [
+              '#3b82f6',
+              '#10b981',
+              '#f59e0b',
+              '#ef4444',
+              '#6b7280'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
           }
         }
-      }
-    })
+      });
+    }
   }
 
   // Agency Revenue Chart
   if (agencyChart.value) {
-    new Chart(agencyChart.value, {
-      type: 'bar',
-      data: {
-        labels: ['Creative Agency', 'Media Partners', 'Digital Solutions', 'Brand Masters', 'Ad Experts'],
-        datasets: [{
-          label: 'Revenue',
-          data: [45000, 38000, 32000, 28000, 22000],
-          backgroundColor: 'rgba(59, 130, 246, 0.8)',
-          borderColor: '#3b82f6',
-          borderWidth: 1,
-          borderRadius: 8
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false
-          }
+    if ((agencyChart.value as any).chart) {
+      (agencyChart.value as any).chart.destroy();
+    }
+    const ctx = agencyChart.value.getContext('2d');
+    if (ctx) {
+      (agencyChart.value as any).chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Creative Agency', 'Media Partners', 'Digital Solutions', 'Brand Masters', 'Ad Experts'],
+          datasets: [{
+            label: 'Revenue',
+            data: [45000, 38000, 32000, 28000, 22000],
+            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+            borderColor: '#3b82f6',
+            borderWidth: 1,
+            borderRadius: 8
+          }]
         },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              callback: function(value) {
-                return '$' + value.toLocaleString()
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function (value) {
+                  return '৳' + value.toLocaleString()
+                }
               }
             }
           }
         }
-      }
-    })
+      });
+    }
   }
 }
 
@@ -334,234 +561,184 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Updated Styling for a more modern and minimalist look based on image_0e7299.jpg */
 .dashboard-container {
-  padding: 24px;
-  background: var(--el-bg-color-page);
-  min-height: 100vh;
+  @apply p-6 bg-gray-50 min-h-screen;
+  /* Lighter background, more padding */
 }
 
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 32px;
+  @apply flex justify-between items-center mb-8 flex-wrap gap-4;
+  /* Adjusted margin, added flex-wrap */
 }
 
 .header-content {
-  flex: 1;
+  @apply flex-1;
 }
 
 .page-title {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--el-text-color-primary);
-  margin: 0 0 8px 0;
+  @apply text-3xl font-bold text-gray-900 mb-2;
+  /* Slightly larger, bolder title */
 }
 
 .page-subtitle {
-  font-size: 16px;
-  color: var(--el-text-color-regular);
-  margin: 0;
+  @apply text-base text-gray-600;
+  /* Slightly larger subtitle */
+}
+
+.header-actions {
+  @apply flex items-center gap-4;
+  /* Space between select and button */
 }
 
 .period-select {
-  width: 160px;
+  @apply w-[160px];
 }
 
-.kpi-section {
-  margin-bottom: 32px;
+/* --- New KPI Grid Styling --- */
+.kpi-grid {
+  @apply -mx-2.5;
+  /* Counteracts gutter for full width on small screens */
 }
 
 .kpi-card {
-  cursor: pointer;
-  transition: all 0.3s ease;
-  --el-card-padding: 24px;
+  @apply rounded-xl border border-gray-100 p-5;
+  /* Clean border, more padding */
+  --el-card-padding: 0px;
+  /* Override Element Plus default padding for internal control */
+  transition: all 0.2s ease-in-out;
+  /* Smooth transition for hover */
 }
 
 .kpi-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--el-box-shadow-dark);
+  @apply transform -translate-y-1 shadow-lg;
+  /* Lift and deeper shadow on hover */
 }
 
 .kpi-content {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  @apply flex flex-col gap-3;
+  /* Vertical layout with spacing */
 }
 
-.kpi-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.kpi-icon.invoices {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  color: white;
-}
-
-.kpi-icon.revenue {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-}
-
-.kpi-icon.due {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: white;
-}
-
-.kpi-icon.paid {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-}
-
-.kpi-info {
-  flex: 1;
-}
-
-.kpi-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--el-text-color-primary);
-  line-height: 1.2;
-  margin-bottom: 4px;
+.kpi-header {
+  @apply flex justify-between items-start mb-2;
 }
 
 .kpi-label {
-  font-size: 14px;
-  color: var(--el-text-color-regular);
-  margin-bottom: 8px;
+  @apply text-sm font-medium text-gray-600;
 }
 
-.kpi-change {
-  font-size: 12px;
-  font-weight: 500;
+.kpi-period {
+  @apply ml-1 text-xs font-semibold;
+  /* Smaller, bolder period text */
 }
 
-.kpi-change.positive {
-  color: var(--el-color-success);
+.kpi-icon {
+  @apply w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0;
+  /* Specific colors handled inline in template */
 }
 
-.kpi-change.negative {
-  color: var(--el-color-danger);
+.kpi-value {
+  @apply text-2xl font-bold leading-tight;
+  /* Larger, bolder value */
+  /* Specific colors handled inline in template */
 }
 
-.charts-section {
-  margin-bottom: 32px;
+/* --- Monthly Wise Invoice Reports Styling --- */
+.report-summary-item {
+  @apply p-4 rounded-lg bg-gray-50 flex flex-col items-start;
 }
 
-.agency-section {
-  margin-bottom: 32px;
-}
-
-.activity-section {
-  margin-bottom: 32px;
-}
-
+/* --- Charts and Activity Card Styling Refinements --- */
 .chart-card {
-  --el-card-padding: 24px;
+  @apply rounded-xl border border-gray-100 shadow-sm hover:shadow-lg transition-shadow duration-300;
+  --el-card-padding: 0px;
+  /* Reset padding to control internally */
+}
+
+.chart-card :deep(.el-card__header) {
+  @apply py-4 px-6 border-b border-gray-100;
+  /* Header padding */
+}
+
+.chart-card :deep(.el-card__body) {
+  @apply p-6;
+  /* Body padding */
 }
 
 .chart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  @apply flex justify-between items-center;
 }
 
 .chart-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-  margin: 0;
+  @apply text-lg font-semibold text-gray-900 m-0;
 }
 
 .chart-actions {
-  display: flex;
-  gap: 8px;
+  @apply flex gap-3;
 }
 
 .chart-container {
-  height: 300px;
-  position: relative;
+  @apply h-[300px] w-full;
+  /* Ensure full width for responsiveness */
 }
 
 .activity-card {
-  --el-card-padding: 24px;
+  @apply rounded-xl border border-gray-100 shadow-sm hover:shadow-lg transition-shadow duration-300;
+  --el-card-padding: 0px;
+}
+
+.activity-card :deep(.el-card__header) {
+  @apply py-4 px-6 border-b border-gray-100;
+}
+
+.activity-card :deep(.el-card__body) {
+  @apply p-6;
 }
 
 .activity-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  @apply mt-0;
+  /* Removed default margin from template, relying on card body padding */
 }
 
 .activity-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  border-radius: 12px;
-  background: var(--el-fill-color-lighter);
-  transition: background-color 0.2s;
-}
-
-.activity-item:hover {
-  background: var(--el-fill-color-light);
+  @apply flex items-center gap-4 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors duration-200;
 }
 
 .activity-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: var(--el-color-primary-light-9);
-  color: var(--el-color-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.activity-content {
-  flex: 1;
+  @apply w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0;
 }
 
 .activity-description {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--el-text-color-primary);
-  margin-bottom: 4px;
+  @apply text-sm font-medium text-gray-800;
 }
 
 .activity-time {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
+  @apply text-xs text-gray-500;
 }
 
+/* Responsive Adjustments */
 @media (max-width: 768px) {
-  .dashboard-container {
-    padding: 16px;
-  }
-  
   .page-header {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
+    @apply flex-col items-start;
   }
-  
-  .kpi-content {
-    flex-direction: column;
-    text-align: center;
-    gap: 12px;
+
+  .header-actions {
+    @apply w-full justify-between;
   }
-  
+
+  .period-select {
+    @apply flex-grow;
+  }
+
+  .charts-section .el-col,
+  .kpi-grid .el-col {
+    @apply mb-4;
+    /* Add bottom margin for columns on small screens */
+  }
+
   .activity-item {
-    flex-direction: column;
-    text-align: center;
-    gap: 12px;
+    @apply flex-col items-start text-center;
   }
 }
 </style>
