@@ -13,9 +13,9 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "/vite.svg",
+      "src": "/src/assets/CH24.png",
       "sizes": "any",
-      "type": "image/svg+xml",
+      "type": "image",
       "purpose": "any maskable"
     }
   ]

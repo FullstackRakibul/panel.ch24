@@ -57,7 +57,6 @@ declare module 'vue' {
     PWAInstallPrompt: typeof import('./src/components/PWAInstallPrompt.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    UseNumberToWords: typeof import('./src/components/ui/useNumberToWords')['default']
   }
   export interface ComponentCustomProperties {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']

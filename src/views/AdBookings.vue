@@ -129,9 +129,9 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="Actions" width="200" fixed="right">
+        <el-table-column label="Actions" width="300" fixed="right">
           <template #default="{ row }">
-            <div class="action-buttons">\
+            <div class="action-buttons">
               <el-button type="primary" link @click="viewContract(row)" :icon="Eye" size="small">
                 View
               </el-button>

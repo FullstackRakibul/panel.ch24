@@ -126,7 +126,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="Actions" width="280" fixed="right">
+        <el-table-column label="Actions" width="350" fixed="right">
           <template #default="{ row }">
             <div class="action-buttons">
               <el-button type="primary" link @click="viewInvoice(row)" :icon="Eye" size="small">
