@@ -243,7 +243,7 @@
     </div>
 
     <!-- Collapse Toggle - Always visible, repositioned for better UX -->
-    <el-button :icon="themeStore.sidebarCollapsed ? Expand : Fold" circle size="small" class="collapse-toggle"
+    <el-button :icon="themeStore.sidebarCollapsed ? Expand : Fold" circle size="medium" class="collapse-toggle"
       @click="themeStore.toggleSidebar" />
   </el-aside>
 </template>
@@ -724,8 +724,8 @@ const handleUserCommand = (command: string) => {
 /* Collapse Toggle */
 .collapse-toggle {
   position: absolute;
-  top: 28px;
-  right: -16px;
+  top: 20px;
+  right: -2px;
   /* Positioned outside for better visibility */
   z-index: 100;
   /* Ensure it's above other elements */
@@ -736,7 +736,7 @@ const handleUserCommand = (command: string) => {
   --el-button-hover-text-color: #A02408;
   --el-button-hover-bg-color: #f9fafb;
   --el-button-border-color: #e5e7eb;
-  transition: all 0.3s ease;
+  transition: all 0.9s ease;
   /* Smooth transition */
 }
 

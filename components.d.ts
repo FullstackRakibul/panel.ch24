@@ -7,9 +7,11 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AgeingReport: typeof import('./src/components/reports/AgeingReport.vue')['default']
     AgencyCard: typeof import('./src/components/ui/AgencyCard.vue')['default']
     ClientModal: typeof import('./src/components/forms/ClientModal.vue')['default']
     ClientsSkeleton: typeof import('./src/components/skeletons/ClientsSkeleton.vue')['default']
+    CommercialSchedule: typeof import('./src/components/reports/CommercialSchedule.vue')['default']
     ContractModal: typeof import('./src/components/forms/ContractModal.vue')['default']
     ContractViewModal: typeof import('./src/components/modals/ContractViewModal.vue')['default']
     DashboardSkeleton: typeof import('./src/components/skeletons/DashboardSkeleton.vue')['default']
@@ -46,7 +48,10 @@ declare module 'vue' {
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
     ElTable: typeof import('element-plus/es')['ElTable']
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
+    ElTabPane: typeof import('element-plus/es')['ElTabPane']
+    ElTabs: typeof import('element-plus/es')['ElTabs']
     ElTag: typeof import('element-plus/es')['ElTag']
+    ElTimePicker: typeof import('element-plus/es')['ElTimePicker']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     FallbackPage: typeof import('./src/components/FallbackPage.vue')['default']
@@ -54,6 +59,7 @@ declare module 'vue' {
     InvoiceViewModal: typeof import('./src/components/modals/InvoiceViewModal.vue')['default']
     KPIBox: typeof import('./src/components/shared/KPIBox.vue')['default']
     PageSkeleton: typeof import('./src/components/skeletons/PageSkeleton.vue')['default']
+    PartyLedger: typeof import('./src/components/reports/PartyLedger.vue')['default']
     PWAInstallPrompt: typeof import('./src/components/PWAInstallPrompt.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

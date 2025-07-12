@@ -6,7 +6,7 @@
         <h1 class="page-title">Invoice Management</h1>
         <p class="page-subtitle">Create and manage invoices for your contracts</p>
       </div>
-      <el-button type="primary" size="large" @click="openCreateModal">
+      <el-button type="primary" size="large" @click="openCreateModal()">
         <el-icon class="mr-2">
           <Plus />
         </el-icon>
@@ -238,6 +238,9 @@ const handleFilter = () => {
 }
 
 const openCreateModal = () => {
+
+  console.log('Opening create invoice modal')
+
   selectedInvoice.value = null
   isEditMode.value = false
   showModal.value = true
