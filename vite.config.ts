@@ -26,5 +26,22 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
-  }
+  },
+  build: {
+    target: "esnext",
+    outDir: "dist",
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "element-plus": ["element-plus"],
+          "vue-vendor": ["vue", "vue-router", "pinia"],
+          chart: ["chart.js"],
+        },
+      },
+    },
+  },
+  define: {
+    __VUE_PROD_DEVTOOLS__: false,
+  },
 })
