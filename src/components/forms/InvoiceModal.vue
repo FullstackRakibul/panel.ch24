@@ -211,6 +211,101 @@ const dialogVisible = computed({
   set: (value) => emit('update:modelValue', value)
 })
 
+// Helper functions defined first
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('en-BD', {
+    style: 'decimal',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)
+}
+
+const numberToWords = (num: number): string => {
+  // Simple number to words conversion for Bangladeshi Taka
+  if (num === 0) return 'Zero Taka Only'
+
+  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine']
+  const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+
+  const convertHundreds = (n: number): string => {
+    let result = ''
+    if (n >= 100) {
+      result += ones[Math.floor(n / 100)] + ' Hundred '
+      n %= 100
+    }
+    if (n >= 20) {
+      result += tens[Math.floor(n / 10)] + ' '
+      n %= 10
+    } else if (n >= 10) {
+      result += teens[n - 10] + ' '
+      return result
+    }
+    if (n > 0) {
+      result += ones[n] + ' '
+    }
+    return result
+  }
+
+  let result = ''
+  const crores = Math.floor(num / 10000000)
+  const lacs = Math.floor((num % 10000000) / 100000)
+  const thousands = Math.floor((num % 100000) / 1000)
+  const hundreds = num % 1000
+
+  if (crores > 0) {
+    result += convertHundreds(crores) + 'Crore '
+  }
+  if (lacs > 0) {
+    result += convertHundreds(lacs) + 'Lac '
+  }
+  if (thousands > 0) {
+    result += convertHundreds(thousands) + 'Thousand '
+  }
+  if (hundreds > 0) {
+    result += convertHundreds(hundreds)
+  }
+
+  return result.trim() + ' Taka Only'
+}
+
+const resetForm = () => {
+  form.value = {
+    number: '',
+    date: '',
+    contractNo: '',
+    contractDate: '',
+    billTo: {
+      name: '',
+      address: ''
+    },
+    advertiser: '',
+    product: '',
+    items: [
+      {
+        sl: 1,
+        particulars: '',
+        quantity: 1,
+        rate: 0,
+        amount: 0
+      }
+    ],
+    spotTotal: 0,
+    vatPercentage: 15,
+    vatAmount: 0,
+    grandTotal: 0,
+    grandTotalWords: '',
+    signature1Name: 'Rashed Ahasan',
+    signature1Title: 'Head of Marketing',
+    signature2Name: 'M. M. Elias',
+    signature2Title: 'DGM, Finance & Accounts',
+    footerContact: 'Channel 24 Limited | 387 (south), Tejgaon I/A, Dhaka 1208 | Tel: +8802 550 29724 | Fax: +8802 550 29709 | www.channel24bd.tv',
+    status: 'draft',
+    dueDate: ''
+  }
+  formRef.value?.clearValidate()
+}
+
 const form = ref<Invoice>({
   number: '',
   date: '',
@@ -325,43 +420,6 @@ watch([spotTotal, vatAmount, grandTotal, grandTotalWords], () => {
   form.value.grandTotalWords = grandTotalWords.value
 })
 
-const resetForm = () => {
-  form.value = {
-    number: '',
-    date: '',
-    contractNo: '',
-    contractDate: '',
-    billTo: {
-      name: '',
-      address: ''
-    },
-    advertiser: '',
-    product: '',
-    items: [
-      {
-        sl: 1,
-        particulars: '',
-        quantity: 1,
-        rate: 0,
-        amount: 0
-      }
-    ],
-    spotTotal: 0,
-    vatPercentage: 15,
-    vatAmount: 0,
-    grandTotal: 0,
-    grandTotalWords: '',
-    signature1Name: 'Rashed Ahasan',
-    signature1Title: 'Head of Marketing',
-    signature2Name: 'M. M. Elias',
-    signature2Title: 'DGM, Finance & Accounts',
-    footerContact: 'Channel 24 Limited | 387 (south), Tejgaon I/A, Dhaka 1208 | Tel: +8802 550 29724 | Fax: +8802 550 29709 | www.channel24bd.tv',
-    status: 'draft',
-    dueDate: ''
-  }
-  formRef.value?.clearValidate()
-}
-
 const addItem = () => {
   form.value.items.push({
     sl: form.value.items.length + 1,
@@ -378,63 +436,6 @@ const removeItem = (index: number) => {
   form.value.items.forEach((item, idx) => {
     item.sl = idx + 1
   })
-}
-
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('en-BD', {
-    style: 'decimal',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value)
-}
-
-const numberToWords = (num: number): string => {
-  // Simple number to words conversion for Bangladeshi Taka
-  if (num === 0) return 'Zero Taka Only'
-
-  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine']
-  const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
-  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
-
-  const convertHundreds = (n: number): string => {
-    let result = ''
-    if (n >= 100) {
-      result += ones[Math.floor(n / 100)] + ' Hundred '
-      n %= 100
-    }
-    if (n >= 20) {
-      result += tens[Math.floor(n / 10)] + ' '
-      n %= 10
-    } else if (n >= 10) {
-      result += teens[n - 10] + ' '
-      return result
-    }
-    if (n > 0) {
-      result += ones[n] + ' '
-    }
-    return result
-  }
-
-  let result = ''
-  const crores = Math.floor(num / 10000000)
-  const lacs = Math.floor((num % 10000000) / 100000)
-  const thousands = Math.floor((num % 100000) / 1000)
-  const hundreds = num % 1000
-
-  if (crores > 0) {
-    result += convertHundreds(crores) + 'Crore '
-  }
-  if (lacs > 0) {
-    result += convertHundreds(lacs) + 'Lac '
-  }
-  if (thousands > 0) {
-    result += convertHundreds(thousands) + 'Thousand '
-  }
-  if (hundreds > 0) {
-    result += convertHundreds(hundreds)
-  }
-
-  return result.trim() + ' Taka Only'
 }
 
 const handleClose = () => {
