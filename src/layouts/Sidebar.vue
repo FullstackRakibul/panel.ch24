@@ -1,5 +1,5 @@
 <template>
-  <el-aside :width="themeStore.sidebarCollapsed ? '80px' : '280px'" class="sidebar-container"
+  <el-aside :width="themeStore.sidebarCollapsed ? '85px' : '280px'" class="sidebar-container"
     :class="{ 'mobile-open': mobileSidebarOpen }">
     <!-- Mobile Toggle Button (Hamburger Menu) -->
     <div class="mobile-toggle" @click="toggleMobileSidebar">
@@ -243,7 +243,7 @@
     </div>
 
     <!-- Collapse Toggle - Always visible, repositioned for better UX -->
-    <el-button :icon="themeStore.sidebarCollapsed ? Expand : Fold" circle size="small" class="collapse-toggle"
+    <el-button :icon="themeStore.sidebarCollapsed ? Expand : Fold" circle size="medium" class="collapse-toggle"
       @click="themeStore.toggleSidebar" />
   </el-aside>
 </template>
@@ -402,7 +402,7 @@ const handleUserCommand = (command: string) => {
   /* Fixed position so it's always visible */
   top: 16px;
   left: 16px;
-  z-index: 1100;
+  z-index: 1500;
   /* Higher than sidebar */
   cursor: pointer;
   padding: 8px;
@@ -641,7 +641,7 @@ const handleUserCommand = (command: string) => {
 
 /* User Section */
 .user-section {
-  padding: 16px;
+  padding: 20px;
   border-top: 1px solid #f0f0f0;
   flex-shrink: 0;
   width: 100%;
@@ -650,6 +650,9 @@ const handleUserCommand = (command: string) => {
 .user-content.collapsed {
   display: flex;
   justify-content: center;
+  align-items: center;
+  padding: 8px 0;
+  width: 50%;
 }
 
 .user-profile {
@@ -724,8 +727,8 @@ const handleUserCommand = (command: string) => {
 /* Collapse Toggle */
 .collapse-toggle {
   position: absolute;
-  top: 28px;
-  right: -16px;
+  top: 20px;
+  right: 1px;
   /* Positioned outside for better visibility */
   z-index: 100;
   /* Ensure it's above other elements */

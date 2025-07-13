@@ -202,10 +202,10 @@ const recentNotifications = ref([
     title: 'New Invoice Payment',
     message: 'Payment received for Invoice #INV-001',
     time: '2 min ago',
-    read: false
+    read: true
   },
   {
-    id: 2,
+    id: 4,
     title: 'Invoice Overdue',
     message: 'Invoice #INV-003 is now 5 days overdue',
     time: '1 hour ago',
