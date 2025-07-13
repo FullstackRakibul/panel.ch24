@@ -11,12 +11,12 @@
   "categories": ["business", "finance", "productivity"],
   "lang": "en",
   "dir": "ltr",
-  "icons": [
-    {
+  "icons": 
+  {
     "src": "/src/assets/CH24.png",
     "sizes": "any",
     "type": "image/png",
     "purpose": "any maskable"
   }
-  ]
+  
 }
