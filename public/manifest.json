@@ -13,10 +13,10 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "/src/assets/CH24.png",
-      "sizes": "any",
-      "type": "image",
-      "purpose": "any maskable"
-    }
+    "src": "/src/assets/CH24.png",
+    "sizes": "any",
+    "type": "image/png",
+    "purpose": "any maskable"
+  }
   ]
 }
