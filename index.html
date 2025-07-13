@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/png" href="/src/assets/CH24.png" />
+  <link rel="icon" type="image/png" href="/CH24.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Basic Meta Tags -->
@@ -20,21 +20,27 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Channel 24" />
 
-  <!-- Preconnect for fonts -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="manifest" href="/manifest.json">
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json" />
 
   <title>Channel 24 - Billing System</title>
 </head>
 
 <body>
   <div id="app"></div>
+
+  <!-- Main JS (handled by Vite) -->
   <script type="module" src="/src/main.ts"></script>
+
+  <!-- Service Worker Registration -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')         
+        navigator.serviceWorker.register('/sw.js')
           .then(registration => {
             console.log('Service Worker registered with scope:', registration.scope);
           })
