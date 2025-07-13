@@ -728,7 +728,7 @@ const handleUserCommand = (command: string) => {
 .collapse-toggle {
   position: absolute;
   top: 20px;
-  right: 1px;
+  right: -2px;
   /* Positioned outside for better visibility */
   z-index: 100;
   /* Ensure it's above other elements */
@@ -739,7 +739,7 @@ const handleUserCommand = (command: string) => {
   --el-button-hover-text-color: #A02408;
   --el-button-hover-bg-color: #f9fafb;
   --el-button-border-color: #e5e7eb;
-  transition: all 0.3s ease;
+  transition: all 0.9s ease;
   /* Smooth transition */
 }
 

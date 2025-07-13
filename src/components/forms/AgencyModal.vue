@@ -1,0 +1,151 @@
+<template>
+  <el-dialog v-model="dialogVisible" :title="isEditMode ? 'Edit Agency' : 'Add New Agency'" width="500px"
+    :before-close="handleClose">
+    <el-form :model="form" :rules="rules" ref="agencyFormRef" label-position="top">
+      <el-form-item label="Agency Name" prop="name">
+        <el-input v-model="form.name" placeholder="e.g., Creative Solutions Inc." />
+      </el-form-item>
+      <el-form-item label="Tagline" prop="tagline">
+        <el-input v-model="form.tagline" placeholder="e.g., Your brand, our passion." />
+      </el-form-item>
+      <el-form-item label="Logo URL" prop="logo">
+        <el-input v-model="form.logo" placeholder="e.g., https://example.com/logo.png" />
+      </el-form-item>
+      <el-form-item label="Work Type" prop="work">
+        <el-select v-model="form.work" placeholder="Select work type" class="w-full">
+          <el-option label="Advertising" value="Advertising" />
+          <el-option label="Digital Marketing" value="Digital Marketing" />
+          <el-option label="Branding" value="Branding" />
+          <el-option label="SEO" value="SEO" />
+          <el-option label="Media Buying" value="Media Buying" />
+          <el-option label="Web Design" value="Web Design" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="Location" prop="location">
+        <el-input v-model="form.location" placeholder="e.g., Dhaka, Bangladesh" />
+      </el-form-item>
+      <el-form-item label="Budget (৳)" prop="budget">
+        <el-input-number v-model="form.budget" :min="0" :precision="0" controls-position="right" class="w-full" />
+      </el-form-item>
+      <el-form-item label="Team Size" prop="size">
+        <el-select v-model="form.size" placeholder="Select team size" class="w-full">
+          <el-option label="1-10" value="1-10" />
+          <el-option label="11-50" value="11-50" />
+          <el-option label="51-200" value="51-200" />
+          <el-option label="201-500" value="201-500" />
+          <el-option label="500+" value="500+" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="Rating" prop="rating">
+        <el-rate v-model="form.rating" :max="5" allow-half />
+      </el-form-item>
+      <el-form-item label="Review Count" prop="reviewCount">
+        <el-input-number v-model="form.reviewCount" :min="0" :precision="0" controls-position="right" class="w-full" />
+      </el-form-item>
+      <el-form-item label="Slogan (Optional)" prop="slogan">
+        <el-input v-model="form.slogan" type="textarea" :rows="2" placeholder="A short slogan for the agency." />
+      </el-form-item>
+      <el-form-item label="Contact Email (Optional)" prop="contactEmail">
+        <el-input v-model="form.contactEmail" placeholder="e.g., contact@agency.com" />
+      </el-form-item>
+      <el-form-item label="Phone Number (Optional)" prop="phoneNumber">
+        <el-input v-model="form.phoneNumber" placeholder="e.g., +8801XXXXXXXXX" />
+      </el-form-item>
+      <el-form-item label="Website (Optional)" prop="website">
+        <el-input v-model="form.website" placeholder="e.g., https://www.agency.com" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="handleClose">Cancel</el-button>
+        <el-button type="primary" @click="handleSubmit">
+          {{ isEditMode ? 'Save Changes' : 'Add Agency' }}
+        </el-button>
+      </span>
+    </template>
+  </el-dialog>
+</template>
+
+<script setup lang="ts">
+import { ref, watch, reactive } from 'vue';
+import { ElDialog, ElForm, ElFormItem, ElInput, ElInputNumber, ElSelect, ElOption, ElRate, ElButton, ElMessage } from 'element-plus';
+import type { FormInstance, FormRules } from 'element-plus';
+import { IAgency } from '@/stores/agencies';
+
+const props = defineProps<{
+  visible: boolean;
+  agency?: IAgency | null;
+}>();
+
+const emit = defineEmits(['update:visible', 'save']);
+
+const dialogVisible = ref(props.visible);
+const isEditMode = ref(false);
+const agencyFormRef = ref<FormInstance>();
+
+const defaultForm: IAgency = {
+  id: '',
+  name: '',
+  tagline: '',
+  logo: '',
+  rating: 0,
+  reviewCount: 0,
+  work: '',
+  location: '',
+  budget: 0,
+  size: '',
+};
+
+const form = reactive<IAgency>({ ...defaultForm });
+
+watch(() => props.visible, (newVal) => {
+  dialogVisible.value = newVal;
+  if (newVal) {
+    if (props.agency) {
+      Object.assign(form, props.agency);
+      isEditMode.value = true;
+    } else {
+      Object.assign(form, defaultForm);
+      form.id = Date.now().toString();
+      isEditMode.value = false;
+    }
+  }
+});
+
+const rules = reactive<FormRules<IAgency>>({
+  name: [{ required: true, message: 'Please enter agency name', trigger: 'blur' }],
+  tagline: [{ required: true, message: 'Please enter tagline', trigger: 'blur' }],
+  logo: [{ required: true, message: 'Please enter logo URL', trigger: 'blur' }],
+  work: [{ required: true, message: 'Please select work type', trigger: 'change' }],
+  location: [{ required: true, message: 'Please enter location', trigger: 'blur' }],
+  budget: [{ required: true, message: 'Please enter budget', trigger: 'blur' }],
+  size: [{ required: true, message: 'Please select team size', trigger: 'change' }],
+  rating: [{ required: true, message: 'Please provide a rating', trigger: 'change' }],
+  reviewCount: [{ required: true, message: 'Please enter review count', trigger: 'blur' }],
+});
+
+const handleSubmit = () => {
+  agencyFormRef.value?.validate(async (valid) => {
+    if (valid) {
+      emit('save', { ...form });
+      ElMessage.success(isEditMode.value ? 'Agency updated successfully!' : 'Agency added successfully!');
+      handleClose();
+    } else {
+      ElMessage.error('Please correct the form errors.');
+      return false;
+    }
+  });
+};
+
+const handleClose = () => {
+  dialogVisible.value = false;
+  emit('update:visible', false);
+  agencyFormRef.value?.resetFields();
+};
+</script>
+
+<style scoped>
+.dialog-footer button:first-child {
+  margin-right: 10px;
+}
+</style>

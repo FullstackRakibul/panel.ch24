@@ -3,8 +3,7 @@ const CACHE_NAME = "channel24-v1.0.0"
 const urlsToCache = [
   "/", // Caches index.html
   "/login", // If this is a client-side route, it won't fetch a new file. If it's a server route, it should be a full path.
-  "/manifest.json",
-  "/vite.svg", // Your main icon
+  "/manifest.json" // Your main icon
   // Add your compiled JS, CSS, and other static assets here.
   // These paths will depend on your Vite build output.
   // For example:

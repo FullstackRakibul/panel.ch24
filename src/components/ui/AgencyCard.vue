@@ -9,11 +9,11 @@
           <el-rate v-model="agency.rating" disabled score-template="{value} review" class="mt-1"
             :colors="['#f5be22', '#f5be22', '#f5be22']" />
           <p class="text-sm text-gray-500 mt-0.5">{{ agency.reviewCount }} review{{ agency.reviewCount !== 1 ? 's' : ''
-            }}</p>
+          }}</p>
         </div>
       </div>
       <el-icon class="text-gray-400 hover:text-red-500 cursor-pointer">
-        <StarFilled class="h-5 w-5" />
+        <Star class="h-5 w-5" />
       </el-icon>
     </div>
 
@@ -21,20 +21,20 @@
 
     <div class="space-y-3 text-sm text-gray-600 mb-6">
       <div class="flex items-center gap-2">
-        <Work class="h-4 w-4 text-gray-500" />
-        <span>{{ agency.status }} in Advertising</span>
+        <Briefcase class="h-4 w-4 text-gray-500" />
+        <span>{{ agency.work }} in Advertising</span>
       </div>
       <div class="flex items-center gap-2">
-        <LocationFilled class="h-4 w-4 text-gray-500" />
+        <MapPin class="h-4 w-4 text-gray-500" />
         <span>Located in {{ agency.location }}</span>
       </div>
       <div class="flex items-center gap-2">
-        <Money class="h-4 w-4 text-gray-500" />
-        <span>From {{ agency.budget }} for Advertising</span>
+        <DollarSign class="h-4 w-4 text-gray-500" />
+        <span>From {{ formatCurrency(agency.budget) }} for Advertising</span>
       </div>
       <div class="flex items-center gap-2">
-        <UserFilled class="h-4 w-4 text-gray-500" />
-        <span>{{ agency.members }} members</span>
+        <Users class="h-4 w-4 text-gray-500" />
+        <span>{{ agency.size }} members</span>
       </div>
     </div>
 
@@ -47,34 +47,19 @@
 <script setup lang="ts">
 import { defineProps, defineEmits } from 'vue';
 import { ElCard, ElRate, ElButton, ElIcon } from 'element-plus';
-import { StarFilled, LocationFilled, UserFilled, Money } from '@element-plus/icons-vue';
-// Custom icon for 'Work'. Since Element Plus Icons don't have a direct 'Work' icon,
-// we can either use a generic one or import from another library like Lucide Vue if available.
-// For this example, I'll use a placeholder or assume a suitable one from Element Plus Icons.
-// Let's assume you have 'Briefcase' or similar. If not, use a generic one like 'Setting' or 'Paperclip'
-// or stick to Lucide for more specific icons if you have it installed.
-// For now, let's use a generic El icon or text.
-// If you want 'Briefcase', you would import it from '@element-plus/icons-vue' if it exists.
-// As per the Element Plus Icons site, there isn't a direct 'Work' icon that exactly matches.
-// Let's create a simple wrapper for a "Work" icon if you don't have Lucide, or just use text.
-// For the demo, I'll use a local 'Work' icon to represent a briefcase.
-// If you have `lucide-vue-next` installed, you can use:
-import { Briefcase as Work } from 'lucide-vue-next'; // If you use lucide for more specific icons.
-// Otherwise, fall back to a generic El icon or remove it.
-// For the sake of matching the demo visually, let's assume `Work` exists or use a generic one.
-
+import { Star, MapPin, Users, DollarSign, Briefcase } from 'lucide-vue-next';
 
 interface Agency {
-  id: number;
+  id: string;
   logo: string;
   name: string;
   rating: number;
   reviewCount: number;
   slogan: string;
-  status: string;
+  work: string;
   location: string;
-  budget: string;
-  members: string;
+  budget: number;
+  size: string;
 }
 
 defineProps<{
@@ -82,51 +67,50 @@ defineProps<{
 }>();
 
 defineEmits(['viewProfile']);
+
+const formatCurrency = (value: number) => {
+  return `৳ ${value.toLocaleString('en-BD')}`;
+};
 </script>
 
 <style scoped>
 .agency-card {
-  @apply rounded-xl p-6 border-0;
-  /* Adjust padding and remove default border */
+  @apply rounded-xl p-6 border border-gray-200 shadow-sm bg-white;
+  transition: all 0.2s ease-in-out;
+}
+
+.agency-card:hover {
+  @apply shadow-md border-gray-300;
 }
 
 /* Customizing El-Rate stars */
 :deep(.el-rate__icon) {
   font-size: 14px !important;
-  /* Smaller stars */
   margin-right: 2px !important;
-  /* Closer together */
 }
 
 :deep(.el-rate__text) {
   @apply text-sm text-gray-500 !important;
-  /* Styling for the review text */
 }
 
 .agency-card-button {
   @apply rounded-lg font-semibold;
-  /* Adjust button border-radius */
-  background-color: #e0e7ff;
-  /* Lighter blue background similar to demo */
-  color: #3f51b5;
-  /* Darker blue text */
-  border: 1px solid #c5cae9;
-  /* Light border */
+  background-color: var(--ch24-primary);
+  color: white;
+  border: 1px solid var(--ch24-primary);
   transition: all 0.2s ease-in-out;
 }
 
 .agency-card-button:hover {
-  background-color: #c5cae9;
-  /* Darker hover */
-  color: #2c387e;
-  border-color: #9fa8da;
+  background-color: var(--ch24-primary-dark);
+  border-color: var(--ch24-primary-dark);
 }
 
 /* Override Element Plus default button hover/focus if necessary */
 :deep(.el-button.is-hover),
 :deep(.el-button:focus) {
-  background-color: #c5cae9 !important;
-  color: #2c387e !important;
-  border-color: #9fa8da !important;
+  background-color: var(--ch24-primary-dark) !important;
+  color: white !important;
+  border-color: var(--ch24-primary-dark) !important;
 }
 </style>
