@@ -25,14 +25,14 @@ onMounted(async () => {
     themeStore.initializeTheme()
 
     // Register service worker for PWA (only in production)
-    if ('serviceWorker' in navigator && import.meta.env.PROD) {
-      try {
-        const registration = await navigator.serviceWorker.register('/sw.js')
-        console.log('SW registered: ', registration)
-      } catch (registrationError) {
-        console.log('SW registration failed: ', registrationError)
-      }
-    }
+    // if ('serviceWorker' in navigator && import.meta.env.PROD) {
+    //   try {
+    //     const registration = await navigator.serviceWorker.register('/sw.js')
+    //     console.log('SW registered: ', registration)
+    //   } catch (registrationError) {
+    //     console.log('SW registration failed: ', registrationError)
+    //   }
+    // }
   } catch (error) {
     console.error('App initialization error:', error)
   }
