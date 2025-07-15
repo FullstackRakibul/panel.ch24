@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { onMounted, computed, onErrorCaptured } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { useThemeStore } from '@/stores/theme'
-import Sidebar from '@/layouts/Sidebar.vue'
-import HeaderComponent from '@/layouts/HeaderComponent.vue'
+import { useAuthStore } from './stores/auth'
+import { useThemeStore } from './stores/theme'
+import Sidebar from './layouts/Sidebar.vue'
+import HeaderComponent from './layouts/HeaderComponent.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
