@@ -1,7 +1,6 @@
 <template>
   <div class="agencies-container">
-    <!-- Page Header -->
-    <div class="page-header">
+    <div class="page-header ">
       <div class="header-content">
         <h1 class="page-title">Advertising Agencies</h1>
         <p class="page-subtitle">Manage all your advertising agency partners</p>
@@ -14,7 +13,6 @@
       </el-button>
     </div>
 
-    <!-- Control Bar (as an ElCard) -->
     <el-card class="control-bar-card" shadow="never">
       <template #header>
         <div class="card-header">
@@ -60,9 +58,8 @@
         </div>
       </template>
 
-      <!-- Agency Display Area -->
-      <div v-loading="agenciesStore.loading" class="min-h-[300px] flex items-center justify-center">
-        <div v-if="agenciesStore.filteredAndSortedAgencies.length > 0">
+      <div v-loading="agenciesStore.loading" class="min-h-[300px] flex flex-col">
+        <div v-if="agenciesStore.filteredAndSortedAgencies.length > 0" class="flex-1">
           <div v-if="viewType === 'grid'"
             class="agencies-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <AgencyCard v-for="agency in agenciesStore.filteredAndSortedAgencies" :key="agency.id" :agency="agency"
@@ -70,56 +67,57 @@
           </div>
 
           <div v-else class="agencies-list bg-white rounded-xl overflow-hidden">
-            <el-table :data="agenciesStore.filteredAndSortedAgencies" style="width: 100%" stripe>
-              <el-table-column prop="name" label="Agency Name" sortable>
-                <template #default="{ row }">
-                  <div class="flex items-center gap-3">
-                    <img :src="row.logo" :alt="row.name"
-                      class="w-10 h-10 rounded-md object-contain border border-gray-100 p-0.5" />
-                    <span class="font-medium text-gray-800">{{ row.name }}</span>
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column prop="tagline" label="Tagline" min-width="150" />
-              <el-table-column prop="location" label="Location" sortable />
-              <el-table-column prop="work" label="Work Type" sortable />
-              <el-table-column prop="budget" label="Budget" sortable align="right">
-                <template #default="{ row }">
-                  {{ formatCurrency(row.budget) }}
-                </template>
-              </el-table-column>
-              <el-table-column prop="rating" label="Rating" sortable align="center">
-                <template #default="{ row }">
-                  <el-rate v-model="row.rating" disabled size="small" :colors="['#f5be22', '#f5be22', '#f5be22']" />
-                  <span class="text-xs text-gray-500 ml-1">({{ row.reviewCount }})</span>
-                </template>
-              </el-table-column>
-              <el-table-column label="Actions" width="180" fixed="right" align="center">
-                <template #default="{ row }">
-                  <div class="action-buttons">
-                    <el-button type="primary" link @click="handleViewProfile(row.id)" :icon="Eye" size="small">
-                      View
-                    </el-button>
-                    <el-button type="success" link @click="openEditAgencyModal(row)" :icon="Edit" size="small">
-                      Edit
-                    </el-button>
-                    <el-button type="danger" link @click="handleDeleteAgency(row.id)" :icon="Trash2" size="small">
-                      Delete
-                    </el-button>
-                  </div>
-                </template>
-              </el-table-column>
-            </el-table>
+            <div class="table-responsive-wrapper">
+              <el-table :data="agenciesStore.filteredAndSortedAgencies" style="width: 100%" stripe>
+                <el-table-column prop="name" label="Agency Name" sortable>
+                  <template #default="{ row }">
+                    <div class="flex items-center gap-3">
+                      <img :src="row.logo" :alt="row.name"
+                        class="w-10 h-10 rounded-md object-contain border border-gray-100 p-0.5" />
+                      <span class="font-medium text-gray-800">{{ row.name }}</span>
+                    </div>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="tagline" label="Tagline" min-width="150" />
+                <el-table-column prop="location" label="Location" sortable />
+                <el-table-column prop="work" label="Work Type" sortable />
+                <el-table-column prop="budget" label="Budget" sortable align="right">
+                  <template #default="{ row }">
+                    {{ formatCurrency(row.budget) }}
+                  </template>
+                </el-table-column>
+                <el-table-column prop="rating" label="Rating" sortable align="center">
+                  <template #default="{ row }">
+                    <el-rate v-model="row.rating" disabled size="small" :colors="['#f5be22', '#f5be22', '#f5be22']" />
+                    <span class="text-xs text-gray-500 ml-1">({{ row.reviewCount }})</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="Actions" width="250" fixed="right" align="center">
+                  <template #default="{ row }">
+                    <div class="action-buttons">
+                      <el-button type="primary" link @click="handleViewProfile(row.id)" :icon="Eye" size="small">
+                        View
+                      </el-button>
+                      <el-button type="success" link @click="openEditAgencyModal(row)" :icon="Edit" size="small">
+                        Edit
+                      </el-button>
+                      <el-button type="danger" link @click="handleDeleteAgency(row.id)" :icon="Trash2" size="small">
+                        Delete
+                      </el-button>
+                    </div>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
           </div>
         </div>
-        <div v-else class="flex flex-col items-center justify-center py-12 bg-white rounded-xl shadow-sm w-full">
+        <div v-else class="flex flex-col items-center justify-center py-12 bg-white rounded-xl shadow-sm w-full flex-1">
           <el-empty description="No agencies found matching your criteria." />
           <el-button type="primary" @click="openAddAgencyModal" class="mt-4">Add First Agency</el-button>
         </div>
       </div>
     </el-card>
 
-    <!-- Agency Modal -->
     <AgencyModal :visible="isAgencyModalVisible" :agency="currentAgency" @update:visible="isAgencyModalVisible = $event"
       @save="handleSaveAgency" />
   </div>
@@ -235,7 +233,7 @@ const AgencyCard = {
 
 const agenciesStore = useAgenciesStore();
 
-const viewType = ref<'grid' | 'list'>('list');
+const viewType = ref<'grid' | 'list'>('list'); // Default to list view for better table visibility
 
 const isAgencyModalVisible = ref(false);
 const currentAgency = ref<IAgency | null>(null);
@@ -327,129 +325,198 @@ const formatCurrency = (value: number) => {
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 .agencies-container {
-  @apply p-6 bg-gray-50 min-h-screen;
+  padding: 1.5rem;
+  background-color: #f9fafb;
+  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
 }
 
 /* Page Header styles - consistent with Invoices.vue */
 .page-header {
-  @apply flex flex-col md:flex-row items-start md:items-center justify-between mb-8;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 2rem;
 }
 
 .header-content {
-  @apply flex-1;
+  flex: 1;
 }
 
 .page-title {
-  @apply text-3xl font-bold text-gray-800 mb-2 md:mb-0;
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
 }
 
 .page-subtitle {
-  @apply text-base text-gray-600;
+  font-size: 1rem;
+  color: #4b5563;
 }
 
 .el-button.el-button--large {
-  @apply px-6 py-3 rounded-lg text-base;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
 }
 
 /* Control Bar Card styles - consistent with Invoices.vue card header */
 .control-bar-card {
   --el-card-padding: 24px;
-  @apply rounded-xl shadow-md mb-6 bg-white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  margin-bottom: 1.5rem;
+  background-color: #ffffff;
 }
 
 .control-bar-card :deep(.el-card__header) {
-  @apply py-4 px-6 border-b border-gray-100;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
 }
 
 .control-bar-card .card-header {
-  @apply flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
 }
 
 .control-bar-card h3 {
-  @apply text-lg font-semibold text-gray-800 m-0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
 }
 
 .control-bar-card .header-actions {
-  @apply flex flex-wrap gap-5 items-center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
 }
 
 .control-input,
 .control-select {
-  @apply w-full sm:w-auto flex-1 max-w-[600px];
+  width: 100%;
+  flex: 1;
 }
 
 .control-input :deep(.el-input__wrapper),
 .control-select :deep(.el-select__wrapper) {
-  @apply rounded-lg border border-gray-200 shadow-none px-3 py-2.5;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
   box-shadow: none !important;
+  padding: 0.625rem 0.75rem;
 }
 
 .control-input :deep(.el-input__wrapper.is-focus),
 .control-select :deep(.el-select__wrapper.is-focused) {
-  @apply border-blue-500 ring-2 ring-blue-500/20;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 .clear-filters-button {
-  @apply rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors;
+  border-radius: 0.5rem;
+  color: #4b5563;
+  transition-property: background-color, color;
+  transition-duration: 0.15s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clear-filters-button:hover {
+  background-color: #f3f4f6;
+  color: #1f2937;
 }
 
 .view-toggle :deep(.el-radio-button__inner) {
-  @apply rounded-lg border border-gray-300 bg-white text-gray-700 px-4 py-2;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+  background-color: #ffffff;
+  color: #374151;
+  padding: 0.5rem 1rem;
   box-shadow: none !important;
 }
 
 .view-toggle :deep(.el-radio-button__orig-radio:checked+.el-radio-button__inner) {
-  @apply bg-blue-600 border-blue-600 text-white;
+  background-color: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
 }
 
 .view-toggle :deep(.el-radio-button__orig-radio:checked+.el-radio-button__inner:hover) {
-  @apply bg-blue-700 border-blue-700;
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
 }
 
 /* Agency Card Styling (for grid view) */
 .agency-card {
-  @apply bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6;
+  background-color: #ffffff;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition-property: box-shadow;
+  transition-duration: 0.3s;
+  padding: 1.5rem;
   --el-card-padding: 0px;
-  /* Reset Element Plus default padding */
+}
+
+.agency-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .agency-card :deep(.el-card__body) {
-  @apply p-0;
-  /* Ensure internal padding is handled by Tailwind classes */
+  padding: 0;
 }
 
 /* Table Styling (for list view) - consistent with Invoices.vue table */
 .agencies-list {
-  @apply bg-white rounded-xl overflow-hidden;
+  background-color: #ffffff;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+/* New wrapper for table to handle overflow and ensure full width */
+.table-responsive-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 :deep(.el-table) {
-  @apply rounded-xl;
+  border-radius: 0.75rem;
+  min-width: 800px;
 }
 
 :deep(.el-table th.el-table__cell) {
-  @apply bg-gray-100 text-gray-700 font-semibold py-3 px-4;
+  background-color: #f3f4f6;
+  color: #374151;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
 }
 
 :deep(.el-table td.el-table__cell) {
-  @apply text-gray-700 py-3 px-4;
+  color: #374151;
+  padding: 0.75rem 1rem;
 }
 
 :deep(.el-table__row--striped td.el-table__cell) {
-  @apply bg-gray-50;
+  background-color: #f9fafb;
 }
 
 :deep(.el-table__row:hover) {
-  @apply bg-gray-100;
+  background-color: #f3f4f6;
 }
 
 .action-buttons {
-  @apply flex gap-2 justify-center;
-  /* Center actions in table */
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
 }
 
 .el-button.el-button--link.el-button--small {
-  @apply text-sm font-medium;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
 .mr-2 {
@@ -458,35 +525,52 @@ const formatCurrency = (value: number) => {
 
 /* Responsive adjustments */
 @media (max-width: 1024px) {
-  .control-bar-card .header-actions {
-    @apply flex-col items-stretch;
+  .page-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .page-title {
+    margin-bottom: 0;
+  }
+
+  .control-bar-card .card-header {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .control-input,
   .control-select {
-    @apply max-w-full;
+    max-width: 100%;
   }
 }
 
 @media (max-width: 768px) {
   .agencies-container {
-    @apply p-4;
+    padding: 1rem;
   }
 
   .page-header {
-    @apply flex-col gap-4 items-stretch;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
   }
 
   .page-title {
-    @apply text-2xl;
+    font-size: 1.5rem;
   }
 
   .control-bar-card .card-header {
-    @apply flex-col items-stretch;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .action-buttons {
-    @apply flex-col items-start;
+    flex-direction: column;
+    align-items: flex-start;
   }
+
+
 }
 </style>

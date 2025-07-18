@@ -1,13 +1,6 @@
 <template>
-  <el-aside :width="themeStore.sidebarCollapsed ? '85px' : '280px'" class="sidebar-container"
-    :class="{ 'mobile-open': mobileSidebarOpen }">
-    <!-- Mobile Toggle Button (Hamburger Menu) -->
-    <div class="mobile-toggle" @click="toggleMobileSidebar">
-      <el-icon :size="24">
-        <Menu />
-      </el-icon>
-    </div>
-
+  <!-- Desktop Sidebar -->
+  <el-aside v-if="!isMobile" :width="themeStore.sidebarCollapsed ? '85px' : '280px'" class="sidebar-container">
     <!-- Header Section -->
     <div class="sidebar-header">
       <div class="header-content" :class="{ 'collapsed': themeStore.sidebarCollapsed }">
@@ -49,7 +42,6 @@
                   <el-icon class="nav-icon">
                     <component :is="item.icon" />
                   </el-icon>
-                  <!-- Label and Badge only visible when not collapsed -->
                   <span v-if="!themeStore.sidebarCollapsed" class="nav-label">{{ item.name }}</span>
                   <el-tag v-if="item.badge && !themeStore.sidebarCollapsed" :type="item.badgeType || 'warning'"
                     size="small" class="nav-badge">
@@ -105,51 +97,6 @@
             </router-link>
           </nav>
         </div>
-
-        <!-- Invoice Submenu - Always present, content adjusts -->
-        <!-- <div class="nav-group">
-          <div v-if="!themeStore.sidebarCollapsed" class="section-header">
-            <span class="section-title">INVOICES</span>
-          </div>
-
-          <nav class="nav-menu">
-            <router-link to="/invoices/create" class="nav-item"
-              :class="{ 'active': $route.path.startsWith('/invoices/create') }">
-              <el-tooltip v-if="themeStore.sidebarCollapsed" content="Create Invoice" placement="right"
-                :show-after="300">
-                <div class="nav-content">
-                  <el-icon class="nav-icon">
-                    <Plus />
-                  </el-icon>
-                  <span v-if="!themeStore.sidebarCollapsed" class="nav-label">Create Invoice</span>
-                </div>
-              </el-tooltip>
-              <div v-else class="nav-content">
-                <el-icon class="nav-icon">
-                  <Plus />
-                </el-icon>
-                <span class="nav-label">Create Invoice</span>
-              </div>
-            </router-link>
-            <router-link to="/invoices" class="nav-item"
-              :class="{ 'active': $route.path === '/invoices' || ($route.path.startsWith('/invoices/') && $route.path !== '/invoices/create') }">
-              <el-tooltip v-if="themeStore.sidebarCollapsed" content="Invoice List" placement="right" :show-after="300">
-                <div class="nav-content">
-                  <el-icon class="nav-icon">
-                    <List />
-                  </el-icon>
-                  <span v-if="!themeStore.sidebarCollapsed" class="nav-label">Invoice List</span>
-                </div>
-              </el-tooltip>
-              <div v-else class="nav-content">
-                <el-icon class="nav-icon">
-                  <List />
-                </el-icon>
-                <span class="nav-label">Invoice List</span>
-              </div>
-            </router-link>
-          </nav>
-        </div> -->
 
         <!-- System Section - Always present, content adjusts -->
         <div class="nav-group">
@@ -246,10 +193,156 @@
     <el-button :icon="themeStore.sidebarCollapsed ? Expand : Fold" circle size="medium" class="collapse-toggle"
       @click="themeStore.toggleSidebar" />
   </el-aside>
+
+  <!-- Mobile Drawer Sidebar -->
+  <el-drawer v-if="isMobile" :model-value="props.mobileSidebarOpen" direction="ltr" :with-header="false" size="280px"
+    @update:model-value="newValue => emit('update:mobileSidebarOpen', newValue)">
+    <div class="sidebar-container-mobile">
+      <!-- Header Section (Mobile) -->
+      <div class="sidebar-header">
+        <div class="header-content">
+          <div class="brand-section">
+            <div class="logo-wrapper">
+              <img src="@/assets/CH24.png" alt="Channel 24" class="logo-image" />
+              <div class="brand-info">
+                <h1 class="brand-title">Channel 24</h1>
+                <p class="brand-subtitle">Billing System</p>
+              </div>
+            </div>
+          </div>
+          <div class="search-section">
+            <el-input v-model="searchQuery" placeholder="Search" :prefix-icon="Search" size="large"
+              class="sidebar-search" clearable />
+            <div class="search-shortcut">Ctrl+D</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Menu (Mobile) -->
+      <div class="nav-section">
+        <el-scrollbar class="nav-scrollbar">
+          <!-- General Section -->
+          <div class="nav-group">
+            <div class="section-header">
+              <span class="section-title">GENERAL</span>
+            </div>
+            <nav class="nav-menu">
+              <router-link v-for="item in generalItems" :key="item.path" :to="item.path" class="nav-item"
+                :class="{ 'active': isActiveRoute(item.path) }" @click="closeMobileSidebar">
+                <div class="nav-content">
+                  <el-icon class="nav-icon">
+                    <component :is="item.icon" />
+                  </el-icon>
+                  <span class="nav-label">{{ item.name }}</span>
+                  <el-tag v-if="item.badge" :type="item.badgeType || 'warning'" size="small" class="nav-badge">
+                    {{ item.badge }}
+                  </el-tag>
+                </div>
+              </router-link>
+            </nav>
+          </div>
+
+          <!-- Management Section -->
+          <div class="nav-group">
+            <div class="section-header">
+              <span class="section-title">MANAGEMENT</span>
+            </div>
+            <nav class="nav-menu">
+              <router-link v-for="item in managementItems" :key="item.path" :to="item.path" class="nav-item"
+                :class="{ 'active': isActiveRoute(item.path) }" @click="closeMobileSidebar">
+                <div class="nav-content">
+                  <el-icon class="nav-icon">
+                    <component :is="item.icon" />
+                  </el-icon>
+                  <span class="nav-label">{{ item.name }}</span>
+                  <el-tag v-if="item.badge" :type="item.badgeType || 'warning'" size="small" class="nav-badge">
+                    {{ item.badge }}
+                  </el-tag>
+                </div>
+              </router-link>
+            </nav>
+          </div>
+
+          <!-- System Section -->
+          <div class="nav-group">
+            <div class="section-header">
+              <span class="section-title">SYSTEM</span>
+            </div>
+            <nav class="nav-menu">
+              <router-link v-for="item in systemItems" :key="item.path" :to="item.path" class="nav-item"
+                :class="{ 'active': isActiveRoute(item.path) }" @click="closeMobileSidebar">
+                <div class="nav-content">
+                  <el-icon class="nav-icon">
+                    <component :is="item.icon" />
+                  </el-icon>
+                  <span class="nav-label">{{ item.name }}</span>
+                  <el-tag v-if="item.badge" :type="item.badgeType || 'warning'" size="small" class="nav-badge">
+                    {{ item.badge }}
+                  </el-tag>
+                </div>
+              </router-link>
+            </nav>
+          </div>
+        </el-scrollbar>
+      </div>
+
+      <!-- User Profile Section (Mobile) -->
+      <div class="user-section">
+        <div class="user-content">
+          <el-dropdown trigger="click" placement="top-start" @command="handleUserCommand">
+            <div class="user-profile">
+              <el-avatar :size="36" class="user-avatar">
+                <img :src="currentUser.avatar" alt="User Avatar" />
+              </el-avatar>
+              <div class="user-info">
+                <div class="user-name">{{ currentUser.name }}</div>
+                <div class="user-status">
+                  <div class="status-indicator online"></div>
+                  <span class="status-text">Online</span>
+                </div>
+              </div>
+              <el-icon class="dropdown-arrow">
+                <ArrowUp />
+              </el-icon>
+            </div>
+
+            <template #dropdown>
+              <el-dropdown-menu class="user-dropdown">
+                <el-dropdown-item command="profile">
+                  <el-icon>
+                    <UserFilled />
+                  </el-icon>
+                  <span>Profile Settings</span>
+                </el-dropdown-item>
+                <el-dropdown-item command="settings">
+                  <el-icon>
+                    <Setting />
+                  </el-icon>
+                  <span>Account Settings</span>
+                </el-dropdown-item>
+                <el-dropdown-item command="help">
+                  <el-icon>
+                    <QuestionFilled />
+                  </el-icon>
+                  <span>Help & Support</span>
+                </el-dropdown-item>
+                <el-dropdown-item divided command="logout" class="logout-item">
+                  <el-icon>
+                    <SwitchButton />
+                  </el-icon>
+                  <span>Sign Out</span>
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+      </div>
+    </div>
+  </el-drawer>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
@@ -258,7 +351,7 @@ import {
   User,
   OfficeBuilding,
   Calendar,
-  Document,
+  Document, // Assuming Document is used for Invoices
   CreditCard,
   DataAnalysis,
   Van,
@@ -277,13 +370,18 @@ import {
   Menu // Hamburger icon for mobile
 } from '@element-plus/icons-vue'
 
+const props = defineProps<{
+  mobileSidebarOpen: boolean;
+}>();
+
+const emit = defineEmits(['update:mobileSidebarOpen']); // Ensure emit is defined
+
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
 
 const searchQuery = ref('')
-const mobileSidebarOpen = ref(false) // State to control mobile sidebar visibility
 
 const currentUser = computed(() => authStore.user || {
   name: 'Admin User',
@@ -291,6 +389,21 @@ const currentUser = computed(() => authStore.user || {
   role: 'Administrator',
   avatar: 'https://assets-v2.lottiefiles.com/a/82411e66-1184-11ee-8cfa-d707e53cae38/bccvxj7Ogv.gif'
 })
+
+// Determine if on mobile based on window width
+const isMobile = ref(window.innerWidth <= 768);
+
+const updateIsMobile = () => {
+  isMobile.value = window.innerWidth <= 768;
+};
+
+onMounted(() => {
+  window.addEventListener('resize', updateIsMobile);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateIsMobile);
+});
 
 // Navigation items
 const generalItems = [
@@ -319,7 +432,7 @@ const managementItems = [
   { name: 'Clients', path: '/clients', icon: User, badge: undefined, badgeType: undefined },
   { name: 'Agencies', path: '/agencies', icon: OfficeBuilding, badge: undefined, badgeType: undefined },
   { name: 'Ad Bookings', path: '/ad-bookings', icon: Calendar, badge: undefined, badgeType: undefined },
-  { name: 'Invoices', path: '/invoices', icon: List, badge: undefined, badgeType: undefined },
+  { name: 'Invoices', path: '/invoices', icon: Document, badge: undefined, badgeType: undefined }, // Changed to Document for Invoices
   {
     name: 'Payments',
     path: '/payments',
@@ -344,18 +457,10 @@ const isActiveRoute = (path: string) => {
   return route.path === path || route.path.startsWith(path + '/')
 }
 
-// Toggle mobile sidebar visibility
-const toggleMobileSidebar = () => {
-  mobileSidebarOpen.value = !mobileSidebarOpen.value
-  document.body.classList.toggle('sidebar-open', mobileSidebarOpen.value) // Add/remove class to body for overlay/scroll lock
-}
-
-// Close mobile sidebar when a route changes
-watch(route, () => {
-  if (mobileSidebarOpen.value) {
-    toggleMobileSidebar();
-  }
-});
+// Close mobile sidebar (emits to parent)
+const closeMobileSidebar = () => {
+  emit('update:mobileSidebarOpen', false);
+};
 
 const handleUserCommand = (command: string) => {
   switch (command) {
@@ -374,6 +479,15 @@ const handleUserCommand = (command: string) => {
       break
   }
 }
+
+// Add a watch to log prop changes for debugging
+watch(() => props.mobileSidebarOpen, (newValue) => {
+  console.log('Sidebar: mobileSidebarOpen prop changed to', newValue);
+}, { immediate: true }); // Use immediate: true to run on component mount too
+
+watch(isMobile, (newValue) => {
+  console.log('Sidebar: isMobile changed to', newValue);
+});
 </script>
 
 <style scoped>
@@ -391,26 +505,15 @@ const handleUserCommand = (command: string) => {
   overflow: hidden;
   font-family: 'Poppins', sans-serif;
   z-index: 999;
-  /* Ensure sidebar is above main content */
 }
 
-/* Mobile Toggle Button (Hamburger) */
-.mobile-toggle {
-  display: none;
-  /* Hidden by default on desktop */
-  position: fixed;
-  /* Fixed position so it's always visible */
-  top: 16px;
-  left: 16px;
-  z-index: 1500;
-  /* Higher than sidebar */
-  cursor: pointer;
-  padding: 8px;
+/* Mobile Drawer Specific Container */
+.sidebar-container-mobile {
   background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  color: #A02408;
-  /* Icon color */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Poppins', sans-serif;
 }
 
 /* Header Section */
@@ -510,7 +613,7 @@ const handleUserCommand = (command: string) => {
   transform: translateY(-50%);
   font-size: 11px;
   color: #9ca3af;
-  background: #f3f4f6;
+  background-color: #f3f4f6;
   padding: 2px 6px;
   border-radius: 4px;
   font-weight: 500;
@@ -572,11 +675,8 @@ const handleUserCommand = (command: string) => {
 /* Adjust gap and padding for collapsed state */
 .sidebar-container.is-collapsed .nav-content {
   gap: 0;
-  /* Remove gap when collapsed */
   justify-content: center;
-  /* Center icons when collapsed */
   padding: 12px 0;
-  /* Adjust padding for collapsed icons */
 }
 
 .nav-item:hover .nav-content {
@@ -615,7 +715,6 @@ const handleUserCommand = (command: string) => {
   white-space: nowrap;
   flex: 1;
   overflow: hidden;
-  /* Hide overflow when collapsed */
 }
 
 .nav-badge {
@@ -729,10 +828,8 @@ const handleUserCommand = (command: string) => {
   position: absolute;
   top: 20px;
   right: -2px;
-  /* Positioned outside for better visibility */
   z-index: 100;
-  /* Ensure it's above other elements */
-  background: #ffffff;
+  background-color: #ffffff;
   border: 1px solid #e5e7eb;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --el-button-text-color: #6b7280;
@@ -740,7 +837,6 @@ const handleUserCommand = (command: string) => {
   --el-button-hover-bg-color: #f9fafb;
   --el-button-border-color: #e5e7eb;
   transition: all 0.9s ease;
-  /* Smooth transition */
 }
 
 /* User Dropdown */
@@ -789,7 +885,7 @@ const handleUserCommand = (command: string) => {
 
 /* Dark mode styles */
 .dark .sidebar-container {
-  background: #1f2937;
+  background-color: #1f2937;
   border-right-color: #374151;
 }
 
@@ -828,7 +924,7 @@ const handleUserCommand = (command: string) => {
 }
 
 .dark .collapse-toggle {
-  background: #374151;
+  background-color: #374151;
   border-color: #4b5563;
 }
 
@@ -840,55 +936,6 @@ const handleUserCommand = (command: string) => {
 .dark .sidebar-search :deep(.el-input__wrapper.is-focus) {
   background-color: #4b5563;
   border-color: #A02408;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .sidebar-container {
-    position: fixed;
-    left: 0;
-    top: 0;
-    z-index: 1000;
-    transform: translateX(-100%);
-    /* Hidden by default */
-    transition: transform 0.3s ease;
-    width: 280px;
-    /* Fixed width for mobile sidebar */
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-    /* Shadow for mobile sidebar */
-  }
-
-  .sidebar-container.mobile-open {
-    transform: translateX(0);
-    /* Show when open */
-  }
-
-  .mobile-toggle {
-    display: block;
-    /* Show hamburger on mobile */
-  }
-
-  .collapse-toggle {
-    display: none;
-    /* Hide desktop collapse toggle on mobile */
-  }
-
-  /* When mobile sidebar is open, prevent body scroll and add overlay */
-  body.sidebar-open {
-    overflow: hidden;
-  }
-
-  body.sidebar-open::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 998;
-    /* Below sidebar, above content */
-  }
 }
 
 /* Scrollbar styling */
