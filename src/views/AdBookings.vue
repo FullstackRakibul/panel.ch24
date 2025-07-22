@@ -161,9 +161,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { useContractsStore, type Contract } from '@/stores/contracts'
-import ContractModal from '@/components/forms/ContractModal.vue'
-import ContractViewModal from '@/components/modals/ContractViewModal.vue'
+import { useContractsStore, type Contract } from '../stores/contracts'
+import ContractModal from '../components/forms/ContractModal.vue'
+import ContractViewModal from '../components/modals/ContractViewModal.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Plus,

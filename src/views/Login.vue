@@ -110,7 +110,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '../stores/auth'
 import { MessageSquare, Lock } from 'lucide-vue-next'
 import { ElForm, ElFormItem, ElInput, ElButton, ElCheckbox, ElAlert, type FormInstance } from 'element-plus'
 import 'element-plus/es/components/message/style/css' // Import ElMessage styles if you use it elsewhere

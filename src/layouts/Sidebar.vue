@@ -299,13 +299,13 @@ const generalItems = [
     path: '/',
     icon: HomeFilled,
   },
-  {
-    name: 'To-do List',
-    path: '/todo',
-    icon: List,
-    badge: 'Comming Soon',
-    badgeType: 'warning',
-  },
+  // {
+  //   name: 'To-do List',
+  //   path: '/todo',
+  //   icon: List,
+  //   badge: 'Comming Soon',
+  //   badgeType: 'warning',
+  // },
   {
     name: 'Goals',
     path: '/goals',
