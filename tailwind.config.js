@@ -5,7 +5,7 @@ module.exports = {
     "./index.html",
     "./src/**/*.{vue,js,ts,jsx,tsx}",
     // This path is crucial for shadcn/ui components if they are in your root or other directories
-    "*.{js,ts,jsx,tsx,mdx}",
+    "*.{js,ts,jsx,tsx,mdx,vue}",
   ],
   darkMode: "class",
   theme: {

@@ -110,7 +110,7 @@
                 </el-icon>
                 <span>Dark Mode</span>
               </div>
-              <el-switch v-model="themeStore.isDark" size="small" />
+              <el-switch :model-value="themeStore.isDark" @change="themeStore.toggleTheme" size="small" />
             </el-dropdown-item>
             <el-dropdown-item divided command="logout" class="user-menu-item logout-item">
               <el-icon class="menu-icon">
@@ -128,9 +128,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
-import { useThemeStore } from '../stores/theme'
-import { useClientsStore } from '../stores/clients' // Assuming you have this store
+import { useAuthStore } from '@/stores/auth'
+import { useThemeStore } from '@/stores/theme'
+import { useClientsStore } from '@/stores/clients' // Assuming you have this store
 import {
   Search,
   Bell,
