@@ -9,10 +9,10 @@
             <User class="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 class="text-xl font-bold text-gray-900">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">
               {{ isEdit ? 'Edit Client' : 'Create New Client' }}
             </h2>
-            <p class="text-sm text-gray-600">
+            <p class="text-sm text-gray-900 dark:text-white">
               {{ isEdit ? 'Update client information below' : 'Fill in the details to add a new client' }}
             </p>
           </div>
@@ -25,10 +25,10 @@
       <div class="form-section">
         <div class="section-header">
           <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-              <User class="w-4 h-4 text-blue-600" />
+            <div class="w-8 h-8 bg-blue-50 flex items-center justify-center rounded-full">
+              <User class="w-4 h-4 text-blue-600 " />
             </div>
-            <h3 class="text-lg font-semibold text-gray-900">Basic Information</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Basic Information</h3>
           </div>
         </div>
 
@@ -89,10 +89,10 @@
       <div class="form-section">
         <div class="section-header">
           <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
+            <div class="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center ">
               <MapPin class="w-4 h-4 text-green-600" />
             </div>
-            <h3 class="text-lg font-semibold text-gray-900">Address Information</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Address Information</h3>
           </div>
         </div>
 
@@ -180,10 +180,10 @@
       <div class="form-section">
         <div class="section-header">
           <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center">
+            <div class="w-8 h-8 bg-purple-50 rounded-full flex items-center justify-center">
               <Building2 class="w-4 h-4 text-purple-600" />
             </div>
-            <h3 class="text-lg font-semibold text-gray-900">Client Classification</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Client Classification</h3>
           </div>
         </div>
 
@@ -214,10 +214,10 @@
       <div class="form-section">
         <div class="section-header">
           <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center">
+            <div class="w-8 h-8 bg-orange-50 rounded-full flex items-center justify-center">
               <FileText class="w-4 h-4 text-orange-600" />
             </div>
-            <h3 class="text-lg font-semibold text-gray-900">Additional Information</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Additional Information</h3>
           </div>
         </div>
 
@@ -274,7 +274,7 @@
 import { ref, watch, computed } from 'vue'
 import type { FormInstance, UploadFile, UploadFiles } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import type { Client } from '@/stores/clients'
+import type { Client } from '../../stores/clients'
 import {
   Flag 
 } from '@element-plus/icons-vue'
