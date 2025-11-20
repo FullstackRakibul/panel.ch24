@@ -328,8 +328,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { useClientsStore, type Client } from '@/stores/clients'
-import ClientModal from '@/components/forms/ClientModal.vue'
+import { useClientsStore, type Client } from '../stores/clients'
+import ClientModal from '../components/forms/ClientModal.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Plus,

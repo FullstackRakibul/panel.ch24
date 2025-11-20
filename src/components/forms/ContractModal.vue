@@ -1,10 +1,10 @@
 <template>
-  <el-dialog v-model="dialogVisible" :title="isEdit ? 'Edit Contract' : 'Create New Contract'" width="900px"
-    :close-on-click-modal="false" :close-on-press-escape="false" class="contract-modal" top="5vh">
+  <el-dialog v-model="dialogVisible" :title="isEdit ? 'Edit Contract' : 'Add New Contract / Booking info.'"
+    width="900px" :close-on-click-modal="false" :close-on-press-escape="false" class="contract-modal font-sans"
+    top="5vh">
     <el-form ref="formRef" :model="form" :rules="rules" label-position="top" size="default" class="contract-form">
       <!-- Basic Information -->
       <div class="form-section">
-        <h3 class="section-title">Contract Information</h3>
         <el-row :gutter="16">
           <el-col :span="8">
             <el-form-item label="Contract No" prop="contractNo">
@@ -200,12 +200,12 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import type { FormInstance } from 'element-plus'
-import type { Contract } from '@/stores/contracts'
+import type * as _ from "../../stores/contracts"
 import { Plus, Minus } from 'lucide-vue-next'
 
 interface Props {
   modelValue: boolean
-  contract?: Contract | null
+  contract?: _.Contract | null
   isEdit?: boolean
   loading?: boolean
 }
@@ -218,7 +218,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  save: [contract: Contract]
+  save: [contract: _.Contract]
 }>()
 
 const formRef = ref<FormInstance>()
@@ -227,7 +227,7 @@ const dialogVisible = computed({
   set: (value) => emit('update:modelValue', value)
 })
 
-const form = ref<Contract>({
+const form = ref<_.Contract>({
   contractNo: '',
   contractDate: '',
   clientCopy: true,

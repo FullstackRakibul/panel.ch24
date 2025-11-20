@@ -191,7 +191,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { Contract } from '@/stores/contracts'
+import type { Contract } from '../../stores/contracts'
 import { Printer } from 'lucide-vue-next'
 
 interface Props {
