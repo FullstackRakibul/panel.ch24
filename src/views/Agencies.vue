@@ -117,16 +117,35 @@
         </div>
       </div>
     </el-card>
+    <el-button type="primary" @click="openAddAgencyModal" class="mt-4">Fetch Agency</el-button>
 
-    <AgencyModal :visible="isAgencyModalVisible" :agency="currentAgency" @update:visible="isAgencyModalVisible = $event"
-      @save="handleSaveAgency" />
+
+    <AgencyModal :visible="isAgencyModalVisible" @update:visible="isAgencyModalVisible = $event" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useAgenciesStore, IAgency } from '@/stores/agencies';
+import { useAgenciesStore } from '@/stores/agencies';
 import AgencyModal from '@/components/forms/AgencyModal.vue'; // Assuming this path is correct
+
+interface IAgency {
+  id: string
+  name: string
+  tagline: string
+  logo: string
+  rating: number
+  reviewCount: number
+  work: string
+  location: string
+  budget: number
+  size: string
+  slogan?: string
+  contactEmail?: string
+  phoneNumber?: string
+  website?: string
+}
+
 import {
   ElButton,
   ElInput,
@@ -173,7 +192,7 @@ const AgencyCard = {
     },
   },
   emits: ['viewProfile', 'editAgency', 'deleteAgency'],
-  setup(props, { emit }) {
+  setup(props: any, { emit }: any) {
     const formatCurrency = (value: number) => {
       return `৳ ${value.toLocaleString('en-BD', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
     };
@@ -251,7 +270,7 @@ const openEditAgencyModal = (agency: IAgency) => {
 const handleSaveAgency = (agency: IAgency) => {
   // This logic is already API-friendly, assuming agenciesStore methods
   // would internally handle API calls (e.g., using axios)
-  if (agency.id && agenciesStore.allAgencies.some(a => a.id === agency.id)) {
+  if (agency.id && agenciesStore.allAgencies.some((a: IAgency) => a.id === agency.id)) {
     agenciesStore.updateAgency(agency);
     ElMessage.success('Agency updated successfully!');
   } else {

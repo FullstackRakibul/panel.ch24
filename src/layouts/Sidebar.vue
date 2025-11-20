@@ -196,7 +196,7 @@
 
   <!-- Mobile Drawer Sidebar -->
   <el-drawer v-if="isMobile" :model-value="props.mobileSidebarOpen" direction="ltr" :with-header="false" size="280px"
-    @update:model-value="newValue => emit('update:mobileSidebarOpen', newValue)">
+    @update:model-value="(newValue: any) => emit('update:mobileSidebarOpen', newValue)">
     <div class="sidebar-container-mobile">
       <!-- Header Section (Mobile) -->
       <div class="sidebar-header">

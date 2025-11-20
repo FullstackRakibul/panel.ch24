@@ -1,13 +1,25 @@
 {
   "extends": "@tsconfig/node20/tsconfig.json",
   "include": ["vite.config.*", "vitest.config.*", "cypress.config.*", "playwright.config.*"],
+  "exclude": ["node_modules", "dist", "build", "coverage", "test-results"],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ],
   "compilerOptions": {
     "composite": true,
-    "noEmit": true,
+    "noEmit": false,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "types": ["node","vite/client"],
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
   }
 }
