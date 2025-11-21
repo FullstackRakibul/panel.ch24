@@ -1,7 +1,7 @@
 
 
-// export const commonLoginService = async ()=>{
+export const commonLoginService = async ()=>{
 
-//   const request = await 
-//   return ;
-// }
+  const request = await 
+  return request;
+}
