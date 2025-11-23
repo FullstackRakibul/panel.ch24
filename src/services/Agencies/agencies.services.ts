@@ -1,131 +1,32 @@
-import type { AgencyInterface, CreateAgencyInterface } from "@/interface/agency/agencies.interface";
-import { createHttpClient } from "@/utils/base.Http";
+import type { IAgency, ICreateAgency, IUpdateAgency } from '@/interface/agency/agencies.interface';
+import { channelApiHttpJson, useHttp } from '@/utils/base.Http';
 
 
-// export const getAllAgenciesInfoService = async ()=>{
 
-//   const apiInstance = createHttpClient();
-//   return await apiInstance.get("/agency")   
-
-// }
-
-
-export interface ApiResponse<T> {
-  success: boolean
-  data?: T
-  message?: string
-}
-
-// Simulated agency data
-const mockAgencyData: AgencyInterface[] = [
-  {
-    id: "agency-1",
-    AgencyName: "Creative Minds Studio",
-    Tagline: "Your Vision, Our Creativity",
-    Location: "Dhaka, Bangladesh",
-    Slogan: "Transforming Ideas into Reality",
-    Logo: "https://via.placeholder.com/150?text=CMS",
-    Email: "contact@creativeminds.com",
-    Phone: "+8801700000001",
-    PortfolioURL: "https://creativeminds.com",
-    CompanySize: 50,
-    Rating: "4.8",
-    ReviewCount: "120",
-    Budget: "500000",
+export const agencyService = {
+  getAllAgencies: async(): Promise<IAgency[]> =>{
+    const response = await channelApiHttpJson().get<{ data: IAgency[] }>('/agencies');
+    return response.data.data;
   },
-  {
-    id: "agency-2",
-    AgencyName: "Digital Horizon Ltd",
-    Tagline: "Digital Excellence Assured",
-    Location: "Chittagong, Bangladesh",
-    Slogan: "Innovation at Scale",
-    Logo: "https://via.placeholder.com/150?text=DHL",
-    Email: "hello@digitalhorizon.com",
-    Phone: "+8801700000002",
-    PortfolioURL: "https://digitalhorizon.com",
-    CompanySize: 30,
-    Rating: "4.5",
-    ReviewCount: "95",
-    Budget: "300000",
+
+
+
+  getAgencyById: async(guid: string): Promise<IAgency> => {
+    const response = await useHttp().get<IAgency>(`/agencies/${guid}`);
+    return response.data;
   },
-]
 
-export const getAllAgenciesInfoService = async (): Promise<ApiResponse<CreateAgencyInterface[]>> => {
-  try {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 600))
+  createAgency: async(agencyData: ICreateAgency): Promise<IAgency> => {
+    const response = await useHttp().post<IAgency>('/agencies', agencyData);
+    return response.data;
+  },
 
-    console.log("[v0] Agency List Data: ", mockAgencyData)
+  updateAgency: async(guid: string, agencyData: IUpdateAgency): Promise<IAgency> => {
+    const response = await useHttp().put<IAgency>(`/agencies/${guid}`, agencyData);
+    return response.data;
+  },
 
-    return {
-      success: true,
-      // data: mockAgencyData,
-    }
-  } catch (error) {
-    console.error("[v0] Error fetching agencies:", error)
-    return {
-      success: false,
-      message: "Failed to fetch agencies",
-    }
+  deleteAgency: async(guid: string): Promise<void> => {
+    await useHttp().delete(`/agencies/${guid}`);
   }
-}
-
-export const createAgencyService = async (
-  agencyData: CreateAgencyInterface,
-): Promise<ApiResponse<CreateAgencyInterface>> => {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    const newAgency: CreateAgencyInterface = {
-      ...agencyData,
-      // id: `agency-${Date.now()}`,
-    }
-
-    return {
-      success: true,
-      data: newAgency,
-    }
-  } catch (error) {
-    console.error("[v0] Error creating agency:", error)
-    return {
-      success: false,
-      message: "Failed to create agency",
-    }
-  }
-}
-
-export const updateAgencyService = async (
-  id: string,
-  agencyData: CreateAgencyInterface,
-): Promise<ApiResponse<CreateAgencyInterface>> => {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    return {
-      success: true,
-      // data: { ...agencyData, id },
-    }
-  } catch (error) {
-    console.error("[v0] Error updating agency:", error)
-    return {
-      success: false,
-      message: "Failed to update agency",
-    }
-  }
-}
-
-export const deleteAgencyService = async (id: string): Promise<ApiResponse<null>> => {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    return {
-      success: true,
-    }
-  } catch (error) {
-    console.error("[v0] Error deleting agency:", error)
-    return {
-      success: false,
-      message: "Failed to delete agency",
-    }
-  }
-}
+};

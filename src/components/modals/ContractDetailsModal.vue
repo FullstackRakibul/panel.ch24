@@ -1,6 +1,5 @@
 <template>
-  <el-dialog v-model="dialogVisible" title="Contract Details" width="900px" :close-on-click-modal="false"
-    class="contract-view-modal" top="5vh">
+  <el-dialog v-model="dialogVisible" width="900px" :close-on-click-modal="false" class="contract-view-modal" top="5vh">
     <div v-if="contract" class="contract-document">
       <!-- Header -->
       <div class="document-header">
@@ -10,7 +9,7 @@
         </div>
         <div class="document-type">
           <h2>TELEVISION CONTRACT</h2>
-          <div class="client-copy" v-if="contract.clientCopy">CLIENT COPY</div>
+          <div class="client-copy">CLIENT COPY</div>
         </div>
       </div>
 
@@ -19,25 +18,27 @@
         <div class="info-left">
           <p><strong>Between:</strong> CHANNEL24 LIMITED</p>
           <p><strong>And:</strong></p>
-          <p><strong>{{ contract.advertiser }}</strong></p>
-          <p>{{ contract.product }}</p>
+          <p v-if="contract.contractedClient"><strong>{{ contract.contractedClient.clintName }}</strong></p>
+          <p v-else-if="contract.contractedAgency"><strong>{{ contract.contractedAgency.agencyName }}</strong></p>
+          <p v-else><strong>N/A</strong></p>
+          <p>{{ getClientContactInfo() }}</p>
         </div>
         <div class="info-right">
           <div class="info-row">
             <span>Contract No:</span>
-            <span>{{ contract.contractNo }}</span>
+            <span>{{ contract.televisionContractNo }}</span>
           </div>
           <div class="info-row">
             <span>Contract Date:</span>
-            <span>{{ contract.contractDate }}</span>
+            <span>{{ formatDate(contract.contractDate) }}</span>
           </div>
           <div class="info-row">
             <span>Start Date:</span>
-            <span>{{ contract.startDate }}</span>
+            <span>{{ formatDate(contract.contractStartDate) }}</span>
           </div>
           <div class="info-row">
             <span>End Date:</span>
-            <span>{{ contract.endDate }}</span>
+            <span>{{ formatDate(contract.contractEndDate) }}</span>
           </div>
         </div>
       </div>
@@ -48,43 +49,63 @@
         <div class="advertiser-info">
           <div class="info-row">
             <span>Advertiser:</span>
-            <span>{{ contract.advertiser }}</span>
+            <span>{{ getAdvertiserName() }}</span>
           </div>
           <div class="info-row">
-            <span>Product:</span>
-            <span>{{ contract.product }}</span>
+            <span>Contract Type:</span>
+            <span>{{ contract.contractedClient ? 'Direct Client' : 'Agency' }}</span>
           </div>
         </div>
       </div>
 
-      <!-- Items Table -->
-      <div class="items-table-section">
+      <!-- Products Table -->
+      <div class="items-table-section" v-if="contract.products && contract.products.length > 0">
         <table class="contract-table">
           <thead>
             <tr>
               <th>SL#</th>
-              <th>PARTICULARS</th>
+              <th>PRODUCT NAME</th>
+              <th>DESCRIPTION</th>
               <th>QTY</th>
               <th>RATE (Tk.)</th>
               <th>AMOUNT (Tk.)</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in contract.items" :key="item.sl">
-              <td>{{ item.sl }}</td>
-              <td>{{ item.particulars }}</td>
-              <td>{{ item.quantity }}</td>
-              <td>{{ formatCurrency(item.rate) }}</td>
-              <td>{{ formatCurrency(item.amount) }}</td>
-            </tr>
+            <template v-for="(product, productIndex) in contract.products" :key="product.guid">
+              <!-- Main Product Row -->
+              <tr>
+                <td>{{ productIndex + 1 }}</td>
+                <td>{{ product.contractProductName || 'N/A' }}</td>
+                <td>{{ product.contractProductDescription || 'N/A' }}</td>
+                <td>{{ product.quantity || 0 }}</td>
+                <td>{{ formatCurrency(getProductRate(product)) }}</td>
+                <td>{{ formatCurrency(product.total || 0) }}</td>
+              </tr>
+
+              <!-- Product Items -->
+              <tr v-for="(item, itemIndex) in product.productItems" :key="item.guid" class="product-item-row">
+                <td></td>
+                <td colspan="2" style="padding-left: 20px;">
+                  {{ item.particularsName || 'N/A' }}
+                  <span v-if="item.remarks" class="remarks-text">({{ item.remarks }})</span>
+                </td>
+                <td>1</td>
+                <td>{{ formatCurrency(item.rate || 0) }}</td>
+                <td>{{ formatCurrency(item.rate || 0) }}</td>
+              </tr>
+            </template>
+
+            <!-- Totals -->
             <tr class="total-row">
-              <td colspan="4"><strong>SPOT TOTAL Tk</strong></td>
-              <td><strong>{{ formatCurrency(contract.spotTotal) }}</strong></td>
+              <td colspan="5"><strong>SUBTOTAL Tk</strong></td>
+              <td><strong>{{ formatCurrency(calculateSubtotal()) }}</strong></td>
             </tr>
             <tr>
-              <td colspan="4">Plus {{ contract.vatPercentage }}% VAT on Tk {{ contract.spotTotal.toLocaleString() }}
+              <td colspan="5">
+                Plus {{ contract.vatRate || 0 }}% VAT on Tk {{ formatCurrency(calculateSubtotal()) }}
               </td>
-              <td>{{ formatCurrency(contract.vatAmount) }}</td>
+              <td>{{ formatCurrency(contract.vat || 0) }}</td>
             </tr>
           </tbody>
         </table>
@@ -93,24 +114,20 @@
       <!-- Grand Total -->
       <div class="grand-total-section">
         <div class="total-words">
-          <span>In Words: {{ contract.grandTotalWords }}</span>
+          <span>In Words: {{ amountToWords(contract.total || 0) }}</span>
         </div>
         <div class="total-amount">
-          <span>Tk {{ formatCurrency(contract.grandTotal) }}</span>
+          <span>Tk {{ formatCurrency(contract.total || 0) }}</span>
         </div>
       </div>
 
-      <!-- Schedule Section -->
-      <div class="schedule-section">
+      <!-- On Air Descriptions Section -->
+      <div class="schedule-section" v-if="contract.onAirDescriptions && contract.onAirDescriptions.length > 0">
         <div class="schedule-header">
           <div class="duration-info">
             <div class="info-row">
-              <span>Duration:</span>
-              <span>{{ contract.duration }}</span>
-            </div>
-            <div class="info-row">
-              <span>On-air Description:</span>
-              <span>{{ contract.onAirDescription }}</span>
+              <span>Contract Duration:</span>
+              <span>{{ formatDate(contract.contractStartDate) }} to {{ formatDate(contract.contractEndDate) }}</span>
             </div>
           </div>
           <div class="signature-seal">
@@ -118,34 +135,41 @@
           </div>
         </div>
 
-        <div class="branding-package">
-          <h4>Branding Package</h4>
-          <p>{{ contract.brandingPackage }}</p>
-        </div>
-
-        <div class="schedule-table">
+        <div class="schedule-table" v-for="(onAirDesc, index) in contract.onAirDescriptions" :key="onAirDesc.guid">
+          <h4>On Air Description {{ contract.onAirDescriptions.length > 1 ? index + 1 : '' }}</h4>
           <table>
             <thead>
               <tr>
-                <th>Month</th>
-                <th>Dates</th>
+                <th>Description Type</th>
                 <th>Description</th>
+                <th>Duration</th>
+                <th>Schedule</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>{{ contract.schedule.month }}</td>
-                <td>{{ contract.schedule.dates }}</td>
-                <td>{{ contract.schedule.description || contract.onAirDescription }}</td>
+                <td>{{ onAirDesc.descriptionTypeName || onAirDesc.descriptionType || 'N/A' }}</td>
+                <td>{{ onAirDesc.descriptionText || 'N/A' }}</td>
+                <td>{{ onAirDesc.onAirDuration || 'N/A' }}</td>
+                <td>
+                  <div v-if="onAirDesc.transmissionSchedule && onAirDesc.transmissionSchedule.length > 0">
+                    <div v-for="schedule in onAirDesc.transmissionSchedule" :key="schedule.guid">
+                      {{ formatDate(schedule.dateValue) }} ({{ schedule.durationInMinute }} mins)
+                    </div>
+                  </div>
+                  <div v-else>No schedule</div>
+                </td>
               </tr>
             </tbody>
           </table>
+          <p v-if="onAirDesc.remarks" class="remarks-section">Remarks: {{ onAirDesc.remarks }}</p>
         </div>
       </div>
 
-      <!-- Terms Section -->
-      <div class="terms-section">
-        <p>{{ contract.terms }}</p>
+      <!-- Remarks Section -->
+      <div class="terms-section" v-if="contract.remarks">
+        <h4>Remarks</h4>
+        <p>{{ contract.remarks }}</p>
       </div>
 
       <!-- Signature Section -->
@@ -153,15 +177,15 @@
         <div class="signature-row">
           <div class="signature-item">
             <div class="signature-line"></div>
-            <p>Prepared by: {{ contract.preparedBy }}</p>
+            <p>Prepared by: ___________________</p>
           </div>
           <div class="signature-item">
             <div class="signature-line"></div>
-            <p>Checked by: {{ contract.checkedBy }}</p>
+            <p>Checked by: ___________________</p>
           </div>
           <div class="signature-item">
             <div class="signature-line"></div>
-            <p>Authorized by: {{ contract.authorizedBy }}</p>
+            <p>Authorized by: ___________________</p>
           </div>
         </div>
       </div>
@@ -191,12 +215,12 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { Contract } from '../../stores/contracts'
 import { Printer } from 'lucide-vue-next'
+import type { ITelevisionContract } from '@/interface/contract/contracts.interface';
 
 interface Props {
   modelValue: boolean
-  contract?: Contract | null
+  contract?: ITelevisionContract | null
 }
 
 const props = defineProps<Props>()
@@ -216,6 +240,56 @@ const formatCurrency = (value: number) => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value)
+}
+
+const formatDate = (dateString: string | null | undefined) => {
+  if (!dateString) return 'N/A'
+  return new Date(dateString).toLocaleDateString('en-BD')
+}
+
+const getAdvertiserName = () => {
+  if (props.contract?.contractedClient) {
+    return props.contract.contractedClient.clintName
+  } else if (props.contract?.contractedAgency) {
+    return props.contract.contractedAgency?.agencyName
+  }
+  return 'N/A'
+}
+
+const getClientContactInfo = () => {
+  if (props.contract?.contractedClient) {
+    const client = props.contract.contractedClient
+    return `${client.email || ''} ${client.phone || ''}`.trim()
+  } else if (props.contract?.contractedAgency) {
+    const agency = props.contract.contractedAgency
+    return `${agency?.email || ''}`.trim()
+  }
+  return 'N/A'
+}
+
+const getProductRate = (product: any) => {
+  if (product.productItems && product.productItems.length > 0) {
+    return product.productItems.reduce((sum: number, item: any) => sum + (item.rate || 0), 0)
+  }
+  return product.total || 0
+}
+
+const calculateSubtotal = () => {
+  if (!props.contract?.products) return 0
+  return props.contract.products.reduce((sum, product) => sum + (product.total || 0), 0)
+}
+
+const amountToWords = (amount: number): string => {
+  // Simple implementation - you might want to use a more robust solution
+  const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine']
+  const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+
+  if (amount === 0) return 'Zero Taka'
+  if (amount > 999999) return 'Amount too large to convert'
+
+  // This is a simplified version - consider using a proper library for full implementation
+  return `${amount.toFixed(2)} Taka only`
 }
 
 const printContract = () => {
@@ -330,13 +404,28 @@ const printContract = () => {
   font-weight: bold;
 }
 
-.contract-table td:nth-child(2) {
+.contract-table td:nth-child(2),
+.contract-table td:nth-child(3) {
   text-align: left;
 }
 
 .contract-table td:nth-child(4),
-.contract-table td:nth-child(5) {
+.contract-table td:nth-child(5),
+.contract-table td:nth-child(6) {
   text-align: right;
+}
+
+.product-item-row {
+  background-color: #fafafa;
+}
+
+.product-item-row td {
+  font-size: 12px;
+}
+
+.remarks-text {
+  font-style: italic;
+  color: #666;
 }
 
 .total-row {
@@ -376,13 +465,15 @@ const printContract = () => {
   font-size: 12px;
 }
 
-.branding-package {
-  margin-bottom: 15px;
+.schedule-table {
+  margin-bottom: 20px;
 }
 
-.branding-package h4 {
+.schedule-table h4 {
   text-align: center;
   margin-bottom: 10px;
+  background-color: #f5f5f5;
+  padding: 5px;
 }
 
 .schedule-table table {
@@ -394,17 +485,28 @@ const printContract = () => {
 .schedule-table td {
   border: 1px solid #333;
   padding: 8px;
-  text-align: center;
+  text-align: left;
 }
 
 .schedule-table th {
   background-color: #f5f5f5;
 }
 
+.remarks-section {
+  font-size: 12px;
+  font-style: italic;
+  margin-top: 5px;
+  color: #666;
+}
+
 .terms-section {
   margin-bottom: 25px;
   font-size: 12px;
   text-align: justify;
+}
+
+.terms-section h4 {
+  margin-bottom: 5px;
 }
 
 .signature-section {

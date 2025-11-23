@@ -20,94 +20,94 @@
 import { ref, computed } from 'vue';
 import { ElInput, ElEmpty } from 'element-plus';
 import { Search } from '@element-plus/icons-vue';
-import AgencyCard from '@/components/ui/AgencyCard.vue' // Adjust the path if your component is in a different directory
+import AgencyCard from '@/components/ui/AgencyCard.vue'
 
-// Dummy data for agencies - replace with your actual data fetching
+// data fetching
 interface Agency {
-  id: number;
+  id: string;
   logo: string;
   name: string;
   rating: number;
   reviewCount: number;
   slogan: string;
-  status: string;
+  work: string;
   location: string;
-  budget: string;
-  members: string;
+  budget: number;
+  size: string;
 }
 
 const agencies = ref<Agency[]>([
   {
-    id: 1,
-    logo: 'https://via.placeholder.com/150/000000/FFFFFF?text=P', // Replace with actual logos
+    id: '1',
+    logo: 'https://via.placeholder.com/150/000000/FFFFFF?text=P',
     name: 'Pursuit Limited',
     rating: 0,
     reviewCount: 0,
     slogan: 'unlock your dreams',
-    status: '1 work',
+    work: '1 work',
     location: 'Dhaka, Bangladesh',
-    budget: '€1,000',
-    members: '1-10',
+    budget: 1000,
+    size: '1-10',
   },
   {
-    id: 2,
+    id: '2',
     logo: 'https://via.placeholder.com/150/0000FF/FFFFFF?text=IS',
     name: 'Instant Solution',
     rating: 0,
     reviewCount: 0,
     slogan: 'Effortlessly accurate, every time',
-    status: '1 work',
+    work: '1 work',
     location: 'Dhaka, Bangladesh',
-    budget: '€2,000',
-    members: '11-50',
+    budget: 2000,
+    size: '11-50',
   },
   {
-    id: 3,
+    id: '3',
     logo: 'https://via.placeholder.com/150/FF0000/FFFFFF?text=MK',
     name: 'Markimist',
     rating: 0,
     reviewCount: 0,
     slogan: 'Build a Brand, Not Just a Business!!',
-    status: 'Looking for work',
+    work: 'Looking for work',
     location: 'Dhaka, Bangladesh',
-    budget: '€50',
-    members: '11-50',
+    budget: 50,
+    size: '11-50',
   },
   {
-    id: 4,
+    id: '4',
     logo: 'https://via.placeholder.com/150/00FF00/FFFFFF?text=CT',
     name: 'Ctmrs Limited',
     rating: 0,
     reviewCount: 0,
     slogan: 'Leading the way in digital solutions.', // Example slogan
-    status: '1 work',
+    work: '1 work',
     location: 'Dhaka District, Bangladesh',
-    budget: '€1,000',
-    members: '11-50',
+    budget: 1000,
+    size: '11-50',
   },
   {
-    id: 5,
+    id: '5',
     logo: 'https://via.placeholder.com/150/FFFF00/000000?text=BCI',
     name: 'BCI Technosys Limited',
     rating: 5, // Example rating
     reviewCount: 1, // Example review count
     slogan: 'Innovating for a brighter future.', // Example slogan
-    status: 'Looking for work',
+    work: 'Looking for work',
     location: 'Dhaka, Bangladesh',
-    budget: '€1,000',
-    members: '11-50',
+    budget: 1000,
+    size: '11-50',
   },
   {
-    id: 6,
+    id: '6',
     logo: 'https://via.placeholder.com/150/FF00FF/FFFFFF?text=A',
     name: 'Augnitive',
     rating: 0,
     reviewCount: 0,
-    slogan: 'Your trusted partner in growth.', // Example slogan
-    status: 'Looking for work',
+    slogan: 'Your trusted partner in growth.',
+    work: 'Looking for work',
     location: 'Dhaka, Bangladesh',
-    budget: 'Budget on request',
-    members: '1-10',
+    budget: 0,
+    size: '1-10',
   },
 ]);
 
@@ -125,7 +125,7 @@ const filteredAgencies = computed(() => {
   );
 });
 
-const handleViewProfile = (id: number) => {
+const handleViewProfile = (id: string) => {
   console.log('Viewing profile for agency ID:', id);
   // Implement navigation to agency profile page here
   // e.g., router.push(`/agencies/${id}`);

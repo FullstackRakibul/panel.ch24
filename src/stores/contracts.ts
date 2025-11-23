@@ -1,147 +1,362 @@
-import { ref } from "vue"
-import { defineStore } from "pinia"
+import { defineStore } from 'pinia'
+import { ref, computed, readonly, type DeepReadonly } from 'vue'
 
-export interface ContractItem {
-  sl: number
-  particulars: string
-  quantity: number
+export interface TelevisionContractProductItemsRequestDto {
+  guid: string
+  particularsName: string
   rate: number
-  amount: number
+  remarks: string
+  vat: number
+  vatRate: number
 }
 
-export interface Contract {
-  id?: number
-  contractNo: string
+export interface TelevisionContractProductRequestDto {
+  contractProductName: string
+  contractProductDescription: string
+  quantity: number
+  vat: number
+  vatRate: number
+  total: number
+  remarks: string
+  productItems: TelevisionContractProductItemsRequestDto[]
+}
+
+export interface TelevisionContractOnAirDescriptionDto {
+  durationMonths: number[]
+  scheduleDates: string
+  description: string
+}
+
+export interface TelevisionContractRequestDto {
+  guid: string
+  televisionContractNo: string
   contractDate: string
-  clientCopy: boolean
-  startDate: string
-  endDate: string
-  advertiser: string
-  product: string
-  items: ContractItem[]
-  spotTotal: number
-  vatPercentage: number
-  vatAmount: number
-  grandTotal: number
-  grandTotalWords: string
-  duration: string
-  onAirDescription: string
-  brandingPackage: string
-  schedule: {
-    month: string
-    dates: string
-    description: string
-  }
-  terms: string
-  preparedBy: string
-  checkedBy: string
-  authorizedBy: string
-  status: "draft" | "active" | "completed" | "cancelled"
-  createdAt?: string
+  contractStartDate: string
+  contractEndDate: string
+  contractedClientId: string | null
+  contractedAgencyId: string | null
+  vat: number
+  vatRate: number
+  total: number
+  remarks: string
+  products: TelevisionContractProductRequestDto[]
+  onAirDescriptions: TelevisionContractOnAirDescriptionDto[]
 }
 
-export const useContractsStore = defineStore("contracts", () => {
-  const contracts = ref<Contract[]>([
-    {
-      id: 1,
-      contractNo: "TML2506039",
-      contractDate: "31 May, 2025",
-      clientCopy: true,
-      startDate: "01 Jun, 2025",
-      endDate: "30 Jun, 2025",
-      advertiser: "Mercantile Bank PLC",
-      product: "Mercantile Bank PLC",
-      items: [
+export const useContractStore = defineStore('contract', () => {
+  // State
+  const currentContract = ref<TelevisionContractRequestDto>(getDefaultContract())
+  const draftContracts = ref<TelevisionContractRequestDto[]>([])
+  const isClientCopy = ref(true)
+  const isLoading = ref(false)
+
+  // Getters
+  const hasDraft = computed(() => draftContracts.value.length > 0)
+  const currentDraft = computed(() => draftContracts.value[draftContracts.value.length - 1])
+  const productsTotal = computed(() => {
+    return currentContract.value.products.reduce((sum, product) => {
+      return sum + calculateProductTotal(product)
+    }, 0)
+  })
+  
+  const vatAmount = computed(() => {
+    return productsTotal.value * (currentContract.value.vatRate / 100)
+  })
+  
+  const grandTotal = computed(() => {
+    return productsTotal.value + vatAmount.value
+  })
+
+  // Actions
+  const initializeContract = () => {
+    currentContract.value = getDefaultContract()
+    loadFromLocalStorage()
+  }
+
+  const setContract = (contract: TelevisionContractRequestDto) => {
+    currentContract.value = { ...contract }
+    saveToLocalStorage()
+  }
+
+  const updateContractField = <K extends keyof TelevisionContractRequestDto>(
+    field: K,
+    value: TelevisionContractRequestDto[K]
+  ) => {
+    currentContract.value[field] = value
+    saveToLocalStorage()
+  }
+
+  const toggleClientCopy = (value: boolean) => {
+    isClientCopy.value = value
+    if (value) {
+      currentContract.value.contractedAgencyId = null
+    } else {
+      currentContract.value.contractedClientId = null
+    }
+    saveToLocalStorage()
+  }
+
+  // Product Management
+  const addProduct = () => {
+    currentContract.value.products.push({
+      contractProductName: '',
+      contractProductDescription: '',
+      quantity: 1,
+      vat: 0,
+      vatRate: 15,
+      total: 0,
+      remarks: '',
+      productItems: [
         {
-          sl: 1,
-          particulars: 'Mercantile Bank PLC "Business24"',
+          guid: '',
+          particularsName: '',
+          rate: 0,
+          remarks: '',
+          vat: 0,
+          vatRate: 15
+        }
+      ]
+    })
+    saveToLocalStorage()
+  }
+
+  const removeProduct = (index: number) => {
+    currentContract.value.products.splice(index, 1)
+    saveToLocalStorage()
+  }
+
+  const updateProduct = (productIndex: number, updates: Partial<TelevisionContractProductRequestDto>) => {
+    currentContract.value.products[productIndex] = {
+      ...currentContract.value.products[productIndex],
+      ...updates
+    }
+    saveToLocalStorage()
+  }
+
+  // Product Items Management
+  const addProductItem = (productIndex: number) => {
+    currentContract.value.products[productIndex].productItems.push({
+      guid: '',
+      particularsName: '',
+      rate: 0,
+      remarks: '',
+      vat: 0,
+      vatRate: 15
+    })
+    saveToLocalStorage()
+  }
+
+  const removeProductItem = (productIndex: number, itemIndex: number) => {
+    currentContract.value.products[productIndex].productItems.splice(itemIndex, 1)
+    saveToLocalStorage()
+  }
+
+  const updateProductItem = (
+    productIndex: number,
+    itemIndex: number,
+    updates: Partial<TelevisionContractProductItemsRequestDto>
+  ) => {
+    currentContract.value.products[productIndex].productItems[itemIndex] = {
+      ...currentContract.value.products[productIndex].productItems[itemIndex],
+      ...updates
+    }
+    saveToLocalStorage()
+  }
+
+  // On Air Descriptions Management
+  const addOnAirDescription = () => {
+    currentContract.value.onAirDescriptions.push({
+      durationMonths: [],
+      scheduleDates: '',
+      description: ''
+    })
+    saveToLocalStorage()
+  }
+
+  const removeOnAirDescription = (index: number) => {
+    currentContract.value.onAirDescriptions.splice(index, 1)
+    saveToLocalStorage()
+  }
+
+  const updateOnAirDescription = (index: number, updates: Partial<TelevisionContractOnAirDescriptionDto>) => {
+    currentContract.value.onAirDescriptions[index] = {
+      ...currentContract.value.onAirDescriptions[index],
+      ...updates
+    }
+    saveToLocalStorage()
+  }
+
+  // Draft Management
+  const saveDraft = () => {
+    draftContracts.value.push({ ...currentContract.value })
+    localStorage.setItem('contractDrafts', JSON.stringify(draftContracts.value))
+  }
+
+  const loadDraft = (index: number) => {
+    if (draftContracts.value[index]) {
+      currentContract.value = { ...draftContracts.value[index] }
+      saveToLocalStorage()
+    }
+  }
+
+  const clearDraft = (index?: number) => {
+    if (index !== undefined) {
+      draftContracts.value.splice(index, 1)
+    } else {
+      draftContracts.value = []
+    }
+    localStorage.setItem('contractDrafts', JSON.stringify(draftContracts.value))
+  }
+
+  // Local Storage Management
+  const saveToLocalStorage = () => {
+    const storageData = {
+      currentContract: currentContract.value,
+      isClientCopy: isClientCopy.value,
+      lastSaved: new Date().toISOString()
+    }
+    localStorage.setItem('contractFormData', JSON.stringify(storageData))
+  }
+
+  const loadFromLocalStorage = () => {
+    try {
+      const stored = localStorage.getItem('contractFormData')
+      if (stored) {
+        const data = JSON.parse(stored)
+        currentContract.value = data.currentContract || getDefaultContract()
+        isClientCopy.value = data.isClientCopy !== undefined ? data.isClientCopy : true
+        
+        // Load drafts
+        const storedDrafts = localStorage.getItem('contractDrafts')
+        if (storedDrafts) {
+          draftContracts.value = JSON.parse(storedDrafts)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading from localStorage:', error)
+      clearLocalStorage()
+    }
+  }
+
+  const clearLocalStorage = () => {
+    localStorage.removeItem('contractFormData')
+    localStorage.removeItem('contractDrafts')
+    currentContract.value = getDefaultContract()
+    draftContracts.value = []
+    isClientCopy.value = true
+  }
+
+  const autoSave = () => {
+    saveToLocalStorage()
+  }
+
+  // Utility functions
+  const calculateItemTotal = (item: TelevisionContractProductItemsRequestDto | DeepReadonly<TelevisionContractProductItemsRequestDto>) => {
+    const rate = item.rate || 0
+    const vatRate = item.vatRate || 0
+    return rate + (rate * (vatRate / 100))
+  }
+
+  const calculateProductTotal = (product: TelevisionContractProductRequestDto | DeepReadonly<TelevisionContractProductRequestDto>) => {
+    const itemsTotal = (product.productItems as any[]).reduce((sum: number, item: any) => {
+      return sum + calculateItemTotal(item)
+    }, 0)
+    
+    const quantity = product.quantity || 1
+    return itemsTotal * quantity
+  }
+
+  const generateGuid = (): string => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0
+      const v = c == 'x' ? r : (r & 0x3 | 0x8)
+      return v.toString(16)
+    })
+  }
+
+  function getDefaultContract(): TelevisionContractRequestDto {
+    return {
+      guid: '',
+      televisionContractNo: '',
+      contractDate: '',
+      contractStartDate: '',
+      contractEndDate: '',
+      contractedClientId: null,
+      contractedAgencyId: null,
+      vat: 0,
+      vatRate: 15,
+      total: 0,
+      remarks: '',
+      products: [
+        {
+          contractProductName: '',
+          contractProductDescription: '',
           quantity: 1,
-          rate: 300000.0,
-          amount: 300000.0,
-        },
+          vat: 0,
+          vatRate: 15,
+          total: 0,
+          remarks: '',
+          productItems: [
+            {
+              guid: '',
+              particularsName: '',
+              rate: 0,
+              remarks: '',
+              vat: 0,
+              vatRate: 15
+            }
+          ]
+        }
       ],
-      spotTotal: 300000.0,
-      vatPercentage: 15,
-      vatAmount: 45000.0,
-      grandTotal: 345000.0,
-      grandTotalWords: "Three Lac Forty Five Thousand Taka Only",
-      duration: "June 2025",
-      onAirDescription: "Branding Package",
-      brandingPackage:
-        "Mercantile Bank PLC 'Business24' Title Sting With Sponsor Logo Presenter Endorsement & Backdrop Doggy During the News 30 Sec L Shape",
-      schedule: {
-        month: "1 Month",
-        dates: "01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30",
-        description: "Business24 Branding Package",
-      },
-      terms:
-        "I/We request CHANNEL24 LIMITED to transmit the above mention Spot. I/We agree to abide by the tariff rate and to the terms and conditions over leaf and indemnify CHANNEL24 LIMITED against all legal action by reason of the transmission of any advertisement material.",
-      preparedBy: "Md.Kamrul Islam",
-      checkedBy: "Authorized Person",
-      authorizedBy: "Management",
-      status: "active",
-      createdAt: "2025-05-31T10:30:00Z",
-    },
-  ])
-
-  const loading = ref(false)
-
-  const createContract = async (contractData: Contract) => {
-    try {
-      loading.value = true
-      await new Promise((resolve) => setTimeout(resolve, 800))
-
-      const newContract: Contract = {
-        ...contractData,
-        id: Math.max(...contracts.value.map((c) => c.id || 0)) + 1,
-        createdAt: new Date().toISOString(),
-      }
-
-      contracts.value.unshift(newContract)
-      return { success: true, contract: newContract }
-    } catch (error: any) {
-      return { success: false, message: "Failed to create contract" }
-    } finally {
-      loading.value = false
+      onAirDescriptions: [
+        {
+          durationMonths: [],
+          scheduleDates: '',
+          description: ''
+        }
+      ]
     }
   }
 
-  const updateContract = async (id: number, contractData: Contract) => {
-    try {
-      loading.value = true
-      await new Promise((resolve) => setTimeout(resolve, 800))
-
-      const index = contracts.value.findIndex((c) => c.id === id)
-      if (index !== -1) {
-        contracts.value[index] = { ...contractData, id }
-      }
-      return { success: true }
-    } catch (error: any) {
-      return { success: false, message: "Failed to update contract" }
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const deleteContract = async (id: number) => {
-    try {
-      loading.value = true
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
-      contracts.value = contracts.value.filter((c) => c.id !== id)
-      return { success: true }
-    } catch (error: any) {
-      return { success: false, message: "Failed to delete contract" }
-    } finally {
-      loading.value = false
-    }
-  }
+  // Initialize store
+  initializeContract()
 
   return {
-    contracts,
-    loading,
-    createContract,
-    updateContract,
-    deleteContract,
+    // State
+    currentContract: readonly(currentContract),
+    draftContracts: readonly(draftContracts),
+    isClientCopy: readonly(isClientCopy),
+    isLoading: readonly(isLoading),
+
+    // Getters
+    hasDraft,
+    currentDraft,
+    productsTotal,
+    vatAmount,
+    grandTotal,
+
+    // Actions
+    initializeContract,
+    setContract,
+    updateContractField,
+    toggleClientCopy,
+    addProduct,
+    removeProduct,
+    updateProduct,
+    addProductItem,
+    removeProductItem,
+    updateProductItem,
+    addOnAirDescription,
+    removeOnAirDescription,
+    updateOnAirDescription,
+    saveDraft,
+    loadDraft,
+    clearDraft,
+    saveToLocalStorage,
+    loadFromLocalStorage,
+    clearLocalStorage,
+    autoSave,
+    calculateItemTotal,
+    calculateProductTotal
   }
 })

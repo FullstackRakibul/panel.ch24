@@ -190,7 +190,7 @@
     </div>
 
     <!-- Collapse Toggle - Always visible, repositioned for better UX -->
-    <el-button :icon="themeStore.sidebarCollapsed ? Expand : Fold" circle size="medium" class="collapse-toggle"
+    <el-button :icon="themeStore.sidebarCollapsed ? Expand : Fold" circle size="small" class="collapse-toggle"
       @click="themeStore.toggleSidebar" />
   </el-aside>
 
@@ -441,9 +441,9 @@ const managementItems = [
     badgeType: 'primary'
   },
   {
-    name: 'Reports', path: '/reports', icon: DataAnalysis, badge: undefined, badgeType: undefined
+    name: 'Reports', path: '/reports', icon: DataAnalysis, badge: 'On Hold', badgeType: undefined
   },
-  { name: 'Delivery Logs', path: '/delivery-logs', icon: Van, badge: undefined, badgeType: undefined }
+  { name: 'Delivery Logs', path: '/delivery-logs', icon: Van, badge: 'On Hold', badgeType: undefined }
 ]
 
 const systemItems = [
@@ -827,7 +827,7 @@ watch(isMobile, (newValue) => {
 .collapse-toggle {
   position: absolute;
   top: 20px;
-  right: -2px;
+  right: 1px;
   z-index: 100;
   background-color: #ffffff;
   border: 1px solid #e5e7eb;

@@ -2,165 +2,140 @@
   <el-dialog v-model="dialogVisible" :title="isEdit ? 'Edit Contract' : 'Add New Contract / Booking info.'"
     width="900px" :close-on-click-modal="false" :close-on-press-escape="false" class="contract-modal font-sans"
     top="5vh">
-    <el-form ref="formRef" :model="form" :rules="rules" label-position="top" size="default" class="contract-form">
+    <el-form ref="formRef" :model="form" :rules="rules" label-position="top" size="default" class="contract-form"
+      @input="handleAutoSave">
+      <!-- Auto-save Indicator -->
+      <div class="auto-save-indicator" v-if="lastSaved">
+        <el-icon>
+          <SuccessFilled />
+        </el-icon>
+        <span>Last saved: {{ formatTime(lastSaved) }}</span>
+      </div>
+
+      <!-- Draft Management -->
+      <div class="draft-management" v-if="store.hasDraft && !isEdit">
+        <el-alert title="You have saved drafts" type="info" :closable="false" show-icon>
+          <template #append>
+            <el-button type="primary" text @click="showDrafts = true">
+              Manage Drafts ({{ store.draftContracts.length }})
+            </el-button>
+          </template>
+        </el-alert>
+      </div>
+
       <!-- Basic Information -->
       <div class="form-section">
         <el-row :gutter="16">
           <el-col :span="8">
-            <el-form-item label="Contract No" prop="contractNo">
-              <el-input v-model="form.contractNo" placeholder="Enter contract number" />
+            <el-form-item label="Contract No" prop="televisionContractNo">
+              <el-input v-model="form.televisionContractNo" placeholder="Enter contract number"
+                @blur="handleFieldUpdate('televisionContractNo', form.televisionContractNo)" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="Contract Date" prop="contractDate">
               <el-date-picker v-model="form.contractDate" type="date" placeholder="Select date" class="w-full"
-                format="DD MMM, YYYY" value-format="DD MMM, YYYY" />
+                format="YYYY-MM-DD" value-format="YYYY-MM-DD"
+                @change="handleFieldUpdate('contractDate', form.contractDate)" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="Client Copy">
-              <el-switch v-model="form.clientCopy" />
+              <el-switch v-model="store.isClientCopy" @change="store.toggleClientCopy" />
             </el-form-item>
           </el-col>
         </el-row>
 
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="Start Date" prop="startDate">
-              <el-date-picker v-model="form.startDate" type="date" placeholder="Select start date" class="w-full"
-                format="DD MMM, YYYY" value-format="DD MMM, YYYY" />
+            <el-form-item label="Start Date" prop="contractStartDate">
+              <el-date-picker v-model="form.contractStartDate" type="date" placeholder="Select start date"
+                class="w-full" format="YYYY-MM-DD" value-format="YYYY-MM-DD"
+                @change="handleFieldUpdate('contractStartDate', form.contractStartDate)" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="End Date" prop="endDate">
-              <el-date-picker v-model="form.endDate" type="date" placeholder="Select end date" class="w-full"
-                format="DD MMM, YYYY" value-format="DD MMM, YYYY" />
+            <el-form-item label="End Date" prop="contractEndDate">
+              <el-date-picker v-model="form.contractEndDate" type="date" placeholder="Select end date" class="w-full"
+                format="YYYY-MM-DD" value-format="YYYY-MM-DD"
+                @change="handleFieldUpdate('contractEndDate', form.contractEndDate)" />
             </el-form-item>
           </el-col>
         </el-row>
 
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="Advertiser" prop="advertiser">
-              <el-input v-model="form.advertiser" placeholder="Enter advertiser name" />
+            <el-form-item :label="store.isClientCopy ? 'Client' : 'Agency'"
+              :prop="store.isClientCopy ? 'contractedClientId' : 'contractedAgencyId'">
+              <el-select v-model="selectedClientOrAgency"
+                :placeholder="`Select ${store.isClientCopy ? 'client' : 'agency'}`" class="w-full" filterable clearable
+                @change="handleClientAgencyChange">
+                <el-option v-for="item in store.isClientCopy ? clients : agencies" :key="item.guid" :label="item.name"
+                  :value="item.guid" />
+              </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="Product" prop="product">
-              <el-input v-model="form.product" placeholder="Enter product name" />
+            <el-form-item label="VAT Rate (%)" prop="vatRate">
+              <el-input-number v-model="form.vatRate" :min="0" :max="100" :precision="2" controls-position="right"
+                class="w-full" @change="handleFieldUpdate('vatRate', form.vatRate)" />
             </el-form-item>
           </el-col>
         </el-row>
       </div>
 
-      <!-- Contract Items -->
+      <!-- Contract Products -->
       <div class="form-section">
-        <h3 class="section-title">Contract Items</h3>
-        <div v-for="(item, index) in form.items" :key="index" class="item-row">
+        <h3 class="section-title">Contract Products</h3>
+
+        <el-button type="primary" :icon="Plus" plain @click="store.addProduct">
+          Add Product
+        </el-button>
+      </div>
+
+      <!-- On Air Descriptions -->
+      <div class="form-section">
+        <h3 class="section-title">On Air Descriptions</h3>
+        <div v-for="(desc, descIndex) in form.onAirDescriptions" :key="descIndex" class="description-row">
           <el-row :gutter="16" align="middle">
-            <el-col :span="2">
-              <el-form-item label="SL#">
-                <el-input-number v-model="item.sl" :min="1" controls-position="right" class="w-full" />
+            <el-col :span="6">
+              <el-form-item label="Duration (Months)">
+                <el-select v-model="desc.durationMonths" multiple placeholder="Select months" class="w-full"
+                  @change="handleOnAirDescriptionUpdate(descIndex, 'durationMonths', desc.durationMonths)">
+                  <el-option v-for="month in availableMonths" :key="month.value" :label="month.label"
+                    :value="month.value" />
+                </el-select>
               </el-form-item>
             </el-col>
-            <el-col :span="10">
-              <el-form-item label="Particulars">
-                <el-input v-model="item.particulars" placeholder="Enter particulars" />
+            <el-col :span="14">
+              <el-form-item label="Schedule Dates">
+                <el-input v-model="desc.scheduleDates" placeholder="Enter dates separated by commas (e.g., 01,02,03...)"
+                  @blur="handleOnAirDescriptionUpdate(descIndex, 'scheduleDates', desc.scheduleDates)" />
               </el-form-item>
             </el-col>
             <el-col :span="4">
-              <el-form-item label="Quantity">
-                <el-input-number v-model="item.quantity" :min="1" controls-position="right" class="w-full" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="4">
-              <el-form-item label="Rate (Tk.)">
-                <el-input-number v-model="item.rate" :min="0" :precision="2" controls-position="right" class="w-full" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="2">
-              <el-form-item label="Amount">
-                <span class="amount-display">{{ formatCurrency(item.quantity * item.rate) }}</span>
-              </el-form-item>
-            </el-col>
-            <el-col :span="2">
               <el-form-item label=" ">
-                <el-button v-if="form.items.length > 1" type="danger" :icon="Minus" circle @click="removeItem(index)" />
+                <el-button v-if="form.onAirDescriptions.length > 1" type="danger" :icon="Minus" circle
+                  @click="store.removeOnAirDescription(descIndex)" />
               </el-form-item>
             </el-col>
           </el-row>
+          <el-form-item label="Description">
+            <el-input v-model="desc.description" type="textarea" :rows="2" placeholder="Enter on-air description"
+              @blur="handleOnAirDescriptionUpdate(descIndex, 'description', desc.description)" />
+          </el-form-item>
         </div>
-        <el-button type="primary" :icon="Plus" plain @click="addItem">Add Item</el-button>
+        <el-button type="primary" :icon="Plus" plain @click="store.addOnAirDescription">
+          Add Description
+        </el-button>
       </div>
 
-      <!-- Branding Package Details -->
+      <!-- Terms and Remarks -->
       <div class="form-section">
-        <h3 class="section-title">Branding Package</h3>
-        <el-row :gutter="16">
-          <el-col :span="12">
-            <el-form-item label="Duration">
-              <el-input v-model="form.duration" placeholder="e.g., June 2025" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="On-air Description">
-              <el-input v-model="form.onAirDescription" placeholder="e.g., Branding Package" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-form-item label="Branding Package Details">
-          <el-input v-model="form.brandingPackage" type="textarea" :rows="3"
-            placeholder="Enter detailed branding package description" />
-        </el-form-item>
-
-        <h4 class="subsection-title">Schedule</h4>
-        <el-row :gutter="16">
-          <el-col :span="8">
-            <el-form-item label="Month">
-              <el-input v-model="form.schedule.month" placeholder="e.g., 1 Month" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="16">
-            <el-form-item label="Dates">
-              <el-input v-model="form.schedule.dates" placeholder="e.g., 01,02,03..." />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </div>
-
-      <!-- Terms and Authorization -->
-      <div class="form-section">
-        <h3 class="section-title">Terms & Authorization</h3>
-        <el-form-item label="Terms & Conditions">
-          <el-input v-model="form.terms" type="textarea" :rows="3" placeholder="Enter terms and conditions" />
-        </el-form-item>
-
-        <el-row :gutter="16">
-          <el-col :span="8">
-            <el-form-item label="Prepared By">
-              <el-input v-model="form.preparedBy" placeholder="Enter name" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="Checked By">
-              <el-input v-model="form.checkedBy" placeholder="Enter name" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="Authorized By">
-              <el-input v-model="form.authorizedBy" placeholder="Enter name" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-form-item label="Status">
-          <el-select v-model="form.status" placeholder="Select status" class="w-full">
-            <el-option label="Draft" value="draft" />
-            <el-option label="Active" value="active" />
-            <el-option label="Completed" value="completed" />
-            <el-option label="Cancelled" value="cancelled" />
-          </el-select>
+        <h3 class="section-title">Terms & Remarks</h3>
+        <el-form-item label="Remarks">
+          <el-input v-model="form.remarks" type="textarea" :rows="3" placeholder="Enter remarks"
+            @blur="handleFieldUpdate('remarks', form.remarks)" />
         </el-form-item>
       </div>
 
@@ -169,16 +144,16 @@
         <h3 class="section-title">Summary</h3>
         <div class="totals-summary">
           <div class="total-row">
-            <span>Spot Total:</span>
-            <span>{{ formatCurrency(spotTotal) }}</span>
+            <span>Products Total:</span>
+            <span>{{ formatCurrency(store.productsTotal) }}</span>
           </div>
           <div class="total-row">
-            <span>VAT (15%):</span>
-            <span>{{ formatCurrency(vatAmount) }}</span>
+            <span>VAT ({{ form.vatRate }}%):</span>
+            <span>{{ formatCurrency(store.vatAmount) }}</span>
           </div>
           <div class="total-row grand-total">
             <span>Grand Total:</span>
-            <span>{{ formatCurrency(grandTotal) }}</span>
+            <span>{{ formatCurrency(store.grandTotal) }}</span>
           </div>
         </div>
       </div>
@@ -186,26 +161,61 @@
 
     <template #footer>
       <div class="modal-footer">
-        <el-button size="large" @click="handleClose">
-          Cancel
-        </el-button>
-        <el-button type="primary" size="large" :loading="loading" :disabled="!isFormValid" @click="handleSubmit">
-          {{ loading ? 'Saving...' : (isEdit ? 'Update Contract' : 'Create Contract') }}
-        </el-button>
+        <div class="footer-left">
+          <el-button v-if="!isEdit" type="info" @click="handleSaveDraft">
+            Save Draft
+          </el-button>
+          <el-button type="warning" @click="handleClearStorage">
+            Clear Data
+          </el-button>
+        </div>
+        <div class="footer-right">
+          <el-button size="large" @click="handleClose">
+            Cancel
+          </el-button>
+          <el-button type="primary" size="large" :loading="loading" :disabled="!isFormValid" @click="handleSubmit">
+            {{ loading ? 'Saving...' : (isEdit ? 'Update Contract' : 'Create Contract') }}
+          </el-button>
+        </div>
       </div>
+    </template>
+  </el-dialog>
+
+  <!-- Drafts Management Dialog -->
+  <el-dialog v-model="showDrafts" title="Saved Drafts" width="600px">
+    <div class="drafts-list">
+      <el-card v-for="(draft, index) in store.draftContracts" :key="index" class="draft-card">
+        <template #header>
+          <div class="draft-header">
+            <span>Draft {{ index + 1 }} - {{ draft.televisionContractNo || 'Untitled' }}</span>
+            <div class="draft-actions">
+              <el-button type="primary" text @click="handleLoadDraft(index)">Load</el-button>
+              <el-button type="danger" text @click="handleDeleteDraft(index)">Delete</el-button>
+            </div>
+          </div>
+        </template>
+        <p><strong>Contract Date:</strong> {{ formatDate(draft.contractDate) || 'Not set' }}</p>
+        <p><strong>Products:</strong> {{ draft.products.length }}</p>
+        <!-- <p><strong>Total:</strong> {{ formatCurrency(store.calculateContractTotal(draft.total)) }}</p> -->
+      </el-card>``
+    </div>
+    <template #footer>
+      <el-button @click="showDrafts = false">Close</el-button>
     </template>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import type { FormInstance } from 'element-plus'
-import type * as _ from "../../stores/contracts"
-import { Plus, Minus } from 'lucide-vue-next'
+import { ref, watch, computed, onMounted } from 'vue'
+import { ElMessage, type FormInstance } from 'element-plus'
+import { Plus, Minus, SuccessFilled } from '@element-plus/icons-vue'
+import { useContractStore } from '@/stores/contracts'
+import { contractService, clientService, agencyService, contractUtils } from '@/services/Contracts/contract.services'
+import type { IAgencySimple, IClientSimple, ITelevisionContract, ITelevisionContractCreateRequest, ITelevisionContractUpdateRequest } from '@/interface/contract/contracts.interface'
 
 interface Props {
   modelValue: boolean
-  contract?: _.Contract | null
+  contract?: ITelevisionContract | null
   isEdit?: boolean
   loading?: boolean
 }
@@ -218,172 +228,238 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  save: [contract: _.Contract]
+  'save': [contract: any]
+  'refresh': []
 }>()
 
+// Store and Refs
+const store = useContractStore()
 const formRef = ref<FormInstance>()
-const dialogVisible = computed({
-  get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
-})
+const clients = ref<IClientSimple[]>([])
+const agencies = ref<IAgencySimple[]>([])
+const showDrafts = ref(false)
+const lastSaved = ref<string>('')
+const isSubmitting = ref(false)
 
-const form = ref<_.Contract>({
-  contractNo: '',
-  contractDate: '',
-  clientCopy: true,
-  startDate: '',
-  endDate: '',
-  advertiser: '',
-  product: '',
-  items: [
-    {
-      sl: 1,
-      particulars: '',
-      quantity: 1,
-      rate: 0,
-      amount: 0
-    }
-  ],
-  spotTotal: 0,
-  vatPercentage: 15,
-  vatAmount: 0,
-  grandTotal: 0,
-  grandTotalWords: '',
-  duration: '',
-  onAirDescription: '',
-  brandingPackage: '',
-  schedule: {
-    month: '',
-    dates: '',
-    description: ''
-  },
-  terms: 'I/We request CHANNEL24 LIMITED to transmit the above mention Spot. I/We agree to abide by the tariff rate and to the terms and conditions over leaf and indemnify CHANNEL24 LIMITED against all legal action by reason of the transmission of any advertisement material.',
-  preparedBy: '',
-  checkedBy: '',
-  authorizedBy: '',
-  status: 'draft'
-})
+// Form data from store
+const form = computed(() => store.currentContract)
 
+// Available months for selection
+const availableMonths = ref([
+  { value: 1, label: 'January' },
+  { value: 2, label: 'February' },
+  { value: 3, label: 'March' },
+  { value: 4, label: 'April' },
+  { value: 5, label: 'May' },
+  { value: 6, label: 'June' },
+  { value: 7, label: 'July' },
+  { value: 8, label: 'August' },
+  { value: 9, label: 'September' },
+  { value: 10, label: 'October' },
+  { value: 11, label: 'November' },
+  { value: 12, label: 'December' }
+])
+
+// Validation rules
 const rules = {
-  contractNo: [
+  televisionContractNo: [
     { required: true, message: 'Please enter contract number', trigger: 'blur' }
   ],
   contractDate: [
     { required: true, message: 'Please select contract date', trigger: 'change' }
   ],
-  advertiser: [
-    { required: true, message: 'Please enter advertiser name', trigger: 'blur' }
-  ],
-  product: [
-    { required: true, message: 'Please enter product name', trigger: 'blur' }
-  ],
-  startDate: [
+  contractStartDate: [
     { required: true, message: 'Please select start date', trigger: 'change' }
   ],
-  endDate: [
+  contractEndDate: [
     { required: true, message: 'Please select end date', trigger: 'change' }
+  ],
+  contractedClientId: [
+    { required: true, message: 'Please select a client', trigger: 'change' }
+  ],
+  contractedAgencyId: [
+    { required: true, message: 'Please select an agency', trigger: 'change' }
+  ],
+  vatRate: [
+    { required: true, message: 'Please enter VAT rate', trigger: 'blur' }
   ]
 }
 
-const spotTotal = computed(() => {
-  return form.value.items.reduce((sum, item) => sum + (item.quantity * item.rate), 0)
+// Computed properties
+const selectedClientOrAgency = computed({
+  get: () => store.isClientCopy ? form.value.contractedClientId : form.value.contractedAgencyId,
+  set: (value) => {
+    if (store.isClientCopy) {
+      store.updateContractField('contractedClientId', value)
+    } else {
+      store.updateContractField('contractedAgencyId', value)
+    }
+  }
 })
 
-const vatAmount = computed(() => {
-  return spotTotal.value * (form.value.vatPercentage / 100)
-})
-
-const grandTotal = computed(() => {
-  return spotTotal.value + vatAmount.value
+const dialogVisible = computed({
+  get: () => props.modelValue,
+  set: (value) => emit('update:modelValue', value)
 })
 
 const isFormValid = computed(() => {
-  return form.value.contractNo.trim() &&
+  const basicValid = form.value.televisionContractNo?.trim() &&
     form.value.contractDate &&
-    form.value.advertiser.trim() &&
-    form.value.product.trim() &&
-    form.value.startDate &&
-    form.value.endDate
+    form.value.contractStartDate &&
+    form.value.contractEndDate &&
+    form.value.vatRate !== null
+
+  const clientAgencyValid = store.isClientCopy ?
+    form.value.contractedClientId :
+    form.value.contractedAgencyId
+
+  const productsValid = form.value.products.length > 0 &&
+    form.value.products.every(product =>
+      product.contractProductName?.trim() &&
+      product.productItems.length > 0 &&
+      product.productItems.every(item => item.particularsName?.trim() && item.rate > 0)
+    )
+
+  return basicValid && clientAgencyValid && productsValid
 })
 
+// Watchers
 watch(() => props.contract, (newContract) => {
-  if (newContract) {
-    form.value = { ...newContract }
-  } else {
-    resetForm()
+  if (newContract && props.isEdit) {
+    // Convert backend response to store format
+    const storeContract = convertToStoreFormat(newContract)
+    store.setContract(storeContract)
+  } else if (!props.isEdit) {
+    store.initializeContract()
   }
 }, { immediate: true })
 
 watch(() => props.modelValue, (visible) => {
-  if (visible && !props.contract) {
-    resetForm()
+  if (visible) {
+    // Load last saved time
+    const stored = localStorage.getItem('contractFormData')
+    if (stored) {
+      const data = JSON.parse(stored)
+      lastSaved.value = data.lastSaved
+    }
+
+    if (!props.contract && !props.isEdit) {
+      store.initializeContract()
+    }
   }
 })
 
-// Update computed values in form
-watch([spotTotal, vatAmount, grandTotal], () => {
-  form.value.spotTotal = spotTotal.value
-  form.value.vatAmount = vatAmount.value
-  form.value.grandTotal = grandTotal.value
-  form.value.grandTotalWords = numberToWords(grandTotal.value)
-})
-
-const resetForm = () => {
-  form.value = {
-    contractNo: '',
-    contractDate: '',
-    clientCopy: true,
-    startDate: '',
-    endDate: '',
-    advertiser: '',
-    product: '',
-    items: [
-      {
-        sl: 1,
-        particulars: '',
-        quantity: 1,
-        rate: 0,
-        amount: 0
-      }
-    ],
-    spotTotal: 0,
-    vatPercentage: 15,
-    vatAmount: 0,
-    grandTotal: 0,
-    grandTotalWords: '',
-    duration: '',
-    onAirDescription: '',
-    brandingPackage: '',
-    schedule: {
-      month: '',
-      dates: '',
-      description: ''
-    },
-    terms: 'I/We request CHANNEL24 LIMITED to transmit the above mention Spot. I/We agree to abide by the tariff rate and to the terms and conditions over leaf and indemnify CHANNEL24 LIMITED against all legal action by reason of the transmission of any advertisement material.',
-    preparedBy: '',
-    checkedBy: '',
-    authorizedBy: '',
-    status: 'draft'
+// Methods
+const convertToStoreFormat = (contract: any) => {
+  return {
+    guid: contract.guid,
+    televisionContractNo: contract.televisionContractNo,
+    contractDate: contract.contractDate,
+    contractStartDate: contract.contractStartDate,
+    contractEndDate: contract.contractEndDate,
+    contractedClientId: contract.contractedClientId,
+    contractedAgencyId: contract.contractedAgencyId,
+    vat: contract.vat || 0,
+    vatRate: contract.vatRate || 15,
+    total: contract.total || 0,
+    remarks: contract.remarks || '',
+    products: contract.products?.map((product: any) => ({
+      contractProductName: product.contractProductName || '',
+      contractProductDescription: product.contractProductDescription || '',
+      quantity: product.quantity || 1,
+      vat: product.vat || 0,
+      vatRate: product.vatRate || 15,
+      total: product.total || 0,
+      remarks: product.remarks || '',
+      productItems: product.productItems?.map((item: any) => ({
+        guid: item.guid || "Guid()",
+        particularsName: item.particularsName || '',
+        rate: item.rate || 0,
+        remarks: item.remarks || '',
+        vat: item.vat || 0,
+        vatRate: item.vatRate || 15
+      })) || []
+    })) || [],
+    onAirDescriptions: contract.onAirDescriptions?.map((desc: any) => ({
+      durationMonths: desc.durationMonths || [],
+      scheduleDates: desc.scheduleDates || '',
+      description: desc.description || ''
+    })) || []
   }
-  formRef.value?.clearValidate()
 }
 
-const addItem = () => {
-  form.value.items.push({
-    sl: form.value.items.length + 1,
-    particulars: '',
-    quantity: 1,
-    rate: 0,
-    amount: 0
-  })
+const convertToApiFormat = (storeContract: any): ITelevisionContractCreateRequest | ITelevisionContractUpdateRequest => {
+  const totals = contractUtils.calculateContractTotals(storeContract)
+
+  return {
+    ...storeContract,
+    vat: totals.vatAmount,
+    total: totals.grandTotal,
+    products: storeContract.products.map((product: any) => ({
+      ...product,
+      vat: store.calculateProductTotal(product) * (product.vatRate / 100),
+      total: store.calculateProductTotal(product),
+      productItems: product.productItems.map((item: any) => ({
+        ...item,
+        vat: item.rate * (item.vatRate / 100)
+      }))
+    }))
+  }
 }
 
-const removeItem = (index: number) => {
-  form.value.items.splice(index, 1)
-  // Reorder SL numbers
-  form.value.items.forEach((item, idx) => {
-    item.sl = idx + 1
-  })
+const handleFieldUpdate = (field: string, value: any) => {
+  store.updateContractField(field as any, value)
+}
+
+const handleClientAgencyChange = (value: string) => {
+  if (store.isClientCopy) {
+    store.updateContractField('contractedClientId', value)
+  } else {
+    store.updateContractField('contractedAgencyId', value)
+  }
+}
+
+const handleProductUpdate = (productIndex: number, field: string, value: any) => {
+  store.updateProduct(productIndex, { [field]: value })
+}
+
+const handleProductItemUpdate = (productIndex: number, itemIndex: number, field: string, value: any) => {
+  store.updateProductItem(productIndex, itemIndex, { [field]: value })
+}
+
+const handleOnAirDescriptionUpdate = (descIndex: number, field: string, value: any) => {
+  store.updateOnAirDescription(descIndex, { [field]: value })
+}
+
+const handleAutoSave = () => {
+  // Debounced auto-save
+  clearTimeout((window as any).autoSaveTimeout)
+    ; (window as any).autoSaveTimeout = setTimeout(() => {
+      store.autoSave()
+      lastSaved.value = new Date().toISOString()
+    }, 1000)
+}
+
+const handleSaveDraft = () => {
+  store.saveDraft()
+  ElMessage.success('Draft saved successfully')
+}
+
+const handleLoadDraft = (index: number) => {
+  store.loadDraft(index)
+  showDrafts.value = false
+  ElMessage.success('Draft loaded successfully')
+}
+
+const handleDeleteDraft = (index: number) => {
+  store.clearDraft(index)
+  ElMessage.success('Draft deleted successfully')
+}
+
+const handleClearStorage = () => {
+  store.clearLocalStorage()
+  lastSaved.value = ''
+  ElMessage.success('All local data cleared')
 }
 
 const formatCurrency = (value: number) => {
@@ -394,53 +470,13 @@ const formatCurrency = (value: number) => {
   }).format(value)
 }
 
-const numberToWords = (num: number): string => {
-  // Simple number to words conversion for Bangladeshi Taka
-  if (num === 0) return 'Zero Taka Only'
+const formatDate = (dateString: string | null | undefined) => {
+  if (!dateString) return 'N/A'
+  return new Date(dateString).toLocaleDateString('en-BD')
+}
 
-  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine']
-  const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
-  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
-
-  const convertHundreds = (n: number): string => {
-    let result = ''
-    if (n >= 100) {
-      result += ones[Math.floor(n / 100)] + ' Hundred '
-      n %= 100
-    }
-    if (n >= 20) {
-      result += tens[Math.floor(n / 10)] + ' '
-      n %= 10
-    } else if (n >= 10) {
-      result += teens[n - 10] + ' '
-      return result
-    }
-    if (n > 0) {
-      result += ones[n] + ' '
-    }
-    return result
-  }
-
-  let result = ''
-  const crores = Math.floor(num / 10000000)
-  const lacs = Math.floor((num % 10000000) / 100000)
-  const thousands = Math.floor((num % 100000) / 1000)
-  const hundreds = num % 1000
-
-  if (crores > 0) {
-    result += convertHundreds(crores) + 'Crore '
-  }
-  if (lacs > 0) {
-    result += convertHundreds(lacs) + 'Lac '
-  }
-  if (thousands > 0) {
-    result += convertHundreds(thousands) + 'Thousand '
-  }
-  if (hundreds > 0) {
-    result += convertHundreds(hundreds)
-  }
-
-  return result.trim() + ' Taka Only'
+const formatTime = (isoString: string) => {
+  return new Date(isoString).toLocaleTimeString()
 }
 
 const handleClose = () => {
@@ -452,14 +488,64 @@ const handleSubmit = async () => {
 
   try {
     await formRef.value.validate()
-    emit('save', form.value)
-  } catch (error) {
-    console.error('Form validation failed:', error)
+    isSubmitting.value = true
+
+    // Validate contract data
+    // const validation = contractUtils.validateContract(form.value)
+    // if (!validation.isValid) {
+    //   ElMessage.error(validation.errors[0])
+    //   return
+    // }
+
+    // Prepare data for API call
+    const contractData = convertToApiFormat(form.value)
+
+    // API call
+    if (props.isEdit) {
+      await contractService.updateTelevisionContract(props.contract!.guid, contractData as ITelevisionContractUpdateRequest)
+    } else {
+      await contractService.createTelevisionContract(contractData as ITelevisionContractCreateRequest)
+    }
+
+    // Clear local storage on successful submission
+    store.clearLocalStorage()
+
+    emit('save', contractData)
+    emit('refresh')
+    handleClose()
+
+    ElMessage.success(`Contract ${props.isEdit ? 'updated' : 'created'} successfully`)
+
+  } catch (error: any) {
+    console.error('Form validation or API call failed:', error)
+    ElMessage.error(error.response?.data?.message || 'Failed to save contract')
+  } finally {
+    isSubmitting.value = false
   }
 }
+
+// Load clients and agencies
+const loadClientsAndAgencies = async () => {
+  try {
+    const [clientsResponse, agenciesResponse] = await Promise.all([
+      clientService.getClientsList(),
+      agencyService.getAgenciesList()
+    ])
+
+    clients.value = clientsResponse.data
+    agencies.value = agenciesResponse.data
+  } catch (error) {
+    console.error('Failed to load clients and agencies:', error)
+  }
+}
+
+onMounted(() => {
+  loadClientsAndAgencies()
+})
 </script>
 
 <style scoped>
+/* Your existing styles remain the same */
 .contract-modal {
   --el-dialog-border-radius: 16px;
 }
@@ -468,6 +554,27 @@ const handleSubmit = async () => {
   max-height: 70vh;
   overflow-y: auto;
   padding-right: 8px;
+}
+
+.auto-save-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--el-color-success-light-9);
+  border: 1px solid var(--el-color-success-light-7);
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--el-color-success);
+}
+
+.auto-save-indicator .el-icon {
+  font-size: 14px;
+}
+
+.draft-management {
+  margin-bottom: 16px;
 }
 
 .form-section {
@@ -495,7 +602,28 @@ const handleSubmit = async () => {
   margin: 16px 0 12px 0;
 }
 
+.product-section {
+  margin-bottom: 24px;
+}
+
+.product-card {
+  margin-bottom: 16px;
+}
+
+.product-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .item-row {
+  background: var(--el-fill-color-lighter);
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.description-row {
   background: var(--el-fill-color-lighter);
   padding: 16px;
   border-radius: 8px;
@@ -533,9 +661,40 @@ const handleSubmit = async () => {
 
 .modal-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   gap: 12px;
   padding-top: 16px;
+}
+
+.footer-left {
+  display: flex;
+  gap: 8px;
+}
+
+.footer-right {
+  display: flex;
+  gap: 12px;
+}
+
+.drafts-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.draft-card {
+  margin-bottom: 12px;
+}
+
+.draft-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.draft-actions {
+  display: flex;
+  gap: 8px;
 }
 
 :deep(.el-form-item__label) {
@@ -560,17 +719,25 @@ const handleSubmit = async () => {
   width: 100%;
 }
 
+:deep(.el-card__header) {
+  padding: 12px 20px;
+  background: var(--el-fill-color-lighter);
+}
+
 @media (max-width: 768px) {
   .contract-modal {
     --el-dialog-width: 90vw;
   }
 
   .modal-footer {
-    flex-direction: column-reverse;
+    flex-direction: column;
+    gap: 16px;
   }
 
-  .modal-footer .el-button {
+  .footer-left,
+  .footer-right {
     width: 100%;
+    justify-content: space-between;
   }
 }
 </style>

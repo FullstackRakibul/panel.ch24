@@ -1,6 +1,7 @@
 <template>
-  <el-dialog v-model="dialogVisible" :title="isEdit ? 'Edit Client' : 'Create New Client'" width="800px"
-    :close-on-click-modal="false" :close-on-press-escape="false" class="client-modal" top="5vh">
+  <el-dialog v-model="dialogVisible" :title="modalStore.isEditMode ? 'Edit Client' : 'Create New Client'" width="800px"
+    :close-on-click-modal="false" :close-on-press-escape="false" class="client-modal" top="5vh"
+    @close="handleDialogClose">
     <template #header>
       <div class="modal-header">
         <div class="flex items-center gap-3">
@@ -10,10 +11,14 @@
           </div>
           <div>
             <h2 class="text-xl font-bold text-gray-900 dark:text-white">
-              {{ isEdit ? 'Edit Client' : 'Create New Client' }}
+              {{ modalStore.isEditMode ? 'Edit Client' : 'Create New Client' }}
             </h2>
             <p class="text-sm text-gray-900 dark:text-white">
-              {{ isEdit ? 'Update client information below' : 'Fill in the details to add a new client' }}
+              {{ modalStore.isEditMode ? 'Update client information below' : 'Fill in the details to add a new client'
+              }}
+              <span v-if="modalStore.hasClientModalData" class="text-xs text-blue-500 ml-2">
+                (Draft saved)
+              </span>
             </p>
           </div>
         </div>
@@ -26,21 +31,17 @@
         <div class="section-header">
           <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-blue-50 flex items-center justify-center rounded-full">
-              <User class="w-4 h-4 text-blue-600 " />
+              <User class="w-4 h-4 text-blue-600" />
             </div>
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Basic Information</h3>
           </div>
         </div>
 
         <el-row :gutter="16">
-          <el-col :span="12">
-            <el-form-item label="Client Name" prop="name">
-              <el-input v-model="form.name" placeholder="Enter client name" :prefix-icon="User" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="Contact Person" prop="contactPerson">
-              <el-input v-model="form.contactPerson" placeholder="Enter contact person name" :prefix-icon="UserCheck" />
+          <el-col :span="24">
+            <el-form-item label="Client Name" prop="clintName">
+              <el-input v-model="form.clintName" placeholder="Enter client name" :prefix-icon="User"
+                @input="handleFormChange" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -48,38 +49,29 @@
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="Email Address" prop="email">
-              <el-input v-model="form.email" type="email" placeholder="Enter email address" :prefix-icon="Mail" />
+              <el-input v-model="form.email" type="email" placeholder="Enter email address" :prefix-icon="Mail"
+                @input="handleFormChange" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="Title/Position" prop="title">
-              <el-input v-model="form.title" placeholder="e.g., CEO, CTO, Manager" :prefix-icon="Briefcase" />
+            <el-form-item label="Phone Number" prop="phone">
+              <el-input v-model="form.phone" placeholder="Enter phone number" :prefix-icon="Phone"
+                @input="handleFormChange" />
             </el-form-item>
           </el-col>
         </el-row>
 
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="Phone Number" prop="phone">
-              <el-input v-model="form.phone" placeholder="Enter phone number" :prefix-icon="Phone" />
+            <el-form-item label="Mobile Number">
+              <el-input v-model="form.mobile" placeholder="Enter mobile number" :prefix-icon="Phone"
+                @input="handleFormChange" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="Toll-Free Number">
-              <el-input v-model="form.tollFreeNumber" placeholder="Enter toll-free number" :prefix-icon="Phone" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="16">
-          <el-col :span="12">
-            <el-form-item label="Website">
-              <el-input v-model="form.website" placeholder="https://example.com" :prefix-icon="Globe" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="Subject/Project">
-              <el-input v-model="form.subject" placeholder="e.g., Mobile App Design" :prefix-icon="FileText" />
+              <el-input v-model="form.tollFreeNumber" placeholder="Enter toll-free number" :prefix-icon="Phone"
+                @input="handleFormChange" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -89,88 +81,29 @@
       <div class="form-section">
         <div class="section-header">
           <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center ">
+            <div class="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center">
               <MapPin class="w-4 h-4 text-green-600" />
             </div>
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Address Information</h3>
           </div>
         </div>
 
-        <el-form-item label="Address" prop="address">
-          <el-input v-model="form.address" type="textarea" :rows="2" placeholder="Enter complete address" />
-        </el-form-item>
-
         <el-row :gutter="16">
           <el-col :span="8">
-            <el-form-item label="City" prop="city">
-              <el-input v-model="form.city" placeholder="Enter city" :prefix-icon="MapPin" />
+            <el-form-item label="City">
+              <el-input v-model="form.city" placeholder="Enter city" :prefix-icon="MapPin" @input="handleFormChange" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="State" prop="state">
-              <el-input v-model="form.state" placeholder="Enter state" :prefix-icon="MapPin" />
+            <el-form-item label="Location" prop="location">
+              <el-input v-model="form.location" placeholder="Enter location" :prefix-icon="MapPin"
+                @input="handleFormChange" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="Country" prop="country">
-              <el-select v-model="form.country" placeholder="Select country" class="w-full" filterable>
-                <el-option label="বাংলাদেশ" value="Bangladesh">
-                  <div class="flex items-center">
-                    <el-icon class="mr-2">
-                      <Flag />
-                    </el-icon> <span>বাংলাদেশ</span>
-                  </div>
-                </el-option>
-                <el-option label="Canada" value="Canada">
-                  <div class="flex items-center">
-                    <el-icon class="mr-2">
-                      <Flag />
-                    </el-icon> <span>Canada</span>
-                  </div>
-                </el-option>
-                <el-option label="United Kingdom" value="UK">
-                  <div class="flex items-center">
-                    <el-icon class="mr-2">
-                      <Flag />
-                    </el-icon> <span>United Kingdom</span>
-                  </div>
-                </el-option>
-                <el-option label="Australia" value="Australia">
-                  <div class="flex items-center">
-                    <el-icon class="mr-2">
-                      <Flag />
-                    </el-icon> <span>Australia</span>
-                  </div>
-                </el-option>
-                <el-option label="Germany" value="Germany">
-                  <div class="flex items-center">
-                    <el-icon class="mr-2">
-                      <Flag />
-                    </el-icon> <span>Germany</span>
-                  </div>
-                </el-option>
-                <el-option label="France" value="France">
-                  <div class="flex items-center">
-                    <el-icon class="mr-2">
-                      <Flag />
-                    </el-icon> <span>France</span>
-                  </div>
-                </el-option>
-                <el-option label="Japan" value="Japan">
-                  <div class="flex items-center">
-                    <el-icon class="mr-2">
-                      <Flag />
-                    </el-icon> <span>Japan</span>
-                  </div>
-                </el-option>
-                <el-option label="Other" value="Other">
-                  <div class="flex items-center">
-                    <el-icon class="mr-2">
-                      <Flag />
-                    </el-icon> <span>Other</span>
-                  </div>
-                </el-option>
-              </el-select>
+            <el-form-item label="Country">
+              <el-input v-model="form.country" placeholder="Enter country" :prefix-icon="MapPin"
+                @input="handleFormChange" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -189,21 +122,24 @@
 
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="Client Type" prop="type">
-              <el-select v-model="form.type" placeholder="Select client type" class="w-full">
-                <el-option label="Agent" value="agent" />
-                <el-option label="Company" value="company" />
-                <el-option label="Individual" value="individual" />
+            <el-form-item label="Client Type" prop="cTypeId">
+              <el-select v-model="form.cTypeId" placeholder="Select client type" class="w-full"
+                @change="handleFormChange" :loading="loadingClientTypes">
+                <el-option v-for="type in clientTypes" :key="type.guid" :label="type.cTypeName" :value="type.guid" />
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="12" v-if="form.type === 'agent'">
-            <el-form-item label="Associated Agency">
-              <el-select v-model="form.agencyId" placeholder="Select agency" class="w-full">
-                <el-option label="Creative Agency" value="1" />
-                <el-option label="Media Partners" value="2" />
-                <el-option label="Digital Solutions" value="3" />
-                <el-option label="Brand Masters" value="4" />
+          <el-col :span="12">
+            <el-form-item label="Agency">
+              <el-select v-model="form.agencyId" placeholder="Select agency (optional)" class="w-full"
+                @change="handleFormChange" :loading="loadingAgencies" clearable filterable>
+                <el-option v-for="agency in agencies" :key="agency.guid" :label="agency.agencyName"
+                  :value="agency.guid">
+                  <div class="flex items-center justify-between">
+                    <span>{{ agency.agencyName }}</span>
+                    <span v-if="agency.email" class="text-xs text-gray-500">{{ agency.email }}</span>
+                  </div>
+                </el-option>
               </el-select>
             </el-form-item>
           </el-col>
@@ -224,46 +160,60 @@
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="Tax ID / Registration Number">
-              <el-input v-model="form.taxId" placeholder="Enter tax ID or registration number"
-                :prefix-icon="FileText" />
+              <el-input v-model="form.taxId" placeholder="Enter tax ID or registration number" :prefix-icon="FileText"
+                @input="handleFormChange" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="Company Registration Date">
-              <el-date-picker v-model="form.companyRegistrationDate" type="date" placeholder="Select date"
-                class="w-full" format="YYYY-MM-DD" value-format="YYYY-MM-DD" />
+            <el-form-item label="Portfolio URL">
+              <el-input v-model="form.portfolioURL" placeholder="https://example.com" :prefix-icon="Globe"
+                @input="handleFormChange" />
             </el-form-item>
           </el-col>
         </el-row>
 
-        <el-form-item label="Office Space Ownership">
-          <el-radio-group v-model="form.officeSpaceOwnership">
-            <el-radio label="owned">Owned</el-radio>
-            <el-radio label="rental">Rental</el-radio>
-          </el-radio-group>
-        </el-form-item>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="Company Registration Date">
+              <el-date-picker v-model="form.companyRegistrationDate" type="date" placeholder="Select date"
+                class="w-full" format="YYYY-MM-DD" value-format="YYYY-MM-DD" @change="handleFormChange" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Company Logo">
+              <el-input v-model="form.companyLogo" placeholder="Enter company logo URL" @input="handleFormChange" />
+            </el-form-item>
+          </el-col>
+        </el-row>
 
-        <el-form-item label="Company Logo">
-          <el-upload class="upload-demo" action="#" :auto-upload="false" :on-change="handleLogoUpload" :limit="1"
-            :file-list="form.companyLogo ? [{ name: 'Company Logo', url: '' }] : []" :on-exceed="handleExceed">
-            <el-button type="primary" :icon="Upload">Choose File</el-button>
-            <template #tip>
-              <div class="el-upload__tip text-xs text-gray-500 mt-1">
-                PNG/JPG file with a size less than 500KB
-              </div>
-            </template>
-          </el-upload>
+        <el-form-item label="Remarks">
+          <el-input v-model="form.remarks" type="textarea" :rows="3" placeholder="Enter any additional remarks or notes"
+            @input="handleFormChange" />
         </el-form-item>
+      </div>
+
+      <!-- Draft Actions -->
+      <div v-if="modalStore.hasClientModalData && !props.client" class="draft-actions">
+        <el-alert title="Draft Saved" description="Your form data has been saved. You can continue where you left off."
+          type="info" :closable="false" show-icon />
+        <div class="draft-buttons">
+          <el-button size="small" @click="clearDraft">
+            Clear Draft
+          </el-button>
+          <el-button size="small" type="primary" @click="restoreDraft">
+            Restore Draft
+          </el-button>
+        </div>
       </div>
     </el-form>
 
     <template #footer>
       <div class="modal-footer">
-        <el-button size="large" @click="handleClose">
+        <el-button size="large" @click="handleClose" :disabled="loading">
           Cancel
         </el-button>
-        <el-button type="primary" size="large" :loading="loading" :disabled="!isFormValid" @click="handleSubmit">
-          {{ loading ? 'Saving...' : (isEdit ? 'Update Client' : 'Create Client') }}
+        <el-button type="primary" size="large" :loading="loading" @click="handleSubmit">
+          {{ loading ? 'Saving...' : (modalStore.isEditMode ? 'Update Client' : 'Create Client') }}
         </el-button>
       </div>
     </template>
@@ -271,72 +221,59 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import type { FormInstance, UploadFile, UploadFiles } from 'element-plus'
+import { ref, watch, computed, onMounted } from 'vue'
+import { debounce } from 'lodash-es'
+import type { FormInstance } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import type { Client } from '../../stores/clients'
-import {
-  Flag 
-} from '@element-plus/icons-vue'
+
 import {
   User,
-  UserCheck,
   Mail,
   Phone,
   Globe,
   FileText,
   MapPin,
-  Building2,
-  Briefcase,
-  Upload
+  Building2
 } from 'lucide-vue-next'
+import type { IAgency, IClient, IClientCreateRequest, IClientType } from '@/interface/clients/clients.interface'
+import { useModalStore } from '@/stores/clients'
+import { agencyService } from '@/services/Agencies/agencies.services'
 
 interface Props {
   modelValue: boolean
-  client?: Client | null
-  isEdit?: boolean
+  client?: IClient | null
   loading?: boolean
+  clientTypes: IClientType[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
   client: null,
-  isEdit: false,
-  loading: false
+  loading: false,
+  clientTypes: () => []
 })
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  save: [client: Client]
+  save: [client: IClientCreateRequest]
 }>()
 
+const modalStore = useModalStore()
 const formRef = ref<FormInstance>()
+
+const agencies = ref<IAgency[]>([])
+const loadingAgencies = ref(false)
+const loadingClientTypes = ref(false)
+
 const dialogVisible = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value)
 })
 
-const form = ref<Client>({
-  name: '',
-  email: '',
-  phone: '',
-  address: '',
-  city: '',
-  state: '',
-  country: '',
-  type: 'company',
-  contactPerson: '',
-  title: '',
-  taxId: '',
-  tollFreeNumber: '',
-  website: '',
-  subject: '',
-  companyRegistrationDate: null,
-  officeSpaceOwnership: 'owned',
-  companyLogo: null
-})
+// Use store data as form source
+const form = computed(() => modalStore.clientModalData)
 
 const rules = {
-  name: [
+  clintName: [
     { required: true, message: 'Please enter client name', trigger: 'blur' }
   ],
   email: [
@@ -346,92 +283,78 @@ const rules = {
   phone: [
     { required: true, message: 'Please enter phone number', trigger: 'blur' }
   ],
-  address: [
-    { required: true, message: 'Please enter address', trigger: 'blur' }
+  location: [
+    { required: true, message: 'Please enter location', trigger: 'blur' }
   ],
-  city: [
-    { required: true, message: 'Please enter city', trigger: 'blur' }
-  ],
-  state: [
-    { required: true, message: 'Please enter state', trigger: 'blur' }
-  ],
-  contactPerson: [
-    { required: true, message: 'Please enter contact person name', trigger: 'blur' }
-  ],
-  type: [
+  cTypeId: [
     { required: true, message: 'Please select client type', trigger: 'change' }
   ]
 }
 
-const isFormValid = computed(() => {
-  return form.value.name.trim() &&
-    form.value.email.trim() &&
-    form.value.phone.trim() &&
-    form.value.address.trim() &&
-    form.value.city.trim() &&
-    form.value.state.trim() &&
-    form.value.contactPerson.trim() &&
-    form.value.type
-})
+// Fetch agencies
+const fetchAgencies = async () => {
+  try {
+    loadingAgencies.value = true
+    const response = await agencyService.getAllAgencies()
+    console.log("Agency getch data : ", response)
+    agencies.value = response
+  } catch (error) {
+    console.error('Error fetching agencies:', error)
+    ElMessage.error('Failed to load agencies')
+  } finally {
+    loadingAgencies.value = false
+  }
+}
+
+// Debounced auto-save
+const handleFormChange = debounce(() => {
+  modalStore.saveToLocalStorage()
+}, 500)
 
 watch(() => props.client, (newClient) => {
   if (newClient) {
-    form.value = { ...newClient }
+    // When editing existing client, load their data and don't save to draft
+    modalStore.setClientModalData({
+      clintName: newClient.clintName,
+      email: newClient.email || '',
+      phone: newClient.phone || '',
+      mobile: newClient.mobile || '',
+      city: newClient.city || '',
+      location: newClient.location,
+      country: newClient.country || '',
+      cTypeId: newClient.cTypeId,
+      agencyId: newClient.agencyId || null, // Ensure null instead of empty string
+      taxId: newClient.taxId || '',
+      tollFreeNumber: newClient.tollFreeNumber || '',
+      portfolioURL: newClient.portfolioURL || '',
+      companyRegistrationDate: newClient.companyRegistrationDate || '',
+      companyLogo: newClient.companyLogo || '',
+      remarks: newClient.remarks || ''
+    })
+    modalStore.isEditMode = true
+    modalStore.editingClientId = newClient.guid
   } else {
-    resetForm()
+    // When creating new client, check if we have draft data
+    if (!modalStore.hasClientModalData) {
+      modalStore.resetClientModalData()
+    }
+    modalStore.isEditMode = false
+    modalStore.editingClientId = null
   }
 }, { immediate: true })
 
 watch(() => props.modelValue, (visible) => {
-  if (visible && !props.client) {
-    resetForm()
+  if (visible) {
+    // Modal opened - load any existing draft data
+    modalStore.loadFromLocalStorage()
+    fetchAgencies() // Load agencies when modal opens
   }
 })
 
-const resetForm = () => {
-  form.value = {
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    state: '',
-    country: '',
-    type: 'company',
-    contactPerson: '',
-    title: '',
-    taxId: '',
-    tollFreeNumber: '',
-    website: '',
-    subject: '',
-    companyRegistrationDate: null,
-    officeSpaceOwnership: 'owned',
-    companyLogo: null
-  }
-  formRef.value?.clearValidate()
-}
-
-const handleLogoUpload = (uploadFile: UploadFile, uploadFiles: UploadFiles) => {
-  const isJPGorPNG = uploadFile.raw?.type === 'image/jpeg' || uploadFile.raw?.type === 'image/png'
-  const isLt500KB = uploadFile.raw ? uploadFile.raw.size / 1024 < 500 : false
-
-  if (!isJPGorPNG) {
-    ElMessage.error('Company logo must be JPG/PNG format!')
-    form.value.companyLogo = null
-    return false
-  }
-  if (!isLt500KB) {
-    ElMessage.error('Company logo size cannot exceed 500KB!')
-    form.value.companyLogo = null
-    return false
-  }
-
-  form.value.companyLogo = uploadFile.raw
-  return true
-}
-
-const handleExceed = () => {
-  ElMessage.warning('You can only upload 1 file. Please remove the existing one before re-uploading.')
+const handleDialogClose = () => {
+  // Don't reset data when modal closes accidentally
+  // Data persists in store and localStorage
+  dialogVisible.value = false
 }
 
 const handleClose = () => {
@@ -443,11 +366,36 @@ const handleSubmit = async () => {
 
   try {
     await formRef.value.validate()
-    emit('save', form.value)
+
+    // Prepare data for submission - ensure agencyId is null if empty
+    const submitData: IClientCreateRequest = {
+      ...form.value,
+      agencyId: form.value.agencyId || null // Convert empty string to null
+    }
+
+    console.log("Submitting client data:", submitData)
+
+    emit('save', submitData)
   } catch (error) {
     ElMessage.error('Please fill in all required fields correctly.')
   }
 }
+
+const clearDraft = () => {
+  modalStore.resetClientModalData()
+  modalStore.clearLocalStorage()
+  ElMessage.success('Draft cleared')
+}
+
+const restoreDraft = () => {
+  modalStore.loadFromLocalStorage()
+  ElMessage.success('Draft restored')
+}
+
+onMounted(() => {
+  // Load any existing draft data when component mounts
+  modalStore.loadFromLocalStorage()
+})
 </script>
 
 <style scoped>
@@ -484,6 +432,21 @@ const handleSubmit = async () => {
   justify-content: flex-end;
   gap: 12px;
   padding-top: 16px;
+}
+
+.draft-actions {
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--el-color-info-light-9);
+  border-radius: 8px;
+  border: 1px solid var(--el-color-info-light-5);
+}
+
+.draft-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: flex-end;
 }
 
 :deep(.el-form-item__label) {

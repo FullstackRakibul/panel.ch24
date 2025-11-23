@@ -35,14 +35,14 @@
       <el-col :xs="24" :sm="8">
         <div class="stats-card">
           <div class="stats-content">
-            <div class="stats-icon company">
+            <div class="stats-icon active">
               <el-icon size="24">
-                <Building2 />
+                <CheckCircle />
               </el-icon>
             </div>
             <div class="stats-info">
-              <div class="stats-value">{{ companyClients }}</div>
-              <div class="stats-label">Companies</div>
+              <div class="stats-value">{{ activeClients }}</div>
+              <div class="stats-label">Active Clients</div>
             </div>
           </div>
         </div>
@@ -51,14 +51,14 @@
       <el-col :xs="24" :sm="8">
         <div class="stats-card">
           <div class="stats-content">
-            <div class="stats-icon agent">
+            <div class="stats-icon company">
               <el-icon size="24">
-                <Users />
+                <Building2 />
               </el-icon>
             </div>
             <div class="stats-info">
-              <div class="stats-value">{{ agentClients }}</div>
-              <div class="stats-label">Agents</div>
+              <div class="stats-value">{{ corporateClients }}</div>
+              <div class="stats-label">Corporate Clients</div>
             </div>
           </div>
         </div>
@@ -69,20 +69,18 @@
     <el-card class="filters-card" shadow="never">
       <el-row :gutter="16" align="middle">
         <el-col :xs="24" :sm="8">
-          <el-input v-model="searchQuery" placeholder="Search clients..." :prefix-icon="Search" size="large" clearable
-            @input="handleSearch" />
+          <el-input v-model="searchQuery" placeholder="Search clients..." :prefix-icon="Search" size="large"
+            clearable />
         </el-col>
 
         <el-col :xs="24" :sm="4">
-          <el-select v-model="selectedType" placeholder="All Types" size="large" clearable @change="handleFilter">
-            <el-option label="Company" value="company" />
-            <el-option label="Agent" value="agent" />
-            <el-option label="Individual" value="individual" />
+          <el-select v-model="selectedClientType" placeholder="All Types" size="large" clearable>
+            <el-option v-for="type in clientTypes" :key="type.guid" :label="type.cTypeName" :value="type.guid" />
           </el-select>
         </el-col>
 
         <el-col :xs="24" :sm="4">
-          <el-select v-model="selectedStatus" placeholder="All Status" size="large" clearable @change="handleFilter">
+          <el-select v-model="selectedStatus" placeholder="All Status" size="large" clearable>
             <el-option label="Active" value="active" />
             <el-option label="Inactive" value="inactive" />
           </el-select>
@@ -91,11 +89,11 @@
         <el-col :xs="24" :sm="8">
           <div class="filter-actions">
             <el-button @click="resetFilters">Reset</el-button>
-            <el-button type="primary" plain>
+            <el-button type="primary" plain @click="handleFetchClientInfo">
               <el-icon class="mr-1">
-                <Download />
+                <Refresh />
               </el-icon>
-              Export
+              Refresh
             </el-button>
             <div class="view-toggle">
               <el-button-group>
@@ -117,31 +115,34 @@
     </el-card>
 
     <!-- Loading State -->
-    <div v-if="clientsStore.loading" class="loading-container">
+    <div v-if="loading" class="loading-container">
       <el-skeleton animated :rows="8" />
     </div>
 
     <!-- Cards View -->
     <div v-else-if="viewMode === 'cards'" class="clients-grid">
       <el-row :gutter="24">
-        <el-col v-for="client in filteredClients" :key="client.id" :xs="24" :sm="12" :lg="8" :xl="6">
+        <el-col v-for="client in filteredClients" :key="client.guid" :xs="24" :sm="12" :lg="8" :xl="6">
           <el-card class="client-card" shadow="hover">
             <!-- Client Header -->
             <div class="client-header">
               <div class="client-avatar-section">
-                <el-avatar :size="48" class="client-avatar">
+                <!-- <el-avatar :size="48" class="client-avatar">
                   <el-icon>
                     <User />
                   </el-icon>
-                </el-avatar>
+                </el-avatar> -->
+                <img :src="client.companyLogo" :alt="client.clintName"
+                  class="w-16 h-16 rounded-lg object-contain border border-gray-100 p-1" />
                 <div class="client-basic-info">
-                  <h3 class="client-name">{{ client.name }}</h3>
+                  <h3 class="client-name">{{ client.clintName }}</h3>
                   <div class="client-badges">
-                    <el-tag :type="getTypeColor(client.type)" size="small" effect="light">
-                      {{ formatType(client.type) }}
+                    <el-tag type="primary" size="small" effect="light">
+                      {{ client.clientType?.cTypeName || 'Unknown' }}
                     </el-tag>
-                    <el-tag :type="client.status === 'active' ? 'success' : 'danger'" size="small" effect="light">
-                      {{ client.status === 'active' ? 'Active' : 'Inactive' }}
+                    <el-tag :type="client.status?.statusName === 'Active' ? 'success' : 'danger'" size="small"
+                      effect="light">
+                      {{ client.status?.statusName || 'Unknown' }}
                     </el-tag>
                   </div>
                 </div>
@@ -177,29 +178,29 @@
 
             <!-- Client Info -->
             <div class="client-info">
-              <div class="info-item">
+              <div class="info-item" v-if="client.email">
                 <el-icon class="info-icon">
                   <Mail />
                 </el-icon>
                 <span class="info-text">{{ client.email }}</span>
               </div>
-              <div class="info-item">
+              <div class="info-item" v-if="client.phone">
                 <el-icon class="info-icon">
                   <Phone />
                 </el-icon>
                 <span class="info-text">{{ client.phone }}</span>
               </div>
-              <div class="info-item">
+              <div class="info-item" v-if="client.location">
                 <el-icon class="info-icon">
                   <MapPin />
                 </el-icon>
-                <span class="info-text">{{ client.city }}, {{ client.state }}</span>
+                <span class="info-text">{{ client.location }}</span>
               </div>
-              <div class="info-item" v-if="client.subject">
+              <div class="info-item" v-if="client.agency">
                 <el-icon class="info-icon">
-                  <FileText />
+                  <Building2 />
                 </el-icon>
-                <span class="info-text">{{ client.subject }}</span>
+                <span class="info-text">{{ client.agency.agencyName }}</span>
               </div>
             </div>
 
@@ -207,8 +208,8 @@
             <div class="client-footer">
               <span class="created-date">Added {{ formatDate(client.createdAt) }}</span>
               <div class="status-indicator">
-                <div class="status-dot active"></div>
-                <span class="status-text">Online</span>
+                <div :class="['status-dot', client.status?.statusName === 'Active' ? 'active' : 'inactive']"></div>
+                <span class="status-text">{{ client.status?.statusName === 'Active' ? 'Active' : 'Inactive' }}</span>
               </div>
             </div>
           </el-card>
@@ -233,65 +234,60 @@
         empty-text="No clients found" class="modern-table">
         <el-table-column width="60">
           <template #default="{ row }">
-            <el-avatar :size="40" class="client-avatar">
-              <el-icon>
-                <User />
-              </el-icon>
-            </el-avatar>
+            <img :src="row.companyLogo" :alt="row.clintName"
+              class="w-16 h-16 rounded-lg object-contain border border-gray-100 p-1" />
           </template>
         </el-table-column>
 
-        <el-table-column label="Name" prop="name" min-width="200" sortable>
+        <el-table-column label="Client Name" prop="clintName" min-width="200" sortable>
           <template #default="{ row }">
             <div class="client-name-cell">
-              <div class="name">{{ row.name }}</div>
-              <div class="contact-person">{{ row.contactPerson }}</div>
+              <div class="name">{{ row.clintName }}</div>
+              <div class="client-type">{{ row.clientType?.cTypeName }}</div>
             </div>
-          </template>
-        </el-table-column>
-
-        <el-table-column label="Title" prop="title" min-width="150">
-          <template #default="{ row }">
-            <span class="title-text">{{ row.title || '-' }}</span>
           </template>
         </el-table-column>
 
         <el-table-column label="Email" prop="email" min-width="200">
           <template #default="{ row }">
-            <el-link :href="`mailto:${row.email}`" type="primary">
+            <el-link v-if="row.email" :href="`mailto:${row.email}`" type="primary">
               {{ row.email }}
             </el-link>
+            <span v-else>-</span>
           </template>
         </el-table-column>
 
         <el-table-column label="Phone" prop="phone" min-width="150">
           <template #default="{ row }">
-            <el-link :href="`tel:${row.phone}`" type="primary">
+            <el-link v-if="row.phone" :href="`tel:${row.phone}`" type="primary">
               {{ row.phone }}
             </el-link>
+            <span v-else>-</span>
           </template>
         </el-table-column>
 
         <el-table-column label="Location" min-width="150">
           <template #default="{ row }">
             <div class="location-cell">
-              <div class="city">{{ row.city }}, {{ row.state }}</div>
-              <div class="country">{{ row.country }}</div>
+              <div class="city">{{ row.city || 'N/A' }}</div>
+              <div class="country">{{ row.country || 'N/A' }}</div>
             </div>
           </template>
         </el-table-column>
 
-        <el-table-column label="Type" prop="type" width="120">
+        <el-table-column label="Type" width="120">
           <template #default="{ row }">
-            <el-tag :type="getTypeColor(row.type)" size="small" effect="light">
-              {{ formatType(row.type) }}
+            <el-tag type="primary" size="small" effect="light">
+              {{ row.clientType?.cTypeName || 'Unknown' }}
             </el-tag>
           </template>
         </el-table-column>
 
-        <el-table-column label="Subject" prop="subject" min-width="150">
+        <el-table-column label="Status" width="100">
           <template #default="{ row }">
-            <span class="subject-text">{{ row.subject || '-' }}</span>
+            <el-tag :type="row.status?.statusName === 'Active' ? 'success' : 'danger'" size="small" effect="light">
+              {{ row.status?.statusName || 'Unknown' }}
+            </el-tag>
           </template>
         </el-table-column>
 
@@ -305,39 +301,29 @@
           <template #default="{ row }">
             <div class="action-buttons">
               <el-button type="primary" link @click="editClient(row)" :icon="Edit" size="small" />
-              <el-button type="danger" link @click="deleteClient(row.id!)" :icon="Trash2" size="small" />
+              <el-button type="danger" link @click="deleteClient(row.guid)" :icon="Trash2" size="small" />
             </div>
           </template>
         </el-table-column>
       </el-table>
-
-      <!-- Pagination -->
-      <div class="pagination-container">
-        <el-pagination v-model:current-page="clientsStore.currentPage" v-model:page-size="pageSize"
-          :page-sizes="[10, 20, 50, 100]" :total="filteredClients.length"
-          layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange"
-          @current-change="handleCurrentChange" />
-      </div>
     </div>
 
     <!-- Client Modal -->
-    <ClientModal v-model="showModal" :client="selectedClient" :is-edit="isEditMode" :loading="clientsStore.loading"
-      @save="handleSave" />
+    <ClientModal v-model="showModal" :client="selectedClient" :is-edit="isEditMode" :loading="modalLoading"
+      :client-types="clientTypes" @save="handleSave" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { useClientsStore, type Client } from '../stores/clients'
-import ClientModal from '../components/forms/ClientModal.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import ClientModal from '../components/forms/ClientModal.vue'
 import {
   Plus,
   Search,
-  Download,
   User,
   Building2,
-  Users,
+  CheckCircle,
   MoreHorizontal,
   Edit,
   Eye,
@@ -345,25 +331,34 @@ import {
   Mail,
   Phone,
   MapPin,
-  FileText,
   Grid3X3,
   List
 } from 'lucide-vue-next'
+import type { IClient, IClientCreateRequest, IClientType } from '@/interface/clients/clients.interface'
+import { clientService } from '@/services/Clients/common.services'
+import { useModalStore } from '@/stores/clients'
 
-const clientsStore = useClientsStore()
-
+const loading = ref(false)
+const modalLoading = ref(false)
+const clients = ref<IClient[]>([])
+const clientTypes = ref<IClientType[]>([])
 const searchQuery = ref('')
-const selectedType = ref('')
+const selectedClientType = ref('')
 const selectedStatus = ref('')
 const showModal = ref(false)
 const isEditMode = ref(false)
-const selectedClient = ref<Client | null>(null)
+const selectedClient = ref<IClient | null>(null)
 const viewMode = ref<'cards' | 'list'>('cards')
-const pageSize = ref(10)
+const modalStore = useModalStore()
 
-const clients = computed(() => clientsStore.clients)
-const companyClients = computed(() => clients.value.filter(c => c.type === 'company').length)
-const agentClients = computed(() => clients.value.filter(c => c.type === 'agent').length)
+
+const activeClients = computed(() =>
+  clients.value.filter(c => c.status?.statusName === 'Active').length
+)
+
+const corporateClients = computed(() =>
+  clients.value.filter(c => c.clientType?.cTypeName === 'Corporate').length
+)
 
 const filteredClients = computed(() => {
   let filtered = [...clients.value]
@@ -371,46 +366,62 @@ const filteredClients = computed(() => {
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     filtered = filtered.filter(client =>
-      client.name.toLowerCase().includes(query) ||
-      client.email.toLowerCase().includes(query) ||
-      client.contactPerson.toLowerCase().includes(query) ||
-      client.city.toLowerCase().includes(query) ||
-      client.subject?.toLowerCase().includes(query)
+      client.clintName.toLowerCase().includes(query) ||
+      client.email?.toLowerCase().includes(query) ||
+      client.phone?.toLowerCase().includes(query) ||
+      client.city?.toLowerCase().includes(query) ||
+      client.location.toLowerCase().includes(query)
     )
   }
 
-  if (selectedType.value) {
-    filtered = filtered.filter(client => client.type === selectedType.value)
+  if (selectedClientType.value) {
+    filtered = filtered.filter(client => client.cTypeId === selectedClientType.value)
   }
 
   if (selectedStatus.value) {
-    filtered = filtered.filter(client => client.status === selectedStatus.value)
+    filtered = filtered.filter(client =>
+      selectedStatus.value === 'active' ? client.status?.statusName === 'Active' : client.status?.statusName !== 'Active'
+    )
   }
 
   return filtered
 })
 
-const handleSearch = () => {
-  // Search is handled by computed property
+const handleFetchClientInfo = async () => {
+  try {
+    loading.value = true
+    const response = await clientService.getAllClientsInfo()
+    clients.value = response
+    console.log("Here is all the clients data : ", response)
+  } catch (error) {
+    ElMessage.error('Failed to fetch clients')
+    console.error('Error fetching clients:', error)
+  } finally {
+    loading.value = false
+  }
 }
 
-const handleFilter = () => {
-  // Filtering is handled by computed property
+const fetchClientTypes = async () => {
+  try {
+    const response = await clientService.getClientTypes()
+    clientTypes.value = response
+  } catch (error) {
+    console.error('Error fetching client types:', error)
+  }
 }
 
 const resetFilters = () => {
   searchQuery.value = ''
-  selectedType.value = ''
+  selectedClientType.value = ''
   selectedStatus.value = ''
 }
 
 const openCreateModal = () => {
-  selectedClient.value = null
-  isEditMode.value = false
+  modalStore.openClientModal()
   showModal.value = true
 }
 
-const handleCommand = (command: { action: string; client: Client }) => {
+const handleCommand = (command: { action: string; client: IClient }) => {
   const { action, client } = command
 
   switch (action) {
@@ -421,22 +432,21 @@ const handleCommand = (command: { action: string; client: Client }) => {
       viewClientDetails(client)
       break
     case 'delete':
-      deleteClient(client.id!)
+      deleteClient(client.guid)
       break
   }
 }
 
-const editClient = (client: Client) => {
-  selectedClient.value = client
-  isEditMode.value = true
+const editClient = (client: IClient) => {
+  modalStore.openClientModal(client, true)
   showModal.value = true
 }
 
-const viewClientDetails = (client: Client) => {
-  ElMessage.info(`Viewing details for ${client.name}`)
+const viewClientDetails = (client: IClient) => {
+  ElMessage.info(`Viewing details for ${client.clintName}`)
 }
 
-const deleteClient = async (id: number) => {
+const deleteClient = async (guid: string) => {
   try {
     await ElMessageBox.confirm(
       'This will permanently delete the client. Continue?',
@@ -448,40 +458,41 @@ const deleteClient = async (id: number) => {
       }
     )
 
-    const result = await clientsStore.deleteClient(id)
-    if (result.success) {
-      ElMessage.success('Client deleted successfully')
-    } else {
-      ElMessage.error(result.message || 'Failed to delete client')
-    }
+    await clientService.deleteClient(guid)
+    ElMessage.success('Client deleted successfully')
+    await handleFetchClientInfo()
   } catch {
     ElMessage.info('Delete cancelled')
   }
 }
 
-const handleSave = async (clientData: Client) => {
-  let result
+const handleSave = async (clientData: IClientCreateRequest) => {
+  try {
+    modalLoading.value = true
+    const formattedData = {
+      ...clientData,
+      agencyId: clientData.agencyId || null
+    }
+    console.log("Clients Created Data : ", formattedData)
+    if (modalStore.isEditMode && modalStore.editingClientId) {
+      await clientService.updateClient(modalStore.editingClientId, formattedData)
+      ElMessage.success('Client updated successfully')
+    } else {
+      await clientService.createClient(formattedData)
+      ElMessage.success('Client created successfully')
+    }
 
-  if (isEditMode.value && selectedClient.value?.id) {
-    result = await clientsStore.updateClient(selectedClient.value.id, clientData)
-  } else {
-    result = await clientsStore.createClient(clientData)
-  }
-
-  if (result.success) {
     showModal.value = false
-    ElMessage.success(isEditMode.value ? 'Client updated successfully' : 'Client created successfully')
-  } else {
-    ElMessage.error(result.message || 'Operation failed')
+    // Clear the draft after successful save
+    modalStore.resetClientModalData()
+    modalStore.clearLocalStorage()
+    await handleFetchClientInfo()
+  } catch (error) {
+    ElMessage.error('Operation failed')
+    console.error('Error saving client:', error)
+  } finally {
+    modalLoading.value = false
   }
-}
-
-const handleSizeChange = (val: number) => {
-  pageSize.value = val
-}
-
-const handleCurrentChange = (val: number) => {
-  clientsStore.currentPage = val
 }
 
 const formatDate = (date: string | undefined) => {
@@ -493,26 +504,9 @@ const formatDate = (date: string | undefined) => {
   })
 }
 
-const formatType = (type: string) => {
-  const typeMap = {
-    company: 'Company',
-    agent: 'Agent',
-    individual: 'Individual'
-  }
-  return typeMap[type as keyof typeof typeMap] || type
-}
-
-const getTypeColor = (type: string) => {
-  const colorMap = {
-    company: 'primary',
-    agent: 'success',
-    individual: 'warning'
-  }
-  return colorMap[type as keyof typeof colorMap] || 'default'
-}
-
 onMounted(() => {
-  clientsStore.fetchClients()
+  handleFetchClientInfo()
+  fetchClientTypes()
 })
 </script>
 

@@ -1,33 +1,50 @@
+export interface IAgency {
+  guid: string;
+  agencyName: string;
+  tagline?: string;
+  location?: string;
+  slogan?: string;
+  logo?: string;
+  email?: string;
+  phone?: string;
+  portfolioURL?: string;
+  companySize?: number;
+  rating?: string;
+  reviewCount?: string;
+  budget?: string;
+  statusId: number;
+  createdBy?: string;
+  createdAt: Date;
+  updatedBy?: string;
+  updatedAt?: Date;
+}
 
-export interface CreateAgencyInterface {
-    Id : string
-  	AgencyName:string
-		Tagline :string
-		Location :string
-		Slogan :string
-		Logo :string
-		Email :string
-		Phone :string
-		PortfolioURL :string
-		CompanySize :number
-		Rating :string
-		ReviewCount:string
-		Budget :string
-} 
+export interface ICreateAgency {
+  agencyName: string;
+  tagline?: string;
+  location?: string;
+  slogan?: string;
+  logo?: string;
+  email?: string;
+  phone?: string;
+  portfolioURL?: string;
+  companySize?: number;
+  rating?: string;
+  reviewCount?: string;
+  budget?: string;
+}
 
-
-export interface AgencyInterface {
-    id : string
-  	AgencyName:string
-		Tagline :string
-		Location :string
-		Slogan :string
-		Logo :string
-		Email :string
-		Phone :string
-		PortfolioURL :string
-		CompanySize :number
-		Rating :string
-		ReviewCount:string
-		Budget :string
+export interface IUpdateAgency {
+  agencyName?: string;
+  tagline?: string;
+  location?: string;
+  slogan?: string;
+  logo?: string;
+  email?: string;
+  phone?: string;
+  portfolioURL?: string;
+  companySize?: number;
+  rating?: string;
+  reviewCount?: string;
+  budget?: string;
 }
