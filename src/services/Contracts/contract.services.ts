@@ -1,5 +1,5 @@
 
-import type { ITelevisionContract, ITelevisionContractCreateRequest, ITelevisionContractFilter, ITelevisionContractListResponse, ITelevisionContractUpdateRequest } from "@/interface/contract/contracts.interface";
+import type { IAgencySimple, IClientSimple, ITelevisionContract, ITelevisionContractCreateRequest, ITelevisionContractFilter, ITelevisionContractListResponse, ITelevisionContractUpdateRequest } from "@/interface/contract/contracts.interface";
 import { useHttp } from "@/utils/base.Http"
 
 export const contractService = {
@@ -153,13 +153,14 @@ export const contractService = {
 // Additional services for related entities
 export const clientService = {
   // Get all clients for dropdown
-  getClientsList: async (): Promise<Array<{ guid: string; name: string; code: string }>> => {
-    const response = await useHttp().get("/clients");
-    return response.data;
-  },
+
+    getClientsList: async (): Promise<IClientSimple[]> => {
+      const response = await useHttp().get("/clients");
+      return response.data;
+    },
 
   // Search clients by name or code
-  searchClients: async (searchTerm: string): Promise<Array<{ guid: string; name: string; code: string }>> => {
+  searchClients: async (searchTerm: string): Promise<Array<IClientSimple>> => {
     const response = await useHttp().get(`/clients/search?q=${encodeURIComponent(searchTerm)}`);
     return response.data;
   }
@@ -167,13 +168,13 @@ export const clientService = {
 
 export const agencyService = {
   // Get all agencies for dropdown
-  getAgenciesList: async (): Promise<Array<{ guid: string; name: string; code: string }>> => {
+  getAgenciesList: async (): Promise<IAgencySimple[]> => {
     const response = await useHttp().get("/agencies");
-    return response.data;
+    return response.data.data;
   },
 
   // Search agencies by name or code
-  searchAgencies: async (searchTerm: string): Promise<Array<{ guid: string; name: string; code: string }>> => {
+  searchAgencies: async (searchTerm: string): Promise<Array<IAgencySimple>> => {
     const response = await useHttp().get(`/agencies/search?q=${encodeURIComponent(searchTerm)}`);
     return response.data;
   }

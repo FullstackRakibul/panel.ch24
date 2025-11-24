@@ -67,11 +67,32 @@
           <el-col :span="12">
             <el-form-item :label="store.isClientCopy ? 'Client' : 'Agency'"
               :prop="store.isClientCopy ? 'contractedClientId' : 'contractedAgencyId'">
+              <!-- <el-select v-model="selectedClientOrAgency"
+                :placeholder="`Select ${store.isClientCopy ? 'client' : 'agency'}`" class="w-full" filterable clearable
+                @change="handleClientAgencyChange">
+                <el-option v-for="item in store.isClientCopy ? clients : agencies" :key="item.guid" :label="item.email"
+                  :value="item.guid" />
+
+                <el-option v-for="agency in store.isClientCopy ? clients : agencies" :key="agency.guid"
+                  :label="agency.email" :value="agency.guid">
+                  <div class="flex items-center justify-between">
+                    <span>{{ agency.email }}</span>
+                    <span v-if="agency.email" class="text-xs text-gray-500">{{ agency.email }}</span>
+                  </div>
+                </el-option>
+              </el-select> -->
               <el-select v-model="selectedClientOrAgency"
                 :placeholder="`Select ${store.isClientCopy ? 'client' : 'agency'}`" class="w-full" filterable clearable
                 @change="handleClientAgencyChange">
-                <el-option v-for="item in store.isClientCopy ? clients : agencies" :key="item.guid" :label="item.name"
-                  :value="item.guid" />
+                <el-option v-for="item in store.isClientCopy ? clients : agencies" :label="item.email" :key="item.guid"
+                  :value="item.guid">
+                  <div class="flex justify-between items-center w-full">
+                    <span class="font-medium">
+                      {{ store.isClientCopy ? (item as IClientSimple).clintName : (item as IAgencySimple).agencyName }}
+                    </span>
+                    <span v-if="item.email" class="text-xs text-gray-500 ml-2">{{ item.email }}</span>
+                  </div>
+                </el-option>
               </el-select>
             </el-form-item>
           </el-col>
@@ -528,12 +549,12 @@ const handleSubmit = async () => {
 const loadClientsAndAgencies = async () => {
   try {
     const [clientsResponse, agenciesResponse] = await Promise.all([
-      clientService.getClientsList(),
-      agencyService.getAgenciesList()
+      await clientService.getClientsList(),
+      await agencyService.getAgenciesList()
     ])
 
-    clients.value = clientsResponse.data
-    agencies.value = agenciesResponse.data
+    clients.value = clientsResponse
+    agencies.value = agenciesResponse
   } catch (error) {
     console.error('Failed to load clients and agencies:', error)
   }

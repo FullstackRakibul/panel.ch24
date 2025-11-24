@@ -103,7 +103,7 @@
     <el-card class="filters-card" shadow="never">
       <div class="filters-content">
         <el-input v-model="searchQuery" placeholder="Search contracts by number, client, agency..."
-          :prefix-icon="Search" clearable style="max-width: 300px;" @input="handleSearch" />
+          :prefix-icon="Search" clearable style="max-width: 200px;" @input="handleSearch" />
         <div class="filter-controls">
           <el-select v-model="selectedStatus" placeholder="All Status" clearable @change="loadContracts">
             <el-option label="Draft" value="draft" />
@@ -197,15 +197,10 @@
         <el-table-column label="Actions" width="280" fixed="right">
           <template #default="{ row }">
             <div class="action-buttons">
-              <el-button type="primary" link @click="viewContractDetails(row)" :icon="View" size="small">
-                Details
-              </el-button>
               <el-button type="success" link @click="editContract(row)" :icon="Edit" size="small">
                 Edit
               </el-button>
-              <el-button type="info" link @click="printContract(row)" :icon="Printer" size="small">
-                Print
-              </el-button>
+
               <el-dropdown @command="(command: string) => handleContractAction(row, command)">
                 <el-button type="warning" link size="small">
                   More
@@ -213,6 +208,12 @@
                 </el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
+                    <el-dropdown-item command="print" :icon="View" @click="viewContractDetails(row)">
+                      Show Details
+                    </el-dropdown-item>
+                    <el-dropdown-item command="print" :icon="Printer" @click="printContract(row)">
+                      Print
+                    </el-dropdown-item>
                     <el-dropdown-item command="duplicate" :icon="Copy">
                       Duplicate
                     </el-dropdown-item>
@@ -766,14 +767,14 @@ onMounted(() => {
 }
 
 .filters-card {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .filters-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
