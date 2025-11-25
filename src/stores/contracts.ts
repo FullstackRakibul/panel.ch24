@@ -21,10 +21,26 @@ export interface TelevisionContractProductRequestDto {
   productItems: TelevisionContractProductItemsRequestDto[]
 }
 
+export interface TelevisionContractTransmissionScheduleDto {
+  guid: string
+  onAirDescriptionId: string | null
+  dateValue: string
+  durationInMinute: number
+  remarks: string
+}
+
 export interface TelevisionContractOnAirDescriptionDto {
-  durationMonths: number[]
-  scheduleDates: string
-  description: string
+  guid: string
+  onAirDuration: string
+  descriptionType: string
+  descriptionText: string
+  descriptionTypeName: string
+  descriptionTypeDescription: string
+  remarks: string
+  createdAt: string
+  statusId: number
+  isDeleted: boolean
+  transmissionSchedule: TelevisionContractTransmissionScheduleDto[]
 }
 
 export interface TelevisionContractRequestDto {
@@ -166,9 +182,17 @@ export const useContractStore = defineStore('contract', () => {
   // On Air Descriptions Management
   const addOnAirDescription = () => {
     currentContract.value.onAirDescriptions.push({
-      durationMonths: [],
-      scheduleDates: '',
-      description: ''
+      guid: '',
+      onAirDuration: '',
+      descriptionType: '',
+      descriptionText: '',
+      descriptionTypeName: '',
+      descriptionTypeDescription: '',
+      remarks: '',
+      createdAt: new Date().toISOString(),
+      statusId: 1,
+      isDeleted: false,
+      transmissionSchedule: []
     })
     saveToLocalStorage()
   }
@@ -184,6 +208,41 @@ export const useContractStore = defineStore('contract', () => {
       ...updates
     }
     saveToLocalStorage()
+  }
+
+  const addTransmissionSchedule = (descIndex: number) => {
+    if (!currentContract.value.onAirDescriptions[descIndex].transmissionSchedule) {
+      currentContract.value.onAirDescriptions[descIndex].transmissionSchedule = []
+    }
+    currentContract.value.onAirDescriptions[descIndex].transmissionSchedule.push({
+      guid: '',
+      onAirDescriptionId: currentContract.value.onAirDescriptions[descIndex].guid,
+      dateValue: '',
+      durationInMinute: 0,
+      remarks: ''
+    })
+    saveToLocalStorage()
+  }
+
+  const removeTransmissionSchedule = (descIndex: number, scheduleIndex: number) => {
+    if (currentContract.value.onAirDescriptions[descIndex]?.transmissionSchedule) {
+      currentContract.value.onAirDescriptions[descIndex].transmissionSchedule.splice(scheduleIndex, 1)
+      saveToLocalStorage()
+    }
+  }
+
+  const updateTransmissionSchedule = (
+    descIndex: number,
+    scheduleIndex: number,
+    updates: Partial<TelevisionContractTransmissionScheduleDto>
+  ) => {
+    if (currentContract.value.onAirDescriptions[descIndex]?.transmissionSchedule?.[scheduleIndex]) {
+      currentContract.value.onAirDescriptions[descIndex].transmissionSchedule[scheduleIndex] = {
+        ...currentContract.value.onAirDescriptions[descIndex].transmissionSchedule[scheduleIndex],
+        ...updates
+      }
+      saveToLocalStorage()
+    }
   }
 
   // Draft Management
@@ -310,9 +369,17 @@ export const useContractStore = defineStore('contract', () => {
       ],
       onAirDescriptions: [
         {
-          durationMonths: [],
-          scheduleDates: '',
-          description: ''
+          guid: '',
+          onAirDuration: '',
+          descriptionType: '',
+          descriptionText: '',
+          descriptionTypeName: '',
+          descriptionTypeDescription: '',
+          remarks: '',
+          createdAt: new Date().toISOString(),
+          statusId: 1,
+          isDeleted: false,
+          transmissionSchedule: []
         }
       ]
     }
@@ -349,6 +416,9 @@ export const useContractStore = defineStore('contract', () => {
     addOnAirDescription,
     removeOnAirDescription,
     updateOnAirDescription,
+    addTransmissionSchedule,
+    removeTransmissionSchedule,
+    updateTransmissionSchedule,
     saveDraft,
     loadDraft,
     clearDraft,

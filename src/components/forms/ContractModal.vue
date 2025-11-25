@@ -1,11 +1,10 @@
 <template>
-  <el-dialog v-model="dialogVisible" :title="isEdit ? 'Edit Contract' : 'Add New Contract / Booking info.'"
-    width="900px" :close-on-click-modal="false" :close-on-press-escape="false" class="contract-modal font-sans"
-    top="5vh">
+  <el-dialog v-model="dialogVisible" :title="isEdit ? 'Edit Contract' : 'Add New Television Contract'" width="1400px"
+    :close-on-click-modal="false" :close-on-press-escape="false" class="contract-modal font-sans" top="3vh">
     <el-form ref="formRef" :model="form" :rules="rules" label-position="top" size="default" class="contract-form"
       @input="handleAutoSave">
       <!-- Auto-save Indicator -->
-      <div class="auto-save-indicator" v-if="lastSaved">
+      <div v-if="lastSaved" class="auto-save-indicator">
         <el-icon>
           <SuccessFilled />
         </el-icon>
@@ -13,9 +12,9 @@
       </div>
 
       <!-- Draft Management -->
-      <div class="draft-management" v-if="store.hasDraft && !isEdit">
+      <div v-if="store.hasDraft && !isEdit" class="draft-management">
         <el-alert title="You have saved drafts" type="info" :closable="false" show-icon>
-          <template #append>
+          <template #default>
             <el-button type="primary" text @click="showDrafts = true">
               Manage Drafts ({{ store.draftContracts.length }})
             </el-button>
@@ -23,25 +22,37 @@
         </el-alert>
       </div>
 
-      <!-- Basic Information -->
+      <!-- Basic Information Section -->
       <div class="form-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="section-icon blue">
+              <FileText class="w-4 h-4" />
+            </span>
+            Contract Information
+          </h3>
+        </div>
+
         <el-row :gutter="16">
           <el-col :span="8">
             <el-form-item label="Contract No" prop="televisionContractNo">
-              <el-input v-model="form.televisionContractNo" placeholder="Enter contract number"
+              <el-input v-model="form.televisionContractNo" placeholder="e.g., TML2510026"
                 @blur="handleFieldUpdate('televisionContractNo', form.televisionContractNo)" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="Contract Date" prop="contractDate">
               <el-date-picker v-model="form.contractDate" type="date" placeholder="Select date" class="w-full"
-                format="YYYY-MM-DD" value-format="YYYY-MM-DD"
+                format="DD MMM, YYYY" value-format="YYYY-MM-DD"
                 @change="handleFieldUpdate('contractDate', form.contractDate)" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="Client Copy">
-              <el-switch v-model="store.isClientCopy" @change="store.toggleClientCopy" />
+            <el-form-item label="Contract Type">
+              <el-radio-group v-model="contractType" @change="handleContractTypeChange">
+                <el-radio label="client">Client (Advertiser)</el-radio>
+                <el-radio label="agency">Agency</el-radio>
+              </el-radio-group>
             </el-form-item>
           </el-col>
         </el-row>
@@ -50,52 +61,58 @@
           <el-col :span="12">
             <el-form-item label="Start Date" prop="contractStartDate">
               <el-date-picker v-model="form.contractStartDate" type="date" placeholder="Select start date"
-                class="w-full" format="YYYY-MM-DD" value-format="YYYY-MM-DD"
+                class="w-full" format="DD MMM, YYYY" value-format="YYYY-MM-DD"
                 @change="handleFieldUpdate('contractStartDate', form.contractStartDate)" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="End Date" prop="contractEndDate">
               <el-date-picker v-model="form.contractEndDate" type="date" placeholder="Select end date" class="w-full"
-                format="YYYY-MM-DD" value-format="YYYY-MM-DD"
+                format="DD MMM, YYYY" value-format="YYYY-MM-DD"
                 @change="handleFieldUpdate('contractEndDate', form.contractEndDate)" />
             </el-form-item>
           </el-col>
         </el-row>
 
+        <!-- Agency Selection -->
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item :label="store.isClientCopy ? 'Client' : 'Agency'"
-              :prop="store.isClientCopy ? 'contractedClientId' : 'contractedAgencyId'">
-              <!-- <el-select v-model="selectedClientOrAgency"
-                :placeholder="`Select ${store.isClientCopy ? 'client' : 'agency'}`" class="w-full" filterable clearable
-                @change="handleClientAgencyChange">
-                <el-option v-for="item in store.isClientCopy ? clients : agencies" :key="item.guid" :label="item.email"
-                  :value="item.guid" />
-
-                <el-option v-for="agency in store.isClientCopy ? clients : agencies" :key="agency.guid"
-                  :label="agency.email" :value="agency.guid">
-                  <div class="flex items-center justify-between">
-                    <span>{{ agency.email }}</span>
-                    <span v-if="agency.email" class="text-xs text-gray-500">{{ agency.email }}</span>
-                  </div>
-                </el-option>
-              </el-select> -->
-              <el-select v-model="selectedClientOrAgency"
-                :placeholder="`Select ${store.isClientCopy ? 'client' : 'agency'}`" class="w-full" filterable clearable
-                @change="handleClientAgencyChange">
-                <el-option v-for="item in store.isClientCopy ? clients : agencies" :label="item.email" :key="item.guid"
-                  :value="item.guid">
-                  <div class="flex justify-between items-center w-full">
-                    <span class="font-medium">
-                      {{ store.isClientCopy ? (item as IClientSimple).clintName : (item as IAgencySimple).agencyName }}
-                    </span>
-                    <span v-if="item.email" class="text-xs text-gray-500 ml-2">{{ item.email }}</span>
-                  </div>
-                </el-option>
-              </el-select>
+            <el-form-item label="Agency (Contract Party)" prop="contractedAgencyId">
+              <div class="select-with-action">
+                <el-select v-model="form.contractedAgencyId" placeholder="Select Agency" class="flex-1" filterable
+                  clearable @change="handleFieldUpdate('contractedAgencyId', form.contractedAgencyId)">
+                  <el-option v-for="agency in agencies" :key="agency.guid" :label="agency.agencyName || agency.email"
+                    :value="agency.guid">
+                    <div class="option-content">
+                      <span class="option-label">{{ agency.agencyName }}</span>
+                      <span v-if="agency.email" class="option-hint">{{ agency.email }}</span>
+                    </div>
+                  </el-option>
+                </el-select>
+                <el-button type="primary" :icon="Plus" @click="showAgencyModal = true" title="Create New Agency" />
+              </div>
             </el-form-item>
           </el-col>
+          <el-col :span="12">
+            <el-form-item label="Client (Advertiser)" prop="contractedClientId">
+              <div class="select-with-action">
+                <el-select v-model="form.contractedClientId" placeholder="Select Client/Advertiser" class="flex-1"
+                  filterable clearable @change="handleFieldUpdate('contractedClientId', form.contractedClientId)">
+                  <el-option v-for="client in clients" :key="client.guid" :label="client.clintName || client.email"
+                    :value="client.guid">
+                    <div class="option-content">
+                      <span class="option-label">{{ client.clintName }}</span>
+                      <span v-if="client.email" class="option-hint">{{ client.email }}</span>
+                    </div>
+                  </el-option>
+                </el-select>
+                <el-button type="primary" :icon="Plus" @click="showClientModal = true" title="Create New Client" />
+              </div>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="VAT Rate (%)" prop="vatRate">
               <el-input-number v-model="form.vatRate" :min="0" :max="100" :precision="2" controls-position="right"
@@ -105,76 +122,247 @@
         </el-row>
       </div>
 
-      <!-- Contract Products -->
+      <!-- Contract Products Section -->
       <div class="form-section">
-        <h3 class="section-title">Contract Products</h3>
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="section-icon green">
+              <Package class="w-4 h-4" />
+            </span>
+            Products & Items
+          </h3>
+          <el-button type="primary" :icon="Plus" @click="store.addProduct">
+            Add Product
+          </el-button>
+        </div>
 
-        <el-button type="primary" :icon="Plus" plain @click="store.addProduct">
-          Add Product
-        </el-button>
+        <div v-for="(product, productIndex) in form.products" :key="productIndex" class="product-card">
+          <el-card shadow="hover">
+            <template #header>
+              <div class="product-header">
+                <span class="font-semibold">Product {{ productIndex + 1 }}</span>
+                <el-button v-if="form.products.length > 1" type="danger" :icon="Trash2" circle size="small"
+                  @click="store.removeProduct(productIndex)" />
+              </div>
+            </template>
+
+            <el-row :gutter="16">
+              <el-col :span="12">
+                <el-form-item label="Product Name">
+                  <el-input v-model="product.contractProductName" placeholder="e.g., Kool"
+                    @blur="handleProductUpdate(productIndex, 'contractProductName', product.contractProductName)" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="Quantity">
+                  <el-input-number v-model="product.quantity" :min="1" controls-position="right" class="w-full"
+                    @change="handleProductUpdate(productIndex, 'quantity', product.quantity)" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="VAT Rate (%)">
+                  <el-input-number v-model="product.vatRate" :min="0" :max="100" :precision="2"
+                    controls-position="right" class="w-full"
+                    @change="handleProductUpdate(productIndex, 'vatRate', product.vatRate)" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <!-- Product Items (Particulars) -->
+            <div class="items-section">
+              <div class="items-header">
+                <h4 class="items-title">Particulars / Items</h4>
+                <el-button type="primary" size="small" :icon="Plus" plain @click="store.addProductItem(productIndex)">
+                  Add Item
+                </el-button>
+              </div>
+
+              <el-table :data="product.productItems" border stripe size="small" class="items-table">
+                <el-table-column label="SL#" width="60" align="center">
+                  <template #default="{ $index }">{{ $index + 1 }}</template>
+                </el-table-column>
+                <el-table-column label="Particulars" min-width="200">
+                  <template #default="{ row, $index }">
+                    <el-input v-model="row.particularsName" placeholder="e.g., Kool Sports24" size="small"
+                      @blur="handleProductItemUpdate(productIndex, $index, 'particularsName', row.particularsName)" />
+                  </template>
+                </el-table-column>
+                <el-table-column label="Rate (Tk.)" width="150">
+                  <template #default="{ row, $index }">
+                    <el-input-number v-model="row.rate" :min="0" :precision="2" controls-position="right" size="small"
+                      class="w-full" @change="handleProductItemUpdate(productIndex, $index, 'rate', row.rate)" />
+                  </template>
+                </el-table-column>
+                <el-table-column label="VAT Rate (%)" width="120">
+                  <template #default="{ row, $index }">
+                    <el-input-number v-model="row.vatRate" :min="0" :max="100" :precision="2" controls-position="right"
+                      size="small" class="w-full"
+                      @change="handleProductItemUpdate(productIndex, $index, 'vatRate', row.vatRate)" />
+                  </template>
+                </el-table-column>
+                <el-table-column label="Amount (Tk.)" width="130" align="right">
+                  <template #default="{ row }">
+                    <span class="amount-value">{{ formatCurrency(store.calculateItemTotal(row)) }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="" width="60" align="center">
+                  <template #default="{ $index }">
+                    <el-button v-if="product.productItems.length > 1" type="danger" :icon="Minus" circle size="small"
+                      @click="store.removeProductItem(productIndex, $index)" />
+                  </template>
+                </el-table-column>
+              </el-table>
+
+              <div class="product-total">
+                <span>Product Total:</span>
+                <span class="product-total-value">Tk. {{ formatCurrency(store.calculateProductTotal(product)) }}</span>
+              </div>
+            </div>
+          </el-card>
+        </div>
       </div>
 
-      <!-- On Air Descriptions -->
+      <!-- On Air Descriptions Section -->
       <div class="form-section">
-        <h3 class="section-title">On Air Descriptions</h3>
-        <div v-for="(desc, descIndex) in form.onAirDescriptions" :key="descIndex" class="description-row">
-          <el-row :gutter="16" align="middle">
-            <el-col :span="6">
-              <el-form-item label="Duration (Months)">
-                <el-select v-model="desc.durationMonths" multiple placeholder="Select months" class="w-full"
-                  @change="handleOnAirDescriptionUpdate(descIndex, 'durationMonths', desc.durationMonths)">
-                  <el-option v-for="month in availableMonths" :key="month.value" :label="month.label"
-                    :value="month.value" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="14">
-              <el-form-item label="Schedule Dates">
-                <el-input v-model="desc.scheduleDates" placeholder="Enter dates separated by commas (e.g., 01,02,03...)"
-                  @blur="handleOnAirDescriptionUpdate(descIndex, 'scheduleDates', desc.scheduleDates)" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="4">
-              <el-form-item label=" ">
-                <el-button v-if="form.onAirDescriptions.length > 1" type="danger" :icon="Minus" circle
-                  @click="store.removeOnAirDescription(descIndex)" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-form-item label="Description">
-            <el-input v-model="desc.description" type="textarea" :rows="2" placeholder="Enter on-air description"
-              @blur="handleOnAirDescriptionUpdate(descIndex, 'description', desc.description)" />
-          </el-form-item>
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="section-icon purple">
+              <Tv class="w-4 h-4" />
+            </span>
+            On-Air Descriptions
+          </h3>
+          <el-button type="primary" :icon="Plus" @click="store.addOnAirDescription">
+            Add Description
+          </el-button>
         </div>
-        <el-button type="primary" :icon="Plus" plain @click="store.addOnAirDescription">
-          Add Description
-        </el-button>
+
+        <div v-for="(desc, descIndex) in form.onAirDescriptions" :key="descIndex" class="description-card">
+          <el-card shadow="hover">
+            <template #header>
+              <div class="description-header">
+                <span class="font-semibold">On-Air Description {{ descIndex + 1 }}</span>
+                <el-button v-if="form.onAirDescriptions.length > 1" type="danger" :icon="Trash2" circle size="small"
+                  @click="store.removeOnAirDescription(descIndex)" />
+              </div>
+            </template>
+
+            <el-row :gutter="16">
+              <el-col :span="8">
+                <el-form-item label="Duration (Month)">
+                  <el-select v-model="desc.onAirDuration" placeholder="Select Month" class="w-full" filterable
+                    allow-create @change="handleOnAirDescriptionUpdate(descIndex, 'onAirDuration', desc.onAirDuration)">
+                    <el-option v-for="month in availableMonthOptions" :key="month" :label="month" :value="month" />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="Description Type">
+                  <el-select v-model="desc.descriptionType" placeholder="Select or Enter Type" class="w-full" filterable
+                    allow-create
+                    @change="handleOnAirDescriptionUpdate(descIndex, 'descriptionType', desc.descriptionType)">
+                    <el-option label="Branding Package" value="Branding Package" />
+                    <el-option label="Spot Package" value="Spot Package" />
+                    <el-option label="Program Sponsorship" value="Program Sponsorship" />
+                    <el-option label="Custom" value="Custom" />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="Type Name">
+                  <el-input v-model="desc.descriptionTypeName" placeholder="e.g., Kool Sports24"
+                    @blur="handleOnAirDescriptionUpdate(descIndex, 'descriptionTypeName', desc.descriptionTypeName)" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-form-item label="Description Text">
+              <el-input v-model="desc.descriptionText" type="textarea" :rows="3"
+                placeholder="e.g., Title Sting & Presenter Endorsement, Backdrop & doggy During the Program, 30 Sec Tvc Per Day (Per News), 30 Sec L_Shape"
+                @blur="handleOnAirDescriptionUpdate(descIndex, 'descriptionText', desc.descriptionText)" />
+            </el-form-item>
+
+            <!-- Transmission Schedule -->
+            <div class="transmission-section">
+              <div class="transmission-header">
+                <h4 class="transmission-title">Transmission Schedule</h4>
+                <el-button type="primary" size="small" :icon="Plus" plain
+                  @click="store.addTransmissionSchedule(descIndex)">
+                  Add Schedule
+                </el-button>
+              </div>
+
+              <div v-for="(schedule, scheduleIndex) in desc.transmissionSchedule" :key="scheduleIndex"
+                class="schedule-row">
+                <el-row :gutter="16" align="middle">
+                  <el-col :span="14">
+                    <el-form-item label="Dates (comma separated)">
+                      <el-input v-model="schedule.dateValue"
+                        placeholder="e.g., 01,02,03,04,05,06,07,08,09,10,11,12,13,14,15..."
+                        @blur="handleTransmissionScheduleUpdate(descIndex, scheduleIndex, 'dateValue', schedule.dateValue)" />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="6">
+                    <el-form-item label="Duration (Minutes)">
+                      <el-input-number v-model="schedule.durationInMinute" :min="0" controls-position="right"
+                        class="w-full"
+                        @change="handleTransmissionScheduleUpdate(descIndex, scheduleIndex, 'durationInMinute', schedule.durationInMinute)" />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="4">
+                    <el-form-item label=" ">
+                      <el-button v-if="desc.transmissionSchedule.length > 1" type="danger" :icon="Minus" circle
+                        @click="store.removeTransmissionSchedule(descIndex, scheduleIndex)" />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </div>
+            </div>
+          </el-card>
+        </div>
       </div>
 
       <!-- Terms and Remarks -->
       <div class="form-section">
-        <h3 class="section-title">Terms & Remarks</h3>
-        <el-form-item label="Remarks">
-          <el-input v-model="form.remarks" type="textarea" :rows="3" placeholder="Enter remarks"
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="section-icon orange">
+              <FileText class="w-4 h-4" />
+            </span>
+            Remarks
+          </h3>
+        </div>
+        <el-form-item>
+          <el-input v-model="form.remarks" type="textarea" :rows="3" placeholder="Enter any additional remarks or notes"
             @blur="handleFieldUpdate('remarks', form.remarks)" />
         </el-form-item>
       </div>
 
       <!-- Totals Summary -->
-      <div class="form-section">
-        <h3 class="section-title">Summary</h3>
+      <div class="form-section summary-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="section-icon blue">
+              <Calculator class="w-4 h-4" />
+            </span>
+            Summary
+          </h3>
+        </div>
         <div class="totals-summary">
           <div class="total-row">
-            <span>Products Total:</span>
-            <span>{{ formatCurrency(store.productsTotal) }}</span>
+            <span>Spot Total:</span>
+            <span>Tk. {{ formatCurrency(store.productsTotal) }}</span>
           </div>
           <div class="total-row">
-            <span>VAT ({{ form.vatRate }}%):</span>
-            <span>{{ formatCurrency(store.vatAmount) }}</span>
+            <span>Plus {{ form.vatRate }}% VAT on Tk. {{ formatCurrency(store.productsTotal) }}:</span>
+            <span>Tk. {{ formatCurrency(store.vatAmount) }}</span>
           </div>
           <div class="total-row grand-total">
             <span>Grand Total:</span>
-            <span>{{ formatCurrency(store.grandTotal) }}</span>
+            <span>Tk. {{ formatCurrency(store.grandTotal) }}</span>
+          </div>
+          <div class="total-row grand-total-words">
+            <span>In Words:</span>
+            <span>{{ numberToWords(store.grandTotal) }} Taka Only</span>
           </div>
         </div>
       </div>
@@ -184,17 +372,17 @@
       <div class="modal-footer">
         <div class="footer-left">
           <el-button v-if="!isEdit" type="info" @click="handleSaveDraft">
-            Save Draft
+            <Save class="w-4 h-4 mr-1" /> Save Draft
           </el-button>
           <el-button type="warning" @click="handleClearStorage">
-            Clear Data
+            <Trash class="w-4 h-4 mr-1" /> Clear Data
           </el-button>
         </div>
         <div class="footer-right">
           <el-button size="large" @click="handleClose">
             Cancel
           </el-button>
-          <el-button type="primary" size="large" :loading="loading" :disabled="!isFormValid" @click="handleSubmit">
+          <el-button type="primary" size="large" :loading="loading" @click="handleSubmit">
             {{ loading ? 'Saving...' : (isEdit ? 'Update Contract' : 'Create Contract') }}
           </el-button>
         </div>
@@ -217,23 +405,48 @@
         </template>
         <p><strong>Contract Date:</strong> {{ formatDate(draft.contractDate) || 'Not set' }}</p>
         <p><strong>Products:</strong> {{ draft.products.length }}</p>
-        <!-- <p><strong>Total:</strong> {{ formatCurrency(store.calculateContractTotal(draft.total)) }}</p> -->
-      </el-card>``
+      </el-card>
     </div>
     <template #footer>
       <el-button @click="showDrafts = false">Close</el-button>
     </template>
   </el-dialog>
+
+  <!-- Client Create Modal -->
+  <ClientModal v-model="showClientModal" :client-types="clientTypes" @save="handleClientCreated" />
+
+  <!-- Agency Create Modal -->
+  <AgencyModal v-model="showAgencyModal" @save="handleAgencyCreated" />
 </template>
 
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue'
 import { ElMessage, type FormInstance } from 'element-plus'
 import { Plus, Minus, SuccessFilled } from '@element-plus/icons-vue'
+import {
+  FileText,
+  Package,
+  Tv,
+  Calculator,
+  Trash2,
+  Save,
+  Trash
+} from 'lucide-vue-next'
 import { useContractStore } from '@/stores/contracts'
-import { contractService, clientService, agencyService, contractUtils } from '@/services/Contracts/contract.services'
-import type { IAgencySimple, IClientSimple, ITelevisionContract, ITelevisionContractCreateRequest, ITelevisionContractUpdateRequest } from '@/interface/contract/contracts.interface'
+import { contractService } from '@/services/Contracts/contract.services'
+import { agencyService } from '@/services/Agencies/agencies.services'
 
+import type {
+  IAgencySimple,
+  IClientSimple,
+  ITelevisionContract,
+  ITelevisionContractCreateRequest,
+  ITelevisionContractUpdateRequest
+} from '@/interface/contract/contracts.interface'
+import type { IClientType, IClientCreateRequest, IAgencyCreateRequest } from '@/interface/clients/clients.interface'
+import ClientModal from '@/components/forms/ClientModal.vue'
+import AgencyModal from '@/components/forms/AgencyModal.vue'
+import { clientService } from '@/services/Clients/common.services'
 interface Props {
   modelValue: boolean
   contract?: ITelevisionContract | null
@@ -258,28 +471,48 @@ const store = useContractStore()
 const formRef = ref<FormInstance>()
 const clients = ref<IClientSimple[]>([])
 const agencies = ref<IAgencySimple[]>([])
+const clientTypes = ref<IClientType[]>([])
 const showDrafts = ref(false)
 const lastSaved = ref<string>('')
 const isSubmitting = ref(false)
+const contractType = ref<'client' | 'agency'>('client')
+
+// Modal controls for creating new Client/Agency
+const showClientModal = ref(false)
+const showAgencyModal = ref(false)
 
 // Form data from store
 const form = computed(() => store.currentContract)
 
-// Available months for selection
-const availableMonths = ref([
-  { value: 1, label: 'January' },
-  { value: 2, label: 'February' },
-  { value: 3, label: 'March' },
-  { value: 4, label: 'April' },
-  { value: 5, label: 'May' },
-  { value: 6, label: 'June' },
-  { value: 7, label: 'July' },
-  { value: 8, label: 'August' },
-  { value: 9, label: 'September' },
-  { value: 10, label: 'October' },
-  { value: 11, label: 'November' },
-  { value: 12, label: 'December' }
-])
+// Generate month options based on contract dates
+const availableMonthOptions = computed(() => {
+  const months: string[] = []
+  const startDate = form.value.contractStartDate ? new Date(form.value.contractStartDate) : new Date()
+  const endDate = form.value.contractEndDate ? new Date(form.value.contractEndDate) : new Date()
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ]
+
+  const current = new Date(startDate)
+  while (current <= endDate) {
+    const monthYear = `${monthNames[current.getMonth()]}' ${current.getFullYear()}`
+    if (!months.includes(monthYear)) {
+      months.push(monthYear)
+    }
+    current.setMonth(current.getMonth() + 1)
+  }
+
+  if (months.length === 0) {
+    const currentYear = new Date().getFullYear()
+    monthNames.forEach(month => {
+      months.push(`${month}' ${currentYear}`)
+    })
+  }
+
+  return months
+})
 
 // Validation rules
 const rules = {
@@ -295,61 +528,22 @@ const rules = {
   contractEndDate: [
     { required: true, message: 'Please select end date', trigger: 'change' }
   ],
-  contractedClientId: [
-    { required: true, message: 'Please select a client', trigger: 'change' }
-  ],
-  contractedAgencyId: [
-    { required: true, message: 'Please select an agency', trigger: 'change' }
-  ],
   vatRate: [
     { required: true, message: 'Please enter VAT rate', trigger: 'blur' }
   ]
 }
-
-// Computed properties
-const selectedClientOrAgency = computed({
-  get: () => store.isClientCopy ? form.value.contractedClientId : form.value.contractedAgencyId,
-  set: (value) => {
-    if (store.isClientCopy) {
-      store.updateContractField('contractedClientId', value)
-    } else {
-      store.updateContractField('contractedAgencyId', value)
-    }
-  }
-})
 
 const dialogVisible = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value)
 })
 
-const isFormValid = computed(() => {
-  const basicValid = form.value.televisionContractNo?.trim() &&
-    form.value.contractDate &&
-    form.value.contractStartDate &&
-    form.value.contractEndDate &&
-    form.value.vatRate !== null
-
-  const clientAgencyValid = store.isClientCopy ?
-    form.value.contractedClientId :
-    form.value.contractedAgencyId
-
-  const productsValid = form.value.products.length > 0 &&
-    form.value.products.every(product =>
-      product.contractProductName?.trim() &&
-      product.productItems.length > 0 &&
-      product.productItems.every(item => item.particularsName?.trim() && item.rate > 0)
-    )
-
-  return basicValid && clientAgencyValid && productsValid
-})
-
 // Watchers
 watch(() => props.contract, (newContract) => {
   if (newContract && props.isEdit) {
-    // Convert backend response to store format
     const storeContract = convertToStoreFormat(newContract)
     store.setContract(storeContract)
+    contractType.value = newContract.contractedClientId ? 'client' : 'agency'
   } else if (!props.isEdit) {
     store.initializeContract()
   }
@@ -357,7 +551,6 @@ watch(() => props.contract, (newContract) => {
 
 watch(() => props.modelValue, (visible) => {
   if (visible) {
-    // Load last saved time
     const stored = localStorage.getItem('contractFormData')
     if (stored) {
       const data = JSON.parse(stored)
@@ -371,9 +564,13 @@ watch(() => props.modelValue, (visible) => {
 })
 
 // Methods
+const handleContractTypeChange = (value: 'client' | 'agency') => {
+  store.toggleClientCopy(value === 'client')
+}
+
 const convertToStoreFormat = (contract: any) => {
   return {
-    guid: contract.guid,
+    guid: contract.guid || null,
     televisionContractNo: contract.televisionContractNo,
     contractDate: contract.contractDate,
     contractStartDate: contract.contractStartDate,
@@ -393,7 +590,7 @@ const convertToStoreFormat = (contract: any) => {
       total: product.total || 0,
       remarks: product.remarks || '',
       productItems: product.productItems?.map((item: any) => ({
-        guid: item.guid || "Guid()",
+        guid: item.guid || null,
         particularsName: item.particularsName || '',
         rate: item.rate || 0,
         remarks: item.remarks || '',
@@ -402,27 +599,76 @@ const convertToStoreFormat = (contract: any) => {
       })) || []
     })) || [],
     onAirDescriptions: contract.onAirDescriptions?.map((desc: any) => ({
-      durationMonths: desc.durationMonths || [],
-      scheduleDates: desc.scheduleDates || '',
-      description: desc.description || ''
+      guid: desc.guid || null,
+      onAirDuration: desc.onAirDuration || '',
+      descriptionType: desc.descriptionType || '',
+      descriptionText: desc.descriptionText || '',
+      descriptionTypeName: desc.descriptionTypeName || '',
+      descriptionTypeDescription: desc.descriptionTypeDescription || '',
+      remarks: desc.remarks || '',
+      createdAt: desc.createdAt || new Date().toISOString(),
+      statusId: desc.statusId || 1,
+      isDeleted: desc.isDeleted || false,
+      transmissionSchedule: desc.transmissionSchedule?.map((schedule: any) => ({
+        guid: schedule.guid || null,
+        onAirDescriptionId: desc.guid,
+        dateValue: schedule.dateValue || '',
+        durationInMinute: schedule.durationInMinute || 0,
+        remarks: schedule.remarks || ''
+      })) || []
     })) || []
   }
 }
 
-const convertToApiFormat = (storeContract: any): ITelevisionContractCreateRequest | ITelevisionContractUpdateRequest => {
-  const totals = contractUtils.calculateContractTotals(storeContract)
+const convertToApiFormat = (): ITelevisionContractCreateRequest | ITelevisionContractUpdateRequest => {
+  const contractData = form.value
 
   return {
-    ...storeContract,
-    vat: totals.vatAmount,
-    total: totals.grandTotal,
-    products: storeContract.products.map((product: any) => ({
-      ...product,
+    guid: contractData.guid,
+    televisionContractNo: contractData.televisionContractNo,
+    contractDate: contractData.contractDate,
+    contractStartDate: contractData.contractStartDate,
+    contractEndDate: contractData.contractEndDate,
+    contractedClientId: contractData.contractedClientId || null,
+    contractedAgencyId: contractData.contractedAgencyId || null,
+    vat: store.vatAmount,
+    vatRate: contractData.vatRate,
+    total: store.grandTotal,
+    remarks: contractData.remarks,
+    products: contractData.products.map((product) => ({
+      contractProductName: product.contractProductName,
+      contractProductDescription: product.contractProductDescription,
+      quantity: product.quantity,
       vat: store.calculateProductTotal(product) * (product.vatRate / 100),
+      vatRate: product.vatRate,
       total: store.calculateProductTotal(product),
-      productItems: product.productItems.map((item: any) => ({
-        ...item,
-        vat: item.rate * (item.vatRate / 100)
+      remarks: product.remarks,
+      productItems: product.productItems.map((item) => ({
+        guid: item.guid,
+        particularsName: item.particularsName,
+        rate: item.rate,
+        remarks: item.remarks,
+        vat: item.rate * (item.vatRate / 100),
+        vatRate: item.vatRate
+      }))
+    })),
+    onAirDescriptions: contractData.onAirDescriptions.map((desc) => ({
+      guid: desc.guid,
+      onAirDuration: desc.onAirDuration,
+      descriptionType: desc.descriptionType,
+      descriptionText: desc.descriptionText,
+      descriptionTypeName: desc.descriptionTypeName,
+      descriptionTypeDescription: desc.descriptionTypeDescription,
+      remarks: desc.remarks,
+      createdAt: desc.createdAt,
+      statusId: desc.statusId,
+      isDeleted: desc.isDeleted,
+      transmissionSchedule: desc.transmissionSchedule.map((schedule) => ({
+        guid: schedule.guid,
+        onAirDescriptionId: desc.guid,
+        dateValue: schedule.dateValue,
+        durationInMinute: schedule.durationInMinute,
+        remarks: schedule.remarks
       }))
     }))
   }
@@ -430,14 +676,6 @@ const convertToApiFormat = (storeContract: any): ITelevisionContractCreateReques
 
 const handleFieldUpdate = (field: string, value: any) => {
   store.updateContractField(field as any, value)
-}
-
-const handleClientAgencyChange = (value: string) => {
-  if (store.isClientCopy) {
-    store.updateContractField('contractedClientId', value)
-  } else {
-    store.updateContractField('contractedAgencyId', value)
-  }
 }
 
 const handleProductUpdate = (productIndex: number, field: string, value: any) => {
@@ -452,8 +690,11 @@ const handleOnAirDescriptionUpdate = (descIndex: number, field: string, value: a
   store.updateOnAirDescription(descIndex, { [field]: value })
 }
 
+const handleTransmissionScheduleUpdate = (descIndex: number, scheduleIndex: number, field: string, value: any) => {
+  store.updateTransmissionSchedule(descIndex, scheduleIndex, { [field]: value })
+}
+
 const handleAutoSave = () => {
-  // Debounced auto-save
   clearTimeout((window as any).autoSaveTimeout)
     ; (window as any).autoSaveTimeout = setTimeout(() => {
       store.autoSave()
@@ -483,9 +724,37 @@ const handleClearStorage = () => {
   ElMessage.success('All local data cleared')
 }
 
+// Handle Client/Agency creation
+const handleClientCreated = async (clientData: IClientCreateRequest) => {
+  try {
+    const response = await clientService.createClient(clientData)
+    ElMessage.success('Client created successfully')
+    showClientModal.value = false
+    await loadClientsAndAgencies()
+    if (response && response.clientId) {
+      store.updateContractField('contractedClientId', response.clientId)
+    }
+  } catch (error: any) {
+    ElMessage.error(error.response?.data?.message || 'Failed to create agency')
+  }
+}
+
+const handleAgencyCreated = async (agencyData: IAgencyCreateRequest) => {
+  try {
+    const response = await agencyService.createAgency(agencyData)
+    ElMessage.success('Agency created successfully')
+    showAgencyModal.value = false
+    await loadClientsAndAgencies()
+    if (response && response.agencyName) {
+      store.updateContractField('contractedAgencyId', response.agencyName)
+    }
+  } catch (error: any) {
+    ElMessage.error(error.response?.data?.message || 'Failed to create agency')
+  }
+}
+
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('en-BD', {
-    style: 'decimal',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value)
@@ -493,11 +762,34 @@ const formatCurrency = (value: number) => {
 
 const formatDate = (dateString: string | null | undefined) => {
   if (!dateString) return 'N/A'
-  return new Date(dateString).toLocaleDateString('en-BD')
+  return new Date(dateString).toLocaleDateString('en-BD', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  })
 }
 
 const formatTime = (isoString: string) => {
   return new Date(isoString).toLocaleTimeString()
+}
+
+const numberToWords = (num: number): string => {
+  if (num === 0) return 'Zero'
+
+  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+    'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+
+  const numToWords = (n: number): string => {
+    if (n < 20) return ones[n]
+    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '')
+    if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + numToWords(n % 100) : '')
+    if (n < 100000) return numToWords(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + numToWords(n % 1000) : '')
+    if (n < 10000000) return numToWords(Math.floor(n / 100000)) + ' Lac' + (n % 100000 ? ' ' + numToWords(n % 100000) : '')
+    return numToWords(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 ? ' ' + numToWords(n % 10000000) : '')
+  }
+
+  return numToWords(Math.floor(num))
 }
 
 const handleClose = () => {
@@ -511,26 +803,15 @@ const handleSubmit = async () => {
     await formRef.value.validate()
     isSubmitting.value = true
 
-    // Validate contract data
-    // const validation = contractUtils.validateContract(form.value)
-    // if (!validation.isValid) {
-    //   ElMessage.error(validation.errors[0])
-    //   return
-    // }
+    const contractData = convertToApiFormat()
 
-    // Prepare data for API call
-    const contractData = convertToApiFormat(form.value)
-
-    // API call
     if (props.isEdit) {
       await contractService.updateTelevisionContract(props.contract!.guid, contractData as ITelevisionContractUpdateRequest)
     } else {
       await contractService.createTelevisionContract(contractData as ITelevisionContractCreateRequest)
     }
 
-    // Clear local storage on successful submission
     store.clearLocalStorage()
-
     emit('save', contractData)
     emit('refresh')
     handleClose()
@@ -545,16 +826,17 @@ const handleSubmit = async () => {
   }
 }
 
-// Load clients and agencies
 const loadClientsAndAgencies = async () => {
   try {
-    const [clientsResponse, agenciesResponse] = await Promise.all([
-      await clientService.getClientsList(),
-      await agencyService.getAgenciesList()
+    const [clientsResponse, agenciesResponse, clientTypesResponse] = await Promise.all([
+      clientService.getAllClientsInfo(),
+      agencyService.getAllAgencies(),
+      clientService.getClientTypes().catch(() => [])
     ])
 
     clients.value = clientsResponse
     agencies.value = agenciesResponse
+    clientTypes.value = clientTypesResponse
   } catch (error) {
     console.error('Failed to load clients and agencies:', error)
   }
@@ -566,13 +848,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Your existing styles remain the same */
 .contract-modal {
   --el-dialog-border-radius: 16px;
 }
 
 .contract-form {
-  max-height: 70vh;
+  max-height: 75vh;
   overflow-y: auto;
   padding-right: 8px;
 }
@@ -590,17 +871,13 @@ onMounted(() => {
   color: var(--el-color-success);
 }
 
-.auto-save-indicator .el-icon {
-  font-size: 14px;
-}
-
 .draft-management {
   margin-bottom: 16px;
 }
 
 .form-section {
-  margin-bottom: 32px;
-  padding-bottom: 24px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
   border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
@@ -609,64 +886,172 @@ onMounted(() => {
   margin-bottom: 0;
 }
 
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
 .section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 18px;
   font-weight: 600;
   color: var(--el-text-color-primary);
-  margin: 0 0 20px 0;
+  margin: 0;
 }
 
-.subsection-title {
-  font-size: 16px;
+.section-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.section-icon.blue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.section-icon.green {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.section-icon.purple {
+  background: #faf5ff;
+  color: #9333ea;
+}
+
+.section-icon.orange {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.select-with-action {
+  display: flex;
+  gap: 8px;
+}
+
+.option-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.option-label {
   font-weight: 500;
-  color: var(--el-text-color-primary);
-  margin: 16px 0 12px 0;
 }
 
-.product-section {
-  margin-bottom: 24px;
+.option-hint {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  margin-left: 8px;
 }
 
 .product-card {
   margin-bottom: 16px;
 }
 
-.product-header {
+.product-header,
+.description-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.item-row {
-  background: var(--el-fill-color-lighter);
+.items-section {
+  margin-top: 16px;
   padding: 16px;
+  background: var(--el-fill-color-lighter);
   border-radius: 8px;
-  margin-bottom: 16px;
 }
 
-.description-row {
-  background: var(--el-fill-color-lighter);
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 16px;
+.items-header,
+.transmission-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
-.amount-display {
+.items-title,
+.transmission-title {
+  font-size: 14px;
   font-weight: 600;
-  color: var(--el-color-primary);
+  color: var(--el-text-color-regular);
+  margin: 0;
+}
+
+.items-table {
+  margin-bottom: 12px;
+}
+
+.amount-value {
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.product-total {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--el-border-color);
+  font-size: 14px;
+}
+
+.product-total-value {
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.description-card {
+  margin-bottom: 16px;
+}
+
+.transmission-section {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--el-fill-color-lighter);
+  border-radius: 8px;
+}
+
+.schedule-row {
+  padding: 12px;
+  background: white;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  border: 1px solid var(--el-border-color-lighter);
+}
+
+.summary-section {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
 }
 
 .totals-summary {
-  background: var(--el-fill-color-lighter);
+  background: white;
   padding: 20px;
   border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .total-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
@@ -678,6 +1063,16 @@ onMounted(() => {
   font-size: 18px;
   font-weight: 700;
   color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
+  margin: 8px -20px -20px;
+  padding: 16px 20px;
+  border-radius: 0 0 8px 8px;
+}
+
+.grand-total-words {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--el-text-color-secondary);
 }
 
 .modal-footer {
@@ -721,7 +1116,7 @@ onMounted(() => {
 :deep(.el-form-item__label) {
   font-weight: 600;
   color: var(--el-text-color-primary);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 :deep(.el-input__wrapper) {
@@ -741,13 +1136,17 @@ onMounted(() => {
 }
 
 :deep(.el-card__header) {
-  padding: 12px 20px;
+  padding: 12px 16px;
   background: var(--el-fill-color-lighter);
+}
+
+:deep(.el-table .el-input-number) {
+  width: 100%;
 }
 
 @media (max-width: 768px) {
   .contract-modal {
-    --el-dialog-width: 90vw;
+    --el-dialog-width: 95vw;
   }
 
   .modal-footer {
