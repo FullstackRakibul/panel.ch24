@@ -178,6 +178,8 @@ export const agencyService = {
     const response = await useHttp().get(`/agencies/search?q=${encodeURIComponent(searchTerm)}`);
     return response.data;
   }
+
+  
 };
 
 // Utility functions for contract operations

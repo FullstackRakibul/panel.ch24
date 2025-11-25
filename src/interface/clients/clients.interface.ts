@@ -42,6 +42,21 @@ export interface IClientCreateRequest {
   remarks?: string;
 }
 
+export interface IAgencyCreateRequest {
+  agencyName: string;
+  tagline?: string;
+  location?: string;
+  slogan?: string;
+  logo?: string;
+  email?: string;
+  phone?: string;
+  portfolioURL?: string;
+  companySize?: number;
+  rating?: string;
+  reviewCount?: string;
+  budget?: string;
+}
+
 export interface IClientType {
   guid: string;
   cTypeName: string;
