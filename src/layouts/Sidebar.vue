@@ -369,6 +369,7 @@ import {
   Plus,
   Menu // Hamburger icon for mobile
 } from '@element-plus/icons-vue'
+import { Upload } from 'lucide-vue-next'
 
 const props = defineProps<{
   mobileSidebarOpen: boolean;
@@ -450,6 +451,9 @@ const systemItems = [
   {
     name: 'Settings', path: '/settings', icon: Setting, badge: undefined, badgeType: undefined
   },
+  {
+    name: 'Media Upload', path: '/media-upload', icon: Upload, badge: undefined, badgeType: undefined
+  }
 ]
 
 // Check if route is active

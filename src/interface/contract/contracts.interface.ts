@@ -1,3 +1,70 @@
+// In contracts.interface.ts - Add these interfaces
+
+export interface ITelevisionContractCreateRequest {
+  guid?: string
+  televisionContractNo: string
+  contractDate: string
+  contractStartDate: string
+  contractEndDate: string
+  contractedClientId: string | null
+  contractedAgencyId: string | null
+  vat: number
+  vatRate: number
+  total: number
+  remarks?: string | null
+  products: ITelevisionContractProductRequest[]
+  onAirDescriptions: ITelevisionContractOnAirDescriptionRequest[]
+}
+
+export interface ITelevisionContractUpdateRequest extends ITelevisionContractCreateRequest {
+  guid: string
+}
+
+export interface ITelevisionContractProductRequest {
+  contractProductName: string
+  contractProductDescription?: string | null
+  quantity: number
+  vat: number
+  vatRate: number
+  total: number
+  remarks?: string | null
+  productItems: ITelevisionContractProductItemRequest[]
+}
+
+export interface ITelevisionContractProductItemRequest {
+  guid?: string
+  particularsName: string
+  rate: number
+  remarks?: string | null
+  vat: number
+  vatRate: number
+}
+
+export interface ITelevisionContractOnAirDescriptionRequest {
+  guid?: string
+  onAirDuration: string
+  descriptionType: string
+  descriptionText: string
+  descriptionTypeName?: string | null
+  descriptionTypeDescription?: string | null
+  remarks?: string | null
+  createdAt?: string
+  statusId?: number
+  isDeleted?: boolean
+  transmissionSchedule: ITransmissionScheduleRequest[]
+}
+
+export interface ITransmissionScheduleRequest {
+  guid?: string
+  onAirDescriptionId?: string
+  dateValue: string
+  durationInMinute: number
+  remarks?: string | null
+}
+
+
+///////////////////////
+
 export interface ITelevisionContractFilter {
   page?: number
   pageSize?: number
@@ -109,7 +176,6 @@ export interface ITransmissionSchedule {
 export interface ITelevisionContractCreateRequest extends Omit<ITelevisionContractRequest, "guid"> {
   guid?: string
 }
-export interface ITelevisionContractUpdateRequest extends ITelevisionContractRequest {}
 
 export interface ITelevisionContractRequest {
   guid: string
@@ -127,16 +193,6 @@ export interface ITelevisionContractRequest {
   onAirDescriptions?: ITelevisionContractOnAirDescriptionRequest[]
 }
 
-export interface ITelevisionContractProductRequest {
-  contractProductName?: string | null
-  contractProductDescription?: string | null
-  quantity: number | null
-  vat: number | null
-  vatRate: number | null
-  total: number | null
-  remarks?: string | null
-  productItems?: ITelevisionContractProductItemsRequest[]
-}
 
 export interface ITelevisionContractProductItemsRequest {
   guid: string
@@ -147,19 +203,7 @@ export interface ITelevisionContractProductItemsRequest {
   vatRate: number | null
 }
 
-export interface ITelevisionContractOnAirDescriptionRequest {
-  guid?: string | null
-  onAirDuration?: string | null
-  descriptionType?: string | null
-  descriptionText?: string | null
-  descriptionTypeName?: string | null
-  descriptionTypeDescription?: string | null
-  remarks?: string | null
-  createdAt?: string
-  statusId?: number
-  isDeleted?: boolean
-  transmissionSchedule?: ITelevisionContractOnAirDescriptionTransmissionScheduleRequest[]
-}
+
 
 export interface ITelevisionContractOnAirDescriptionTransmissionScheduleRequest {
   guid: string

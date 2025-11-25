@@ -57,6 +57,7 @@ export interface IAgencyCreateRequest {
   budget?: string;
 }
 
+
 export interface IClientType {
   guid: string;
   cTypeName: string;

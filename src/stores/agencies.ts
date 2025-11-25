@@ -143,6 +143,35 @@ export const useAgenciesStore = defineStore('agencies', () => {
     sortBy.value = 'agencyName';
   };
 
+    // Auto-save to localStorage for persistence across page reloads
+  const loadFromLocalStorage = () => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('agencyModalData')
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved)
+          agencies.value = { ...agencies.value, ...parsed }
+        } catch (error) {
+          console.warn('Failed to load modal data from localStorage:', error)
+        }
+      }
+    }
+  }
+
+  const saveToLocalStorage = () => {
+    if (typeof window !== 'undefined' && agencies.value.length > 0) {
+      localStorage.setItem('agencyModalData', JSON.stringify(agencies.value))
+    }
+  }
+
+  const clearLocalStorage = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('agencyModalData')
+    }
+  }
+
+  loadFromLocalStorage()
+
   return {
     // State
     agencies,
@@ -159,6 +188,9 @@ export const useAgenciesStore = defineStore('agencies', () => {
     filteredAndSortedAgencies,
 
     // Actions
+    loadFromLocalStorage,
+    saveToLocalStorage,
+    clearLocalStorage,
     fetchAgencies,
     createAgency,
     updateAgency,

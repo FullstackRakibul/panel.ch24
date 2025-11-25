@@ -127,6 +127,7 @@ export const useAgencyModalStore = defineStore('agencyModal', () => {
     hasAgencyModalData,
 
     // Actions
+    loadFromLocalStorage,
     setAgencyModalData,
     resetAgencyModalData,
     openAgencyModal,

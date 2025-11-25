@@ -7,6 +7,7 @@ import Login from "@/views/Login.vue"
 // Create simple fallback component
 import FallbackPage from "@/components/FallbackPage.vue"
 
+
 // Fallback loader
 
 const lazyLoadComponent = (name: keyof typeof viewsMap) => {
@@ -43,6 +44,7 @@ const viewsMap = {
   Settings: () => import('@/views/Settings.vue'),
   NotFound: () => import('@/views/NotFound.vue'),
   CompanyGolas : () => import('@/views/Goals.vue'),
+  MediaUpload : () => import('@/views/MediaUpload.vue'),
 }
 
 const Dashboard = lazyLoadComponent('Dashboard')
@@ -57,6 +59,8 @@ const DeliveryLogs = lazyLoadComponent('DeliveryLogs')
 const Settings = lazyLoadComponent('Settings')
 const NotFound = lazyLoadComponent('NotFound')
 const CompanyGolas = lazyLoadComponent('CompanyGolas')
+const MediaUpload = lazyLoadComponent('MediaUpload')
+
 
 
 
@@ -178,6 +182,16 @@ const router = createRouter({
         requiresAuth: true,
         title: "Settings - Channel 24",
         description: "Configure application settings",
+      },
+    },
+    {
+      path: "/media-upload",
+      name: "Media Upload",
+      component: MediaUpload,
+      meta: {
+        requiresAuth: true,
+        title: "Media Upload - Channel 24",
+        description: "Upload media files",
       },
     },
     // 404 Not Found - must be last

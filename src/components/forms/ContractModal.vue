@@ -48,11 +48,11 @@
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="Contract Type">
-              <el-radio-group v-model="contractType" @change="handleContractTypeChange">
-                <el-radio label="client">Client (Advertiser)</el-radio>
-                <el-radio label="agency">Agency</el-radio>
-              </el-radio-group>
+            <!-- Radio group to toggle between Client Copy and Agency Copy -->
+            <el-form-item class="flex items-center ">
+              <el-switch v-model="isClientCopy" @change="handleContractTypeChange" />
+              <p v-if="isClientCopy">Client Copy (Advertiser)</p>
+              <p v-else>Agency Copy</p>
             </el-form-item>
           </el-col>
         </el-row>
@@ -74,26 +74,10 @@
           </el-col>
         </el-row>
 
-        <!-- Agency Selection -->
+        <!-- Conditional Client/Agency Selection based on isClientCopy -->
         <el-row :gutter="16">
-          <el-col :span="12">
-            <el-form-item label="Agency (Contract Party)" prop="contractedAgencyId">
-              <div class="select-with-action">
-                <el-select v-model="form.contractedAgencyId" placeholder="Select Agency" class="flex-1" filterable
-                  clearable @change="handleFieldUpdate('contractedAgencyId', form.contractedAgencyId)">
-                  <el-option v-for="agency in agencies" :key="agency.guid" :label="agency.agencyName || agency.email"
-                    :value="agency.guid">
-                    <div class="option-content">
-                      <span class="option-label">{{ agency.agencyName }}</span>
-                      <span v-if="agency.email" class="option-hint">{{ agency.email }}</span>
-                    </div>
-                  </el-option>
-                </el-select>
-                <el-button type="primary" :icon="Plus" @click="showAgencyModal = true" title="Create New Agency" />
-              </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
+          <!-- Client Selection - Only shown when isClientCopy is true -->
+          <el-col :span="12" v-if="isClientCopy">
             <el-form-item label="Client (Advertiser)" prop="contractedClientId">
               <div class="select-with-action">
                 <el-select v-model="form.contractedClientId" placeholder="Select Client/Advertiser" class="flex-1"
@@ -110,20 +94,30 @@
               </div>
             </el-form-item>
           </el-col>
-        </el-row>
 
-        <el-row :gutter="16">
-          <el-col :span="12">
-            <el-form-item label="Contract Duration">
-              <div class="flex gap-2 items-center">
-                <el-date-picker v-model="contractModalStore.contractModalData.contractStartDate" type="date"
-                  placeholder="Start date" class="flex-1" format="YYYY-MM-DD" value-format="YYYY-MM-DD"
-                  @change="handleFormChange" />
-                <span class="text-gray-400">to</span>
-                <el-date-picker v-model="contractModalStore.contractModalData.contractEndDate" type="date"
-                  placeholder="End date" class="flex-1" format="YYYY-MM-DD" value-format="YYYY-MM-DD"
-                  @change="handleFormChange" />
+          <!-- Agency Selection - Only shown when isClientCopy is false -->
+          <el-col :span="12" v-else>
+            <el-form-item label="Agency (Contract Party)" prop="contractedAgencyId">
+              <div class="select-with-action">
+                <el-select v-model="form.contractedAgencyId" placeholder="Select Agency" class="flex-1" filterable
+                  clearable @change="handleFieldUpdate('contractedAgencyId', form.contractedAgencyId)">
+                  <el-option v-for="agency in agencies" :key="agency.guid" :label="agency.agencyName || agency.email"
+                    :value="agency.guid">
+                    <div class="option-content">
+                      <span class="option-label">{{ agency.agencyName }}</span>
+                      <span v-if="agency.email" class="option-hint">{{ agency.email }}</span>
+                    </div>
+                  </el-option>
+                </el-select>
+                <el-button type="primary" :icon="Plus" @click="showAgencyModal = true" title="Create New Agency" />
               </div>
+            </el-form-item>
+          </el-col>
+
+          <el-col :span="12">
+            <el-form-item label="VAT Rate (%)" prop="vatRate">
+              <el-input-number v-model="form.vatRate" :min="0" :max="100" :precision="2" controls-position="right"
+                class="w-full" @change="handleFieldUpdate('vatRate', form.vatRate)" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -328,7 +322,7 @@
         </div>
       </div>
 
-      <!-- Additional Information Section -->
+      <!-- Terms and Remarks -->
       <div class="form-section">
         <div class="section-header">
           <h3 class="section-title">
@@ -454,27 +448,28 @@ import type { IClientType, IClientCreateRequest, IAgencyCreateRequest } from '@/
 import ClientModal from '@/components/forms/ClientModal.vue'
 import AgencyModal from '@/components/forms/AgencyModal.vue'
 import { clientService } from '@/services/Clients/common.services'
+
 interface Props {
   modelValue: boolean
+  contract?: ITelevisionContract | null
   isEdit?: boolean
   loading?: boolean
-  contract?: any | null
-}
-
-interface Emits {
-  (e: 'update:modelValue', value: boolean): void
-  (e: 'save', data: any): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  contract: null,
   isEdit: false,
-  loading: false,
-  contract: null
+  loading: false
 })
 
-const emit = defineEmits<Emits>()
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+  'save': [contract: any]
+  'refresh': []
+}>()
 
-const contractModalStore = useContractModalStore()
+// Store and Refs
+const store = useContractStore()
 const formRef = ref<FormInstance>()
 const clients = ref<IClientSimple[]>([])
 const agencies = ref<IAgencySimple[]>([])
@@ -482,7 +477,8 @@ const clientTypes = ref<IClientType[]>([])
 const showDrafts = ref(false)
 const lastSaved = ref<string>('')
 const isSubmitting = ref(false)
-const contractType = ref<'client' | 'agency'>('client')
+
+const isClientCopy = ref(true)
 
 // Modal controls for creating new Client/Agency
 const showClientModal = ref(false)
@@ -521,24 +517,30 @@ const availableMonthOptions = computed(() => {
   return months
 })
 
-// Validation rules
-const rules = {
+const rules = computed(() => ({
   televisionContractNo: [
     { required: true, message: 'Please enter contract number', trigger: 'blur' }
   ],
   contractDate: [
     { required: true, message: 'Please select contract date', trigger: 'change' }
   ],
-  advertiserName: [
-    { required: true, message: 'Please enter advertiser name', trigger: 'blur' }
+  contractStartDate: [
+    { required: true, message: 'Please select start date', trigger: 'change' }
   ],
   contractEndDate: [
     { required: true, message: 'Please select end date', trigger: 'change' }
   ],
   vatRate: [
     { required: true, message: 'Please enter VAT rate', trigger: 'blur' }
-  ]
-}
+  ],
+  // Conditional validation based on contract type
+  contractedClientId: isClientCopy.value ? [
+    { required: true, message: 'Please select a client', trigger: 'change' }
+  ] : [],
+  contractedAgencyId: !isClientCopy.value ? [
+    { required: true, message: 'Please select an agency', trigger: 'change' }
+  ] : []
+}))
 
 const dialogVisible = computed({
   get: () => props.modelValue,
@@ -550,7 +552,7 @@ watch(() => props.contract, (newContract) => {
   if (newContract && props.isEdit) {
     const storeContract = convertToStoreFormat(newContract)
     store.setContract(storeContract)
-    contractType.value = newContract.contractedClientId ? 'client' : 'agency'
+    isClientCopy.value = !!newContract.contractedClientId
   } else if (!props.isEdit) {
     store.initializeContract()
   }
@@ -562,6 +564,9 @@ watch(() => props.modelValue, (visible) => {
     if (stored) {
       const data = JSON.parse(stored)
       lastSaved.value = data.lastSaved
+      if (data.isClientCopy !== undefined) {
+        isClientCopy.value = data.isClientCopy
+      }
     }
 
     if (!props.contract && !props.isEdit) {
@@ -570,9 +575,20 @@ watch(() => props.modelValue, (visible) => {
   }
 })
 
+watch(isClientCopy, (value) => {
+  store.toggleClientCopy(value)
+})
+
 // Methods
-const handleContractTypeChange = (value: 'client' | 'agency') => {
-  store.toggleClientCopy(value === 'client')
+const handleContractTypeChange = (value: boolean) => {
+  isClientCopy.value = value
+  if (value) {
+    // Switching to Client Copy - clear agency
+    store.updateContractField('contractedAgencyId', null)
+  } else {
+    // Switching to Agency Copy - clear client
+    store.updateContractField('contractedClientId', null)
+  }
 }
 
 const convertToStoreFormat = (contract: any) => {
@@ -630,54 +646,69 @@ const convertToStoreFormat = (contract: any) => {
 const convertToApiFormat = (): ITelevisionContractCreateRequest | ITelevisionContractUpdateRequest => {
   const contractData = form.value
 
+  // Generate GUID if not present
+  const generateGuid = () => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      const r = Math.random() * 16 | 0
+      const v = c == 'x' ? r : (r & 0x3 | 0x8)
+      return v.toString(16)
+    })
+  }
+
   return {
-    guid: contractData.guid,
+    guid: contractData.guid || generateGuid(),
     televisionContractNo: contractData.televisionContractNo,
     contractDate: contractData.contractDate,
     contractStartDate: contractData.contractStartDate,
     contractEndDate: contractData.contractEndDate,
-    contractedClientId: contractData.contractedClientId || null,
-    contractedAgencyId: contractData.contractedAgencyId || null,
+    contractedClientId: isClientCopy.value ? contractData.contractedClientId : null,
+    contractedAgencyId: !isClientCopy.value ? contractData.contractedAgencyId : null,
     vat: store.vatAmount,
     vatRate: contractData.vatRate,
     total: store.grandTotal,
-    remarks: contractData.remarks,
-    products: contractData.products.map((product) => ({
-      contractProductName: product.contractProductName,
-      contractProductDescription: product.contractProductDescription,
-      quantity: product.quantity,
-      vat: store.calculateProductTotal(product) * (product.vatRate / 100),
-      vatRate: product.vatRate,
-      total: store.calculateProductTotal(product),
-      remarks: product.remarks,
-      productItems: product.productItems.map((item) => ({
-        guid: item.guid,
-        particularsName: item.particularsName,
-        rate: item.rate,
-        remarks: item.remarks,
-        vat: item.rate * (item.vatRate / 100),
-        vatRate: item.vatRate
-      }))
-    })),
-    onAirDescriptions: contractData.onAirDescriptions.map((desc) => ({
-      guid: desc.guid,
-      onAirDuration: desc.onAirDuration,
-      descriptionType: desc.descriptionType,
-      descriptionText: desc.descriptionText,
-      descriptionTypeName: desc.descriptionTypeName,
-      descriptionTypeDescription: desc.descriptionTypeDescription,
-      remarks: desc.remarks,
-      createdAt: desc.createdAt,
-      statusId: desc.statusId,
-      isDeleted: desc.isDeleted,
-      transmissionSchedule: desc.transmissionSchedule.map((schedule) => ({
-        guid: schedule.guid,
-        onAirDescriptionId: desc.guid,
-        dateValue: schedule.dateValue,
-        durationInMinute: schedule.durationInMinute,
-        remarks: schedule.remarks
-      }))
-    }))
+    remarks: contractData.remarks || '',
+    products: contractData.products.map((product) => {
+      const productTotal = store.calculateProductTotal(product)
+      return {
+        contractProductName: product.contractProductName,
+        contractProductDescription: product.contractProductDescription || '',
+        quantity: product.quantity,
+        vat: productTotal * (product.vatRate / 100),
+        vatRate: product.vatRate,
+        total: productTotal,
+        remarks: product.remarks || '',
+        productItems: product.productItems.map((item) => ({
+          guid: item.guid || generateGuid(),
+          particularsName: item.particularsName,
+          rate: item.rate,
+          remarks: item.remarks || '',
+          vat: item.rate * (item.vatRate / 100),
+          vatRate: item.vatRate
+        }))
+      }
+    }),
+    onAirDescriptions: contractData.onAirDescriptions.map((desc) => {
+      const descGuid = desc.guid || generateGuid()
+      return {
+        guid: descGuid,
+        onAirDuration: desc.onAirDuration,
+        descriptionType: desc.descriptionType,
+        descriptionText: desc.descriptionText,
+        descriptionTypeName: desc.descriptionTypeName || '',
+        descriptionTypeDescription: desc.descriptionTypeDescription || '',
+        remarks: desc.remarks || '',
+        createdAt: desc.createdAt || new Date().toISOString(),
+        statusId: desc.statusId || 1,
+        isDeleted: desc.isDeleted || false,
+        transmissionSchedule: desc.transmissionSchedule.map((schedule) => ({
+          guid: schedule.guid || generateGuid(),
+          onAirDescriptionId: descGuid,
+          dateValue: schedule.dateValue,
+          durationInMinute: schedule.durationInMinute,
+          remarks: schedule.remarks || ''
+        }))
+      }
+    })
   }
 }
 
@@ -685,20 +716,12 @@ const handleFieldUpdate = (field: string, value: any) => {
   store.updateContractField(field as any, value)
 }
 
-const calculateTotal = () => {
-  const quantity = contractModalStore.contractModalData.quantity || 1
-  const rate = contractModalStore.contractModalData.rate || 0
-  const amount = quantity * rate
-  const vatAmount = amount * 0.15
-  const grandTotal = amount + vatAmount
+const handleProductUpdate = (productIndex: number, field: string, value: any) => {
+  store.updateProduct(productIndex, { [field]: value })
+}
 
-  contractModalStore.contractModalData.amount = amount
-  contractModalStore.contractModalData.spotTotal = amount
-  contractModalStore.contractModalData.vatAmount = vatAmount
-  contractModalStore.contractModalData.grandTotal = grandTotal
-  contractModalStore.contractModalData.inWords = numberToWords(grandTotal)
-
-  handleFormChange()
+const handleProductItemUpdate = (productIndex: number, itemIndex: number, field: string, value: any) => {
+  store.updateProductItem(productIndex, itemIndex, { [field]: value })
 }
 
 const handleOnAirDescriptionUpdate = (descIndex: number, field: string, value: any) => {
@@ -713,6 +736,12 @@ const handleAutoSave = () => {
   clearTimeout((window as any).autoSaveTimeout)
     ; (window as any).autoSaveTimeout = setTimeout(() => {
       store.autoSave()
+      const stored = localStorage.getItem('contractFormData')
+      if (stored) {
+        const data = JSON.parse(stored)
+        data.isClientCopy = isClientCopy.value
+        localStorage.setItem('contractFormData', JSON.stringify(data))
+      }
       lastSaved.value = new Date().toISOString()
     }, 1000)
 }
@@ -735,6 +764,7 @@ const handleDeleteDraft = (index: number) => {
 
 const handleClearStorage = () => {
   store.clearLocalStorage()
+  isClientCopy.value = true
   lastSaved.value = ''
   ElMessage.success('All local data cleared')
 }
@@ -750,7 +780,7 @@ const handleClientCreated = async (clientData: IClientCreateRequest) => {
       store.updateContractField('contractedClientId', response.clientId)
     }
   } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || 'Failed to create agency')
+    ElMessage.error(error.response?.data?.message || 'Failed to create client')
   }
 }
 
@@ -760,15 +790,15 @@ const handleAgencyCreated = async (agencyData: IAgencyCreateRequest) => {
     ElMessage.success('Agency created successfully')
     showAgencyModal.value = false
     await loadClientsAndAgencies()
-    if (response && response.agencyName) {
-      store.updateContractField('contractedAgencyId', response.agencyName)
+    if (response && response.guid) {
+      store.updateContractField('contractedAgencyId', response.guid)
     }
   } catch (error: any) {
     ElMessage.error(error.response?.data?.message || 'Failed to create agency')
   }
 }
 
-const formatCurrency = (value: number): string => {
+const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('en-BD', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -820,6 +850,8 @@ const handleSubmit = async () => {
 
     const contractData = convertToApiFormat()
 
+    console.log('Contract JSON:', JSON.stringify(contractData, null, 2))
+
     if (props.isEdit) {
       await contractService.updateTelevisionContract(props.contract!.guid, contractData as ITelevisionContractUpdateRequest)
     } else {
@@ -853,44 +885,13 @@ const loadClientsAndAgencies = async () => {
     agencies.value = agenciesResponse
     clientTypes.value = clientTypesResponse
   } catch (error) {
-    ElMessage.error('Please fill in all required fields correctly.')
+    console.error('Failed to load clients and agencies:', error)
   }
 }
-
-const clearDraft = () => {
-  contractModalStore.resetContractModalData()
-  contractModalStore.clearLocalStorage()
-  ElMessage.success('Draft cleared')
-}
-
-const restoreDraft = () => {
-  contractModalStore.loadFromLocalStorage()
-  ElMessage.success('Draft restored')
-}
-
-watch(() => props.contract, (newContract) => {
-  if (newContract) {
-    contractModalStore.setContractModalData(newContract)
-    contractModalStore.isEditMode = true
-    contractModalStore.editingContractId = newContract.id
-    contractType.value = newContract.contractedClientId ? 'client' : 'agency'
-    selectedEntityId.value = newContract.contractedClientId || newContract.contractedAgencyId
-  } else {
-    if (!contractModalStore.hasContractModalData) {
-      contractModalStore.resetContractModalData()
-    }
-    contractModalStore.isEditMode = false
-  }
-}, { immediate: true })
-
-watch(() => props.modelValue, (visible) => {
-  if (visible) {
-    contractModalStore.loadFromLocalStorage()
-  }
-})
 
 onMounted(() => {
-  contractModalStore.loadFromLocalStorage()
+  loadClientsAndAgencies()
+  isClientCopy.value = store.isClientCopy
 })
 </script>
 
@@ -929,6 +930,7 @@ onMounted(() => {
 }
 
 .form-section:last-child {
+  border-bottom: none;
   margin-bottom: 0;
 }
 
@@ -1123,29 +1125,40 @@ onMounted(() => {
 
 .modal-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   gap: 12px;
   padding-top: 16px;
 }
 
-.draft-actions {
-  margin-top: 20px;
-  padding: 16px;
-  background: var(--el-color-info-light-9);
-  border-radius: 8px;
-  border: 1px solid var(--el-color-info-light-5);
-}
-
-.draft-buttons {
+.footer-left {
   display: flex;
   gap: 8px;
-  margin-top: 12px;
-  justify-content: flex-end;
 }
 
-.grand-total :deep(.el-input__wrapper) {
-  background: linear-gradient(135deg, rgb(219 234 254) 0%, rgb(191 219 254) 100%);
-  border-color: rgb(147 197 253);
+.footer-right {
+  display: flex;
+  gap: 12px;
+}
+
+.drafts-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.draft-card {
+  margin-bottom: 12px;
+}
+
+.draft-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.draft-actions {
+  display: flex;
+  gap: 8px;
 }
 
 :deep(.el-form-item__label) {
@@ -1154,7 +1167,10 @@ onMounted(() => {
   margin-bottom: 6px;
 }
 
-:deep(.el-input__wrapper),
+:deep(.el-input__wrapper) {
+  border-radius: 8px;
+}
+
 :deep(.el-select .el-input__wrapper) {
   border-radius: 8px;
 }
@@ -1182,11 +1198,14 @@ onMounted(() => {
   }
 
   .modal-footer {
-    flex-direction: column-reverse;
+    flex-direction: column;
+    gap: 16px;
   }
 
-  .modal-footer .el-button {
+  .footer-left,
+  .footer-right {
     width: 100%;
+    justify-content: space-between;
   }
 }
 </style>
