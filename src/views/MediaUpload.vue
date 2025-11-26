@@ -125,6 +125,8 @@
                 <div class="file-actions">
                   <el-button type="primary" link :icon="Download" @click="downloadFile(file)" />
                   <el-button type="primary" link :icon="View" @click="previewFile(file)" />
+                  <el-button type="success" link :icon="getCopyLinkIcon(file)" @click="copyFileLink(file)"
+                    :loading="copyLoading === file.id" />
                   <el-button type="danger" link :icon="Delete" @click="deleteFile(file)" />
                 </div>
               </div>
@@ -182,7 +184,9 @@ import {
   Video,
   Music,
   Archive,
-  File
+  File,
+  Link,
+  Copy
 } from 'lucide-vue-next'
 
 // Types
@@ -210,6 +214,8 @@ const sortBy = ref('date')
 const selectedCategory = ref('all')
 const showPreview = ref(false)
 const previewFileData = ref<FileItem | null>(null)
+const copyLoading = ref<string | null>(null)
+
 
 // Mock data - replace with actual API calls
 const files = ref<FileItem[]>([
@@ -341,6 +347,10 @@ const getFileIcon = (fileType: string) => {
   return iconMap[fileType] || File
 }
 
+const getCopyLinkIcon = (file: FileItem) => {
+  return file.type === 'image' ? Link : Copy
+}
+
 const isImage = (file: FileItem | null) => {
   return file?.type === 'image'
 }
@@ -393,6 +403,61 @@ const downloadFile = (file: FileItem) => {
 const previewFile = (file: FileItem) => {
   previewFileData.value = file
   showPreview.value = true
+}
+
+const copyFileLink = async (file: FileItem) => {
+  copyLoading.value = file.id
+
+  try {
+    const linkToCopy = file.url || generateFileLink(file)
+
+    await navigator.clipboard.writeText(linkToCopy)
+
+    ElMessage.success(
+      file.type === 'image'
+        ? 'Image URL copied to clipboard!'
+        : 'File link copied to clipboard!'
+    )
+  } catch (error) {
+    console.error('Failed to copy link:', error)
+    // Fallback for browsers that don't support clipboard API
+    const linkToCopy = file.url || generateFileLink(file)
+    copyToClipboardFallback(linkToCopy)
+
+    ElMessage.success(
+      file.type === 'image'
+        ? 'Image URL copied to clipboard!'
+        : 'File link copied to clipboard!'
+    )
+  } finally {
+    // Small delay for better UX
+    setTimeout(() => {
+      copyLoading.value = null
+    }, 500)
+  }
+}
+
+const generateFileLink = (file: FileItem) => {
+  // Generate a proper file link based on your backend structure
+  // You can customize this based on your actual file URL structure
+  if (file.type === 'image') {
+    return `${window.location.origin}/api/files/images/${file.id}`
+  } else {
+    return `${window.location.origin}/api/files/${file.id}`
+  }
+}
+
+const copyToClipboardFallback = (text: string) => {
+  const textArea = document.createElement('textarea')
+  textArea.value = text
+  textArea.style.position = 'fixed'
+  textArea.style.left = '-999999px'
+  textArea.style.top = '-999999px'
+  document.body.appendChild(textArea)
+  textArea.focus()
+  textArea.select()
+  document.execCommand('copy')
+  document.body.removeChild(textArea)
 }
 
 const deleteFile = async (file: FileItem) => {
@@ -832,6 +897,34 @@ onMounted(() => {
 
   .files-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .file-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(4px);
+    border-radius: 6px;
+    padding: 4px;
+  }
+
+  .file-card:hover .file-actions {
+    opacity: 1;
+  }
+
+  .file-actions .el-button {
+    padding: 6px;
+    margin: 0;
+  }
+
+  /* For dark mode support */
+  :deep(.dark .file-actions) {
+    background: rgba(0, 0, 0, 0.8);
   }
 }
 </style>
