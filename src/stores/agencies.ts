@@ -32,13 +32,19 @@ export const useAgenciesStore = defineStore('agencies', () => {
 
     // Apply search filter
     if (searchTerm.value) {
-      const term = searchTerm.value.toLowerCase();
-      filtered = filtered.filter(agency => 
-        agency.agencyName?.toLowerCase().includes(term) ||
-        agency.tagline?.toLowerCase().includes(term) ||
-        agency.location?.toLowerCase().includes(term) ||
-        agency.slogan?.toLowerCase().includes(term)
-      );
+      const term = searchTerm.value.toLowerCase()
+      filtered = filtered.filter(agency => {
+        const name = (agency.agencyName || '').toLowerCase()
+        const tagline = (agency.tagline || '').toLowerCase()
+        const location = (agency.location || '').toLowerCase()
+        const slogan = (agency.slogan || '').toLowerCase()
+        return (
+          name.includes(term) ||
+          tagline.includes(term) ||
+          location.includes(term) ||
+          slogan.includes(term)
+        )
+      })
     }
 
     // Apply location filter
@@ -150,7 +156,7 @@ export const useAgenciesStore = defineStore('agencies', () => {
       if (saved) {
         try {
           const parsed = JSON.parse(saved)
-          agencies.value = { ...agencies.value, ...parsed }
+          agencies.value = parsed as IAgency[]
         } catch (error) {
           console.warn('Failed to load modal data from localStorage:', error)
         }
