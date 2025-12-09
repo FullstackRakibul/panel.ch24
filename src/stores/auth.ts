@@ -1,9 +1,10 @@
 import { ref, computed } from "vue"
 import { defineStore } from "pinia"
 import axios from "axios"
+import { channelApiHttpJson } from "@/utils/base.Http"
 
 export const useAuthStore = defineStore("auth", () => {
-  const token = ref(localStorage.getItem("token") || "")
+  const token = ref(localStorage.getItem("access_token") || "")
   const user = ref<null | { id: number; name: string; email: string; role: string ;avatar: 'https://assets-v2.lottiefiles.com/a/82411e66-1184-11ee-8cfa-d707e53cae38/bccvxj7Ogv.gif'}>(null)
   const loading = ref(false)
 
@@ -16,14 +17,21 @@ export const useAuthStore = defineStore("auth", () => {
       const ADMIN_EMAIL = "admin@ch24.com"
       const ADMIN_PASSWORD = "admin@ch24.com"
 
+      const response = await channelApiHttpJson().post("/Auth/login", credentials)
+ 
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      if (credentials.email === ADMIN_EMAIL && credentials.password === ADMIN_PASSWORD) {
+      if (response.status === 401) {
+        return { success: false, message: "Invalid email or password" }
+      }
+      if (response.status === 200) {
         // Generate a mock token
-        const mockToken = "mock-jwt-token-" + Date.now()
+        // const mockToken = "mock-jwt-token-" + Date.now()
 
-        token.value = mockToken
+
+
+        token.value = response.data.access_token
         user.value = {
           id: 1,
           name: "Admin User",
@@ -32,7 +40,7 @@ export const useAuthStore = defineStore("auth", () => {
           avatar: 'https://assets-v2.lottiefiles.com/a/82411e66-1184-11ee-8cfa-d707e53cae38/bccvxj7Ogv.gif'
         }
 
-        localStorage.setItem("token", token.value)
+        localStorage.setItem("access_token", token.value)
         localStorage.setItem("user", JSON.stringify(user.value))
 
         // Set default authorization header

@@ -35,12 +35,6 @@
 
         <el-row :gutter="16">
           <el-col :span="8">
-            <el-form-item label="Contract No" prop="televisionContractNo">
-              <el-input v-model="form.televisionContractNo" placeholder="e.g., TML2510026"
-                @blur="handleFieldUpdate('televisionContractNo', form.televisionContractNo)" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
             <el-form-item label="Contract Date" prop="contractDate">
               <el-date-picker v-model="form.contractDate" type="date" placeholder="Select date" class="w-full"
                 format="DD MMM, YYYY" value-format="YYYY-MM-DD"
@@ -436,6 +430,7 @@ import {
 import { useContractStore } from '@/stores/contracts'
 import { contractService } from '@/services/Contracts/contract.services'
 import { agencyService } from '@/services/Agencies/agencies.services'
+import type { ICreateAgency, IUpdateAgency } from '@/interface/agency/agencies.interface'
 
 import type {
   IAgencySimple,
@@ -444,7 +439,7 @@ import type {
   ITelevisionContractCreateRequest,
   ITelevisionContractUpdateRequest
 } from '@/interface/contract/contracts.interface'
-import type { IClientType, IClientCreateRequest, IAgencyCreateRequest } from '@/interface/clients/clients.interface'
+import type { IClientType, IClientCreateRequest } from '@/interface/clients/clients.interface'
 import ClientModal from '@/components/forms/ClientModal.vue'
 import AgencyModal from '@/components/forms/AgencyModal.vue'
 import { clientService } from '@/services/Clients/common.services'
@@ -784,9 +779,10 @@ const handleClientCreated = async (clientData: IClientCreateRequest) => {
   }
 }
 
-const handleAgencyCreated = async (agencyData: IAgencyCreateRequest) => {
+const handleAgencyCreated = async (agencyData: ICreateAgency | IUpdateAgency) => {
   try {
-    const response = await agencyService.createAgency(agencyData)
+    // Cast to ICreateAgency since we are creating
+    const response = await agencyService.createAgency(agencyData as ICreateAgency)
     ElMessage.success('Agency created successfully')
     showAgencyModal.value = false
     await loadClientsAndAgencies()

@@ -17,7 +17,7 @@ export interface ApiError {
 
 // Get auth token from localStorage
 export const getAuthToken = (): string => {
-  return localStorage.getItem("access_token") || localStorage.getItem("token") || ""
+  return localStorage.getItem("access_token") || ""
 }
 
 // Get refresh token
@@ -37,7 +37,6 @@ export const setAuthTokens = (accessToken: string, refreshToken?: string) => {
 export const clearAuthTokens = () => {
   localStorage.removeItem("access_token")
   localStorage.removeItem("refresh_token")
-  localStorage.removeItem("token")
 }
 
 // Base HTTP client factory
@@ -238,7 +237,7 @@ export const useHttp = () => {
 
 // Channel API specific client
 export const channelApiHttpJson = (): AxiosInstance => {
-  const baseUrl: string = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api"
+  const baseUrl: string = import.meta.env.VITE_API_BASE_URL || "http://localhost:35520/api"
   const accessToken = getAuthToken()
 
   const headers: Record<string, string> = {
