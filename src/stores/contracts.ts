@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed, readonly, type DeepReadonly } from 'vue'
+import { ref, computed } from 'vue'
 
 export interface TelevisionContractProductItemsRequestDto {
   guid: string
@@ -310,13 +310,13 @@ export const useContractStore = defineStore('contract', () => {
   }
 
   // Utility functions
-  const calculateItemTotal = (item: TelevisionContractProductItemsRequestDto | DeepReadonly<TelevisionContractProductItemsRequestDto>) => {
+  const calculateItemTotal = (item: TelevisionContractProductItemsRequestDto) => {
     const rate = item.rate || 0
     const vatRate = item.vatRate || 0
     return rate + (rate * (vatRate / 100))
   }
 
-  const calculateProductTotal = (product: TelevisionContractProductRequestDto | DeepReadonly<TelevisionContractProductRequestDto>) => {
+  const calculateProductTotal = (product: TelevisionContractProductRequestDto) => {
     const itemsTotal = (product.productItems as any[]).reduce((sum: number, item: any) => {
       return sum + calculateItemTotal(item)
     }, 0)
@@ -325,13 +325,7 @@ export const useContractStore = defineStore('contract', () => {
     return itemsTotal * quantity
   }
 
-  const generateGuid = (): string => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0
-      const v = c == 'x' ? r : (r & 0x3 | 0x8)
-      return v.toString(16)
-    })
-  }
+
 
   function getDefaultContract(): TelevisionContractRequestDto {
     return {
@@ -390,11 +384,11 @@ export const useContractStore = defineStore('contract', () => {
 
   return {
     // State
-    currentContract: readonly(currentContract),
-    draftContracts: readonly(draftContracts),
-    isClientCopy: readonly(isClientCopy),
-    isLoading: readonly(isLoading),
-
+    currentContract,
+    draftContracts,
+    isClientCopy,
+    isLoading,
+    
     // Getters
     hasDraft,
     currentDraft,
