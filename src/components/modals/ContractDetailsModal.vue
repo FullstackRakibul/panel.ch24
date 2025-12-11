@@ -1,6 +1,6 @@
 <template>
   <el-dialog v-model="dialogVisible" width="900px" :close-on-click-modal="false" class="contract-view-modal" top="5vh">
-    <div v-if="contract" class="contract-document">
+    <div v-if="contract" class="contract-document" ref="contractDocument">
       <!-- Header -->
       <div class="document-header">
         <div class="company-info">
@@ -199,6 +199,12 @@
 
     <template #footer>
       <div class="modal-footer">
+        <el-button @click="downloadPDF" :loading="isGeneratingPDF" type="success">
+          <el-icon class="mr-2">
+            <Download />
+          </el-icon>
+          {{ isGeneratingPDF ? 'Generating PDF...' : 'Download PDF' }}
+        </el-button>
         <el-button @click="printContract">
           <el-icon class="mr-2">
             <Printer />
@@ -214,9 +220,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { Printer } from 'lucide-vue-next'
-import type { ITelevisionContract } from '@/interface/contract/contracts.interface';
+import { computed, ref } from 'vue'
+import { Printer, Download } from 'lucide-vue-next'
+import html2pdf from 'html2pdf.js'
+import type { ITelevisionContract } from '@/interface/contract/contracts.interface'
 
 interface Props {
   modelValue: boolean
@@ -233,6 +240,9 @@ const dialogVisible = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value)
 })
+
+const isGeneratingPDF = ref(false)
+const contractDocument = ref<HTMLElement>()
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('en-BD', {
@@ -294,6 +304,51 @@ const amountToWords = (amount: number): string => {
 
 const printContract = () => {
   window.print()
+}
+
+const downloadPDF = async () => {
+  if (!props.contract) return
+
+  isGeneratingPDF.value = true
+
+  try {
+    const element = contractDocument.value
+    if (!element) {
+      throw new Error('Contract document not found')
+    }
+
+    const contractNo = props.contract.televisionContractNo || 'Contract'
+    const filename = `${contractNo}_${new Date().getTime()}.pdf`
+
+    const opt = {
+      margin: [5, 5, 5, 5] as [number, number, number, number],
+      filename,
+      image: { type: 'jpeg' as const, quality: 0.95 },
+      html2canvas: {
+        scale: 1.5, // Reduced scale to fit content on one page
+        useCORS: true,
+        letterRendering: true,
+        logging: false,
+        windowWidth: 900, // Match modal width
+        // windowHeight: element.scrollHeight
+        windowHeight: 1000,
+      },
+      jsPDF: {
+        unit: 'mm' as const,
+        format: 'a4' as const,
+        orientation: 'portrait' as const,
+        compress: true // Enable compression
+      },
+      pagebreak: { mode: 'avoid-all' as const } // Force single page
+    }
+
+    await html2pdf().set(opt).from(element).save()
+  } catch (error) {
+    console.error('PDF generation failed:', error)
+    alert('Failed to generate PDF. Please try again.')
+  } finally {
+    isGeneratingPDF.value = false
+  }
 }
 </script>
 
@@ -553,25 +608,165 @@ const printContract = () => {
   margin-right: 8px;
 }
 
+/* Print Styles for A4 Paper */
 @media print {
-  .el-dialog__wrapper {
+
+  /* Hide dialog wrapper */
+  :deep(.el-dialog__wrapper) {
     position: static !important;
+    background: white !important;
   }
 
-  .el-dialog {
+  :deep(.el-dialog) {
     margin: 0 !important;
     width: 100% !important;
     max-width: none !important;
+    box-shadow: none !important;
   }
 
-  .el-dialog__header,
-  .el-dialog__footer {
+  /* Hide all buttons and modal controls */
+  .modal-footer,
+  :deep(.el-dialog__header),
+  :deep(.el-dialog__footer) {
     display: none !important;
+  }
+
+  :deep(.el-dialog__body) {
+    padding: 0 !important;
+  }
+
+  /* A4 Page Settings - tighter margins for more content */
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm;
   }
 
   .contract-document {
     margin: 0;
     padding: 0;
+    width: 100%;
+    max-width: 210mm;
+    background: white;
+    font-size: 9pt;
+    /* Smaller font for more content */
+    line-height: 1.3;
+    /* Tighter line spacing */
+    transform: scale(0.95);
+    /* Slightly scale down to fit more */
+    transform-origin: top left;
+  }
+
+  /* Ensure images print correctly */
+  .company-logo {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Table print optimization */
+  .contract-table,
+  .schedule-table table {
+    page-break-inside: auto;
+  }
+
+  .contract-table tr,
+  .schedule-table tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  .contract-table thead,
+  .schedule-table thead {
+    display: table-header-group;
+  }
+
+  .contract-table tfoot,
+  .schedule-table tfoot {
+    display: table-footer-group;
+  }
+
+  /* Ensure backgrounds print */
+  .contract-table th,
+  .schedule-table th,
+  .total-row,
+  .product-item-row {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Signature section - always on new page if needed */
+  .signature-section {
+    page-break-before: auto;
+    page-break-inside: avoid;
+  }
+
+  /* Avoid breaking these sections */
+  .document-header,
+  .contract-info-section,
+  .branding-section,
+  .grand-total-section,
+  .terms-section {
+    page-break-inside: avoid;
+  }
+
+  /* Footer at bottom */
+  .document-footer {
+    page-break-inside: avoid;
+    position: relative;
+    bottom: 0;
+  }
+}
+
+/* Additional print-optimized styles */
+.contract-document {
+  box-sizing: border-box;
+}
+
+.contract-document * {
+  box-sizing: border-box;
+}
+
+/* Additional compact print styles */
+@media print {
+  .company-logo {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .document-header {
+    margin-bottom: 12px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .contract-info-section,
+  .branding-section,
+  .items-table-section,
+  .grand-total-section,
+  .schedule-section,
+  .terms-section,
+  .signature-section {
+    margin-bottom: 10px !important;
+  }
+
+  .contract-table th,
+  .contract-table td,
+  .schedule-table th,
+  .schedule-table td {
+    padding: 3px 5px !important;
+    font-size: 8pt !important;
+  }
+
+  .signature-line {
+    height: 25px !important;
+  }
+
+  .signature-item p {
+    font-size: 8pt !important;
+  }
+
+  .document-footer {
+    font-size: 7pt !important;
+    margin-top: 8px !important;
+    padding-top: 5px !important;
   }
 }
 </style>
