@@ -65,6 +65,7 @@ export const useContractStore = defineStore('contract', () => {
   const draftContracts = ref<TelevisionContractRequestDto[]>([])
   const isClientCopy = ref(true)
   const isLoading = ref(false)
+  const isEditMode = ref(false)
 
   // Getters
   const hasDraft = computed(() => draftContracts.value.length > 0)
@@ -269,6 +270,9 @@ export const useContractStore = defineStore('contract', () => {
 
   // Local Storage Management
   const saveToLocalStorage = () => {
+    // Don't save to localStorage when editing an existing contract
+    if (isEditMode.value) return
+    
     const storageData = {
       currentContract: currentContract.value,
       isClientCopy: isClientCopy.value,
@@ -306,7 +310,14 @@ export const useContractStore = defineStore('contract', () => {
   }
 
   const autoSave = () => {
-    saveToLocalStorage()
+    // Only auto-save for new contracts, not when editing
+    if (!isEditMode.value) {
+      saveToLocalStorage()
+    }
+  }
+
+  const setEditMode = (mode: boolean) => {
+    isEditMode.value = mode
   }
 
   // Utility functions
@@ -388,6 +399,7 @@ export const useContractStore = defineStore('contract', () => {
     draftContracts,
     isClientCopy,
     isLoading,
+    isEditMode,
     
     // Getters
     hasDraft,
@@ -420,6 +432,7 @@ export const useContractStore = defineStore('contract', () => {
     loadFromLocalStorage,
     clearLocalStorage,
     autoSave,
+    setEditMode,
     calculateItemTotal,
     calculateProductTotal
   }

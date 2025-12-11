@@ -34,14 +34,14 @@
         </div>
 
         <el-row :gutter="16">
-          <el-col :span="8">
+          <el-col :span="10">
             <el-form-item label="Contract Date" prop="contractDate">
               <el-date-picker v-model="form.contractDate" type="date" placeholder="Select date" class="w-full"
                 format="DD MMM, YYYY" value-format="YYYY-MM-DD"
                 @change="handleFieldUpdate('contractDate', form.contractDate)" />
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <el-col :span="14">
             <!-- Radio group to toggle between Client Copy and Agency Copy -->
             <el-form-item class="flex items-center ">
               <el-switch v-model="isClientCopy" @change="handleContractTypeChange" />
@@ -52,7 +52,7 @@
         </el-row>
 
         <el-row :gutter="16">
-          <el-col :span="12">
+          <el-col :span="10">
             <el-form-item label="Start Date" prop="contractStartDate">
               <el-date-picker v-model="form.contractStartDate" type="date" placeholder="Select start date"
                 class="w-full" format="DD MMM, YYYY" value-format="YYYY-MM-DD"
@@ -71,7 +71,7 @@
         <!-- Conditional Client/Agency Selection based on isClientCopy -->
         <el-row :gutter="16">
           <!-- Client Selection - Only shown when isClientCopy is true -->
-          <el-col :span="12" v-if="isClientCopy">
+          <el-col :span="16" v-if="isClientCopy">
             <el-form-item label="Client (Advertiser)" prop="contractedClientId">
               <div class="select-with-action">
                 <el-select v-model="form.contractedClientId" placeholder="Select Client/Advertiser" class="flex-1"
@@ -90,7 +90,7 @@
           </el-col>
 
           <!-- Agency Selection - Only shown when isClientCopy is false -->
-          <el-col :span="12" v-else>
+          <el-col :span="16" v-else>
             <el-form-item label="Agency (Contract Party)" prop="contractedAgencyId">
               <div class="select-with-action">
                 <el-select v-model="form.contractedAgencyId" placeholder="Select Agency" class="flex-1" filterable
@@ -108,7 +108,7 @@
             </el-form-item>
           </el-col>
 
-          <el-col :span="12">
+          <el-col :span="6">
             <el-form-item label="VAT Rate (%)" prop="vatRate">
               <el-input-number v-model="form.vatRate" :min="0" :max="100" :precision="2" controls-position="right"
                 class="w-full" @change="handleFieldUpdate('vatRate', form.vatRate)" />
@@ -291,9 +291,9 @@
                 <el-row :gutter="16" align="middle">
                   <el-col :span="14">
                     <el-form-item label="Dates (comma separated)">
-                      <el-input v-model="schedule.dateValue"
-                        placeholder="e.g., 01,02,03,04,05,06,07,08,09,10,11,12,13,14,15..."
-                        @blur="handleTransmissionScheduleUpdate(descIndex, scheduleIndex, 'dateValue', schedule.dateValue)" />
+                      <el-date-picker type="date" v-model="schedule.dateValue" range-separator="To"
+                        start-placeholder="Start date" end-placeholder="End date"
+                        @change="handleTransmissionScheduleUpdate(descIndex, scheduleIndex, 'dateValue', schedule.dateValue)" />
                     </el-form-item>
                   </el-col>
                   <el-col :span="6">
@@ -855,7 +855,7 @@ const handleSubmit = async () => {
     }
 
     store.clearLocalStorage()
-    emit('save', contractData)
+    // emit('save', contractData)
     emit('refresh')
     handleClose()
 
@@ -1095,7 +1095,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
+  padding: 8px 0;
   border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
@@ -1106,14 +1106,14 @@ onMounted(() => {
 .grand-total {
   font-size: 18px;
   font-weight: 700;
-  color: var(--el-color-primary);
+  color: var(--el-color-danger);
   background: var(--el-color-primary-light-9);
   margin: 8px -20px -20px;
-  padding: 16px 20px;
-  border-radius: 0 0 8px 8px;
+  padding: 10px 20px;
 }
 
 .grand-total-words {
+  margin: 20px -10px -20px;
   font-size: 13px;
   font-style: italic;
   color: var(--el-text-color-secondary);

@@ -136,7 +136,7 @@
         </div>
       </template>
 
-      <el-table :data="contractsData.data" style="width: 100%"
+      <el-table :data="contractsData.data" style="width: 100%" height="600"
         :default-sort="{ prop: 'contractDate', order: 'descending' }" empty-text="No contracts found"
         v-loading="loading" @sort-change="handleSortChange">
         <el-table-column label="Contract No" prop="televisionContractNo" width="180" sortable>
@@ -194,8 +194,14 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column filter-placement="bottom-end" label="Created At" sortable prop="createdAt" width="120">
+          <template #default="{ row }">
 
-        <el-table-column label="Actions" width="280" fixed="right">
+            {{ formatDateTime(row.createdAt) }}
+          </template>
+        </el-table-column>
+
+        <el-table-column label="Actions" fixed="right" width="280">
           <template #default="{ row }">
             <div class="action-buttons">
               <el-button type="success" link @click="editContract(row)" :icon="Edit" size="small">
@@ -374,6 +380,7 @@ import ContractDetailsModal from '@/components/modals/ContractDetailsModal.vue'
 import { contractService } from '@/services/Contracts/contract.services'
 import type { ITelevisionContract, ITelevisionContractFilter } from '@/interface/contract/contracts.interface'
 import { useContractStore } from '@/stores/contracts'
+import { formatDateTime } from '@/services/global/formateDateTime'
 
 // Initial load
 onMounted(() => {
@@ -429,8 +436,6 @@ const formatDate = (dateString: string) => {
 }
 
 const getClientOrAgencyName = (contract: ITelevisionContract) => {
-  // This would need to be implemented based on your client/agency data
-  // For now, return a placeholder
   return contract.contractedClientId ? 'Client' : 'Agency'
 }
 
