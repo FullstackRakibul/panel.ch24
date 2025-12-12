@@ -138,7 +138,7 @@ const rules: FormRules = {
       required: true,
       message: 'Please input email',
       trigger: 'blur',
-      type: 'email' // ✅ MUST be literal
+      type: 'email'
     }
   ],
   password: [
@@ -169,6 +169,7 @@ const submitForm = async () => {
 
     const result = await authStore.login(form)
 
+    console.log("form the login page : ", result)
     if (result.success) {
       router.push('/')
     } else {
@@ -187,17 +188,21 @@ const submitForm = async () => {
 /* Customizing Element Plus input, button, checkbox, alert for minimalist design */
 :deep(.el-input__wrapper) {
   @apply rounded-lg px-4 py-2.5 border border-gray-200 shadow-sm;
-  box-shadow: none !important; /* Remove default Element Plus shadow */
+  box-shadow: none !important;
+  /* Remove default Element Plus shadow */
 }
 
 :deep(.el-input__wrapper.is-focus) {
-  @apply ring-2 ring-blue-500 border-transparent; /* Custom focus ring */
+  @apply ring-2 ring-blue-500 border-transparent;
+  /* Custom focus ring */
 }
 
 :deep(.el-button) {
   @apply rounded-lg font-semibold;
-  border: none !important; /* Remove default borders */
-  box-shadow: none !important; /* Remove default shadows */
+  border: none !important;
+  /* Remove default borders */
+  box-shadow: none !important;
+  /* Remove default shadows */
 }
 
 :deep(.el-button--primary) {

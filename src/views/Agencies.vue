@@ -1,343 +1,513 @@
 <template>
   <div class="agencies-container">
-    <div class="page-header ">
+    <!-- Page Header -->
+    <div class="page-header">
       <div class="header-content">
         <h1 class="page-title">Advertising Agencies</h1>
         <p class="page-subtitle">Manage all your advertising agency partners</p>
       </div>
-      <el-button type="primary" size="large" @click="openAddAgencyModal">
+      <el-button type="primary" size="large" @click="openCreateModal">
         <el-icon class="mr-2">
           <Plus />
         </el-icon>
-        Add New Agency
+        New Agency
       </el-button>
     </div>
 
-    <el-card class="control-bar-card" shadow="never">
-      <template #header>
-        <div class="card-header">
-          <h3>Agency Overview</h3>
-          <div class="header-actions">
-            <el-input v-model="agenciesStore.searchTerm" placeholder="Search agencies..." :prefix-icon="Search"
-              clearable class="control-input" @input="handleSearch" />
-            <el-select v-model="agenciesStore.filterByLocation" placeholder="Location" clearable class="control-select"
-              @change="handleFilter">
-              <el-option v-for="location in agenciesStore.locations" :key="location" :label="location"
-                :value="location" />
-            </el-select>
-            <el-select v-model="agenciesStore.filterByWork" placeholder="Work Type" clearable class="control-select"
-              @change="handleFilter">
-              <el-option v-for="workType in agenciesStore.workTypes" :key="workType" :label="workType"
-                :value="workType" />
-            </el-select>
-            <el-select v-model="agenciesStore.filterBySize" placeholder="Team Size" clearable class="control-select"
-              @change="handleFilter">
-              <el-option v-for="size in agenciesStore.sizes" :key="size" :label="size" :value="size" />
-            </el-select>
-            <el-select v-model="agenciesStore.sortBy" placeholder="Sort By" class="control-select" @change="handleSort">
-              <el-option label="Name (A-Z)" value="name" />
-              <el-option label="Rating (High to Low)" value="rating" />
-              <el-option label="Budget (Low to High)" value="budget" />
-            </el-select>
-            <el-button @click="clearFilters" :icon="FilterX" class="clear-filters-button">Clear Filters</el-button>
-            <el-radio-group v-model="viewType" size="small" class="view-toggle">
-              <el-radio-button label="grid">
-                <el-icon>
-                  <Grid3X3 />
-                </el-icon>
-                <span class="ml-1 hidden sm:inline">Grid</span>
-              </el-radio-button>
-              <el-radio-button label="list">
-                <el-icon>
-                  <List />
-                </el-icon>
-                <span class="ml-1 hidden sm:inline">List</span>
-              </el-radio-button>
-            </el-radio-group>
-          </div>
-        </div>
-      </template>
-
-      <div v-loading="agenciesStore.loading" class="min-h-[300px] flex flex-col">
-        <div v-if="agenciesStore.filteredAndSortedAgencies.length > 0" class="flex-1">
-          <div v-if="viewType === 'grid'"
-            class="agencies-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <AgencyCard v-for="agency in agenciesStore.filteredAndSortedAgencies" :key="agency.id" :agency="agency"
-              @viewProfile="handleViewProfile" @editAgency="openEditAgencyModal" @deleteAgency="handleDeleteAgency" />
-          </div>
-
-          <div v-else class="agencies-list bg-white rounded-xl overflow-hidden">
-            <div class="table-responsive-wrapper">
-              <el-table :data="agenciesStore.filteredAndSortedAgencies" style="width: 100%" stripe>
-                <el-table-column prop="name" label="Agency Name" sortable>
-                  <template #default="{ row }">
-                    <div class="flex items-center gap-3">
-                      <img :src="row.logo" :alt="row.name"
-                        class="w-10 h-10 rounded-md object-contain border border-gray-100 p-0.5" />
-                      <span class="font-medium text-gray-800">{{ row.name }}</span>
-                    </div>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="tagline" label="Tagline" min-width="150" />
-                <el-table-column prop="location" label="Location" sortable />
-                <el-table-column prop="work" label="Work Type" sortable />
-                <el-table-column prop="budget" label="Budget" sortable align="right">
-                  <template #default="{ row }">
-                    {{ formatCurrency(row.budget) }}
-                  </template>
-                </el-table-column>
-                <el-table-column prop="rating" label="Rating" sortable align="center">
-                  <template #default="{ row }">
-                    <el-rate v-model="row.rating" disabled size="small" :colors="['#f5be22', '#f5be22', '#f5be22']" />
-                    <span class="text-xs text-gray-500 ml-1">({{ row.reviewCount }})</span>
-                  </template>
-                </el-table-column>
-                <el-table-column label="Actions" width="250" fixed="right" align="center">
-                  <template #default="{ row }">
-                    <div class="action-buttons">
-                      <el-button type="primary" link @click="handleViewProfile(row.id)" :icon="Eye" size="small">
-                        View
-                      </el-button>
-                      <el-button type="success" link @click="openEditAgencyModal(row)" :icon="Edit" size="small">
-                        Edit
-                      </el-button>
-                      <el-button type="danger" link @click="handleDeleteAgency(row.id)" :icon="Trash2" size="small">
-                        Delete
-                      </el-button>
-                    </div>
-                  </template>
-                </el-table-column>
-              </el-table>
+    <!-- Stats Cards -->
+    <el-row :gutter="24" class="stats-section">
+      <el-col :xs="24" :sm="8">
+        <div class="stats-card">
+          <div class="stats-content">
+            <div class="stats-icon total">
+              <el-icon size="24">
+                <Building2 />
+              </el-icon>
+            </div>
+            <div class="stats-info">
+              <div class="stats-value">{{ agenciesStore.totalAgencies }}</div>
+              <div class="stats-label">Total Agencies</div>
             </div>
           </div>
         </div>
-        <div v-else class="flex flex-col items-center justify-center py-12 bg-white rounded-xl shadow-sm w-full flex-1">
-          <el-empty description="No agencies found matching your criteria." />
-          <el-button type="primary" @click="openAddAgencyModal" class="mt-4">Add First Agency</el-button>
+      </el-col>
+
+      <el-col :xs="24" :sm="8">
+        <div class="stats-card">
+          <div class="stats-content">
+            <div class="stats-icon active">
+              <el-icon size="24">
+                <CheckCircle />
+              </el-icon>
+            </div>
+            <div class="stats-info">
+              <div class="stats-value">{{ premiumAgencies }}</div>
+              <div class="stats-label">Premium Agencies</div>
+            </div>
+          </div>
         </div>
-      </div>
+      </el-col>
+
+      <el-col :xs="24" :sm="8">
+        <div class="stats-card">
+          <div class="stats-content">
+            <div class="stats-icon company">
+              <el-icon size="24">
+                <Users />
+              </el-icon>
+            </div>
+            <div class="stats-info">
+              <div class="stats-value">{{ largeAgencies }}</div>
+              <div class="stats-label">Large Agencies</div>
+            </div>
+          </div>
+        </div>
+      </el-col>
+    </el-row>
+
+    <!-- Search and Filters -->
+    <el-card class="filters-card" shadow="never">
+      <el-row :gutter="16" align="middle">
+        <el-col :xs="24" :sm="6">
+          <el-input v-model="agenciesStore.searchTerm" placeholder="Search agencies..." :prefix-icon="Search"
+            size="large" clearable />
+        </el-col>
+
+        <el-col :xs="24" :sm="4">
+          <el-select v-model="agenciesStore.filterByLocation" placeholder="All Locations" size="large" clearable>
+            <el-option v-for="location in agenciesStore.locations" :key="location" :label="location"
+              :value="location" />
+          </el-select>
+        </el-col>
+
+        <el-col :xs="24" :sm="4">
+          <el-select v-model="agenciesStore.filterBySize" placeholder="All Sizes" size="large" clearable>
+            <el-option v-for="size in agenciesStore.sizes" :key="size" :label="size" :value="size" />
+          </el-select>
+        </el-col>
+
+        <el-col :xs="24" :sm="4">
+          <el-select v-model="agenciesStore.sortBy" placeholder="Sort By" size="large">
+            <el-option label="Name (A-Z)" value="agencyName" />
+            <el-option label="Rating (High to Low)" value="rating" />
+            <el-option label="Budget (Low to High)" value="budget" />
+          </el-select>
+        </el-col>
+
+        <el-col :xs="24" :sm="6">
+          <div class="filter-actions">
+            <el-button @click="resetFilters">Reset</el-button>
+            <el-button type="primary" plain @click="handleFetchAgencies">
+              <el-icon class="mr-1">
+                <Refresh />
+              </el-icon>
+              Refresh
+            </el-button>
+            <div class="view-toggle">
+              <el-button-group>
+                <el-button :type="viewMode === 'grid' ? 'primary' : 'default'" @click="viewMode = 'grid'">
+                  <el-icon>
+                    <Grid3X3 />
+                  </el-icon>
+                </el-button>
+                <el-button :type="viewMode === 'list' ? 'primary' : 'default'" @click="viewMode = 'list'">
+                  <el-icon>
+                    <List />
+                  </el-icon>
+                </el-button>
+              </el-button-group>
+            </div>
+          </div>
+        </el-col>
+      </el-row>
     </el-card>
 
-    <AgencyModal :visible="isAgencyModalVisible" :agency="currentAgency" @update:visible="isAgencyModalVisible = $event"
-      @save="handleSaveAgency" />
+    <!-- Loading State -->
+    <div v-if="agenciesStore.loading" class="loading-container">
+      <el-skeleton animated :rows="8" />
+    </div>
+
+    <!-- Cards View -->
+    <div v-else-if="viewMode === 'grid'" class="agencies-grid">
+      <el-row :gutter="10">
+        <el-col class="mb-2" v-for="agency in agenciesStore.filteredAndSortedAgencies" :key="agency.guid" :xs="24"
+          :sm="12" :lg="8" :xl="6">
+          <el-card class="agency-card " shadow="hover">
+            <!-- Agency Header -->
+            <div class="agency-header">
+              <div class="agency-avatar-section">
+                <div v-if="agency.logo" class="agency-logo">
+                  <img :src="agency.logo" :alt="agency.agencyName" class="logo-image" />
+                </div>
+                <el-avatar v-else :size="48" class="agency-avatar">
+                  <el-icon>
+                    <Building2 />
+                  </el-icon>
+                </el-avatar>
+                <div class="agency-basic-info">
+                  <h3 class="agency-name">{{ agency.agencyName }}</h3>
+                  <div class="agency-badges">
+                    <el-tag type="primary" size="small" effect="light">
+                      {{ getSizeLabel(agency.companySize) }}
+                    </el-tag>
+                    <el-tag type="success" size="small" effect="light" v-if="parseFloat(agency.rating || '0') >= 4">
+                      Premium
+                    </el-tag>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Actions Dropdown -->
+              <el-dropdown trigger="click" @command="handleCommand">
+                <el-button :icon="MoreHorizontal" circle size="small" />
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item :command="{ action: 'edit', agency }">
+                      <el-icon class="mr-2">
+                        <Edit />
+                      </el-icon>
+                      Edit Agency
+                    </el-dropdown-item>
+                    <el-dropdown-item :command="{ action: 'view', agency }">
+                      <el-icon class="mr-2">
+                        <Eye />
+                      </el-icon>
+                      View Details
+                    </el-dropdown-item>
+                    <el-dropdown-item :command="{ action: 'delete', agency }" divided>
+                      <el-icon class="mr-2">
+                        <Trash2 />
+                      </el-icon>
+                      Delete Agency
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
+
+            <!-- Agency Info -->
+            <div class="agency-info">
+              <div class="info-item" v-if="agency.tagline">
+                <el-icon class="info-icon">
+                  <Quote />
+                </el-icon>
+                <span class="info-text">{{ agency.tagline }}</span>
+              </div>
+              <div class="info-item" v-if="agency.location">
+                <el-icon class="info-icon">
+                  <MapPin />
+                </el-icon>
+                <span class="info-text">{{ agency.location }}</span>
+              </div>
+              <div class="info-item" v-if="agency.email">
+                <el-icon class="info-icon">
+                  <Mail />
+                </el-icon>
+                <span class="info-text">{{ agency.email }}</span>
+              </div>
+              <div class="info-item" v-if="agency.phone">
+                <el-icon class="info-icon">
+                  <Phone />
+                </el-icon>
+                <span class="info-text">{{ agency.phone }}</span>
+              </div>
+            </div>
+
+            <!-- Agency Stats -->
+            <div class="agency-stats">
+              <div class="stat-item">
+                <div class="stat-value">{{ agency.rating || '0' }}/5</div>
+                <div class="stat-label">Rating</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">{{ agency.reviewCount || '0' }}</div>
+                <div class="stat-label">Reviews</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">{{ formatCurrency(agency.budget) }}</div>
+                <div class="stat-label">Budget</div>
+              </div>
+            </div>
+
+            <!-- Agency Footer -->
+            <div class="agency-footer">
+              <span class="created-date">Added {{ formatDate(agency.createdAt) }}</span>
+              <div class="rating-indicator">
+                <el-rate v-model="agency.rating" disabled size="small" :colors="['#f5be22', '#f5be22', '#f5be22']" />
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+
+      <!-- Empty State for Cards -->
+      <el-empty v-if="agenciesStore.filteredAndSortedAgencies.length === 0"
+        :description="agenciesStore.searchTerm ? 'No agencies found matching your search' : 'No agencies yet'"
+        :image-size="120">
+        <el-button v-if="!agenciesStore.searchTerm" type="primary" @click="openCreateModal">
+          <el-icon class="mr-2">
+            <Plus />
+          </el-icon>
+          Add Your First Agency
+        </el-button>
+      </el-empty>
+    </div>
+
+    <!-- List View -->
+    <div v-else class="agencies-table">
+      <el-table :data="agenciesStore.filteredAndSortedAgencies" style="width: 100%"
+        :default-sort="{ prop: 'createdAt', order: 'descending' }" empty-text="No agencies found" class="modern-table">
+
+        <el-table-column width="60">
+          <template #default="{ row }">
+            <div v-if="row.logo" class="agency-logo-small">
+              <img :src="row.logo" :alt="row.agencyName" class="logo-image-small" />
+            </div>
+            <el-avatar v-else :size="40" class="agency-avatar-small">
+              <el-icon>
+                <Building2 />
+              </el-icon>
+            </el-avatar>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="Agency Name" prop="agencyName" min-width="200" sortable>
+          <template #default="{ row }">
+            <div class="agency-name-cell">
+              <div class="name">{{ row.agencyName }}</div>
+              <div class="tagline">{{ row.tagline }}</div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="Location" prop="location" min-width="150" sortable>
+          <template #default="{ row }">
+            <div class="location-cell">
+              <div class="city">{{ row.location || 'N/A' }}</div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="Size" width="120" sortable>
+          <template #default="{ row }">
+            <el-tag type="primary" size="small" effect="light">
+              {{ getSizeLabel(row.companySize) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="Budget" prop="budget" width="150" sortable align="right">
+          <template #default="{ row }">
+            <div class="budget-cell">
+              {{ formatCurrency(row.budget) }}
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="Rating" width="150" sortable align="center">
+          <template #default="{ row }">
+            <div class="rating-cell">
+              <el-rate v-model="row.rating" disabled size="small" :colors="['#f5be22', '#f5be22', '#f5be22']" />
+              <span class="rating-text">{{ row.rating }}/5</span>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="Created" prop="createdAt" width="120" sortable>
+          <template #default="{ row }">
+            <span class="date-text">{{ formatDate(row.createdAt) }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="Actions" width="120" fixed="right">
+          <template #default="{ row }">
+            <div class="action-buttons">
+              <el-button type="primary" link @click="editAgency(row)" :icon="Edit" size="small" />
+              <el-button type="danger" link @click="deleteAgency(row.guid)" :icon="Trash2" size="small" />
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+
+    <!-- Agency Modal -->
+    <AgencyModal v-model="agencyModalStore.isAgencyModalOpen" :is-edit="agencyModalStore.isEditMode"
+      :loading="modalLoading" @save="handleSave" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useAgenciesStore, IAgency } from '@/stores/agencies';
-import AgencyModal from '@/components/forms/AgencyModal.vue'; // Assuming this path is correct
-import {
-  ElButton,
-  ElInput,
-  ElSelect,
-  ElOption,
-  ElRadioGroup,
-  ElRadioButton,
-  ElTable,
-  ElTableColumn,
-  ElEmpty,
-  ElMessage,
-  ElMessageBox,
-  ElIcon,
-  ElRate,
-  ElCard,
-  ElRow,
-  ElCol,
-  ElTag,
-  ElLoading // For v-loading directive
-} from 'element-plus';
+import { ref, onMounted, computed } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import AgencyModal from '@/components/forms/AgencyModal.vue'
+import { useAgenciesStore } from '@/stores/agencies'
+import { useAgencyModalStore } from '@/stores/agency-modal.store'
+import type { IAgency, ICreateAgency, IUpdateAgency } from '@/interface/agency/agencies.interface'
 import {
   Plus,
   Search,
+  Building2,
+  Users,
+  CheckCircle,
+  MoreHorizontal,
+  Edit,
+  Eye,
+  Trash2,
+  Mail,
+  Phone,
+  MapPin,
   Grid3X3,
   List,
-  MapPin,
-  Briefcase,
-  Users,
-  Star,
-  DollarSign,
-  Edit,
-  Trash2,
-  FilterX,
-  Eye // Added for view action
-} from 'lucide-vue-next';
+  Quote
+} from 'lucide-vue-next'
 
-// Define AgencyCard inline if it's not a separate component, or ensure it matches this styling if it is.
-// For consistency, I'll provide an inline version that can be copied to AgencyCard.vue if it exists.
-const AgencyCard = {
-  props: {
-    agency: {
-      type: Object as () => IAgency,
-      required: true,
-    },
-  },
-  emits: ['viewProfile', 'editAgency', 'deleteAgency'],
-  setup(props, { emit }) {
-    const formatCurrency = (value: number) => {
-      return `৳ ${value.toLocaleString('en-BD', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-    };
+const agenciesStore = useAgenciesStore()
+const agencyModalStore = useAgencyModalStore()
+const modalLoading = ref(false)
+const viewMode = ref<'grid' | 'list'>('grid')
 
-    return {
-      formatCurrency,
-      MapPin, Briefcase, Users, Star, DollarSign, Edit, Trash2, Eye,
-      emit
-    };
-  },
-  template: `
-    <el-card class="agency-card group" shadow="hover">
-      <div class="flex items-center justify-between mb-4">
-        <img :src="agency.logo" :alt="agency.name" class="w-16 h-16 rounded-lg object-contain border border-gray-100 p-1" />
-        <el-tag size="small" type="info" class="rounded-md">{{ agency.size }}</el-tag>
-      </div>
-      <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ agency.name }}</h3>
-      <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ agency.tagline }}</p>
+// Computed properties for stats
+const premiumAgencies = computed(() => {
+  return agenciesStore.agencies.filter(agency =>
+    parseFloat(agency.rating || '0') >= 4
+  ).length
+})
 
-      <div class="grid grid-cols-2 gap-y-2 text-sm text-gray-700 mb-4">
-        <div class="flex items-center gap-2">
-          <el-icon :size="16" class="text-gray-500"><MapPin /></el-icon>
-          <span>{{ agency.location }}</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <el-icon :size="16" class="text-gray-500"><Briefcase /></el-icon>
-          <span>{{ agency.work }}</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <el-icon :size="16" class="text-gray-500"><DollarSign /></el-icon>
-          <span>{{ formatCurrency(agency.budget) }}</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <el-icon :size="16" class="text-gray-500"><Star /></el-icon>
-          <el-rate v-model="agency.rating" disabled size="small" :colors="['#f5be22', '#f5be22', '#f5be22']" />
-          <span class="text-xs text-gray-500 ml-1">({{ agency.reviewCount }})</span>
-        </div>
-      </div>
+const largeAgencies = computed(() => {
+  return agenciesStore.agencies.filter(agency =>
+    (agency.companySize || 0) > 200
+  ).length
+})
 
-      <div class="flex justify-between items-center pt-4 border-t border-gray-100">
-        <el-button link type="primary" size="small" @click="emit('viewProfile', agency.id)">
-          <el-icon><Eye /></el-icon> View Profile
-        </el-button>
-        <div class="action-buttons">
-          <el-button link type="primary" size="small" @click="emit('editAgency', agency)">
-            <el-icon><Edit /></el-icon> Edit
-          </el-button>
-          <el-button link type="danger" size="small" @click="emit('deleteAgency', agency.id)">
-            <el-icon><Trash2 /></el-icon> Delete
-          </el-button>
-        </div>
-      </div>
-    </el-card>
-  `,
-};
-
-
-const agenciesStore = useAgenciesStore();
-
-const viewType = ref<'grid' | 'list'>('list'); // Default to list view for better table visibility
-
-const isAgencyModalVisible = ref(false);
-const currentAgency = ref<IAgency | null>(null);
-
-const openAddAgencyModal = () => {
-  currentAgency.value = null;
-  isAgencyModalVisible.value = true;
-};
-
-const openEditAgencyModal = (agency: IAgency) => {
-  currentAgency.value = { ...agency };
-  isAgencyModalVisible.value = true;
-};
-
-const handleSaveAgency = (agency: IAgency) => {
-  // This logic is already API-friendly, assuming agenciesStore methods
-  // would internally handle API calls (e.g., using axios)
-  if (agency.id && agenciesStore.allAgencies.some(a => a.id === agency.id)) {
-    agenciesStore.updateAgency(agency);
-    ElMessage.success('Agency updated successfully!');
-  } else {
-    // For new agencies, assign a simple ID. In a real API, the backend would assign the ID.
-    agenciesStore.addAgency({ ...agency, id: Date.now().toString() });
-    ElMessage.success('Agency added successfully!');
+const handleFetchAgencies = async () => {
+  try {
+    await agenciesStore.fetchAgencies()
+    console.log("Here is all the agencies data:", agenciesStore.agencies)
+  } catch (error) {
+    ElMessage.error('Failed to fetch agencies')
+    console.error('Error fetching agencies:', error)
   }
-  isAgencyModalVisible.value = false;
-};
+}
 
-const handleDeleteAgency = (id: string) => {
-  ElMessageBox.confirm(
-    'This will permanently delete the agency. Continue?',
-    'Warning',
-    {
-      confirmButtonText: 'Delete',
-      cancelButtonText: 'Cancel',
-      type: 'warning',
-      confirmButtonClass: 'el-button--danger',
+const resetFilters = () => {
+  agenciesStore.resetFilters()
+  ElMessage.info('Filters cleared!')
+}
+
+const openCreateModal = () => {
+  agencyModalStore.openAgencyModal() // This will open modal for creating new agency
+}
+
+const handleCommand = (command: { action: string; agency: IAgency }) => {
+  const { action, agency } = command
+
+  switch (action) {
+    case 'edit':
+      editAgency(agency)
+      break
+    case 'view':
+      viewAgencyDetails(agency)
+      break
+    case 'delete':
+      deleteAgency(agency.guid)
+      break
+  }
+}
+
+const editAgency = (agency: IAgency) => {
+  agencyModalStore.openAgencyModal(agency, true) // This will open modal for editing
+}
+
+const viewAgencyDetails = (agency: IAgency) => {
+  ElMessage.info(`Viewing details for ${agency.agencyName}`)
+}
+
+const deleteAgency = async (guid: string) => {
+  try {
+    await ElMessageBox.confirm(
+      'This will permanently delete the agency. Continue?',
+      'Warning',
+      {
+        confirmButtonText: 'Delete',
+        cancelButtonText: 'Cancel',
+        type: 'warning',
+      }
+    )
+
+    await agenciesStore.deleteAgency(guid)
+    ElMessage.success('Agency deleted successfully')
+  } catch {
+    ElMessage.info('Delete cancelled')
+  }
+}
+
+const handleSave = async (agencyData: ICreateAgency | IUpdateAgency) => {
+  try {
+    modalLoading.value = true
+    console.log("Agency Data:", agencyData)
+
+    if (agencyModalStore.isEditMode && agencyModalStore.editingAgencyId) {
+      await agenciesStore.updateAgency(agencyModalStore.editingAgencyId, agencyData as IUpdateAgency)
+      ElMessage.success('Agency updated successfully')
+    } else {
+      await agenciesStore.createAgency(agencyData as ICreateAgency)
+      ElMessage.success('Agency created successfully')
     }
-  )
-    .then(() => {
-      agenciesStore.deleteAgency(id);
-      ElMessage({
-        type: 'success',
-        message: 'Delete completed',
-      });
-    })
-    .catch(() => {
-      ElMessage({
-        type: 'info',
-        message: 'Delete canceled',
-      });
-    });
-};
 
-const handleViewProfile = (id: string) => {
-  ElMessage.info(`Viewing profile for agency ID: ${id}`);
-  // In a real app, you might navigate to a dedicated agency profile page
-  // router.push(`/agencies/${id}`);
-};
+    // Clear the draft after successful save
+    agencyModalStore.resetAgencyModalData()
+    agencyModalStore.clearLocalStorage()
+    await handleFetchAgencies()
+  } catch (error) {
+    ElMessage.error('Operation failed')
+    console.error('Error saving agency:', error)
+  } finally {
+    modalLoading.value = false
+  }
+}
 
-const clearFilters = () => {
-  agenciesStore.searchTerm = '';
-  agenciesStore.filterByLocation = '';
-  agenciesStore.filterByWork = '';
-  agenciesStore.filterBySize = '';
-  agenciesStore.sortBy = 'name'; // Reset sort to default
-  ElMessage.info('Filters cleared!');
-};
+const formatCurrency = (value?: string) => {
+  if (!value) return '৳ 0'
+  const numValue = parseFloat(value)
+  return `৳ ${numValue.toLocaleString('en-BD', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+}
 
-const handleSearch = () => {
-  // Search is handled by computed property in store
-};
+const formatDate = (date: Date | string | undefined) => {
+  if (!date) return 'Recently'
+  return new Date(date).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })
+}
 
-const handleFilter = () => {
-  // Filtering is handled by computed property in store
-};
+const getSizeLabel = (size?: number) => {
+  if (!size) return 'N/A'
+  if (size <= 10) return '1-10'
+  if (size <= 50) return '11-50'
+  if (size <= 200) return '51-200'
+  if (size <= 500) return '201-500'
+  if (size <= 1000) return '501-1000'
+  return '1000+'
+}
 
-const handleSort = () => {
-  // Sorting is handled by computed property in store
-};
-
-
-const formatCurrency = (value: number) => {
-  return `৳ ${value.toLocaleString('en-BD', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-};
+onMounted(() => {
+  handleFetchAgencies()
+})
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-
 .agencies-container {
-  padding: 1.5rem;
-  background-color: #f9fafb;
+  padding: 24px;
+  background: var(--el-bg-color-page);
   min-height: 100vh;
-  font-family: 'Poppins', sans-serif;
 }
 
-/* Page Header styles - consistent with Invoices.vue */
 .page-header {
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 2rem;
+  align-items: flex-start;
+  margin-bottom: 32px;
 }
 
 .header-content {
@@ -345,232 +515,356 @@ const formatCurrency = (value: number) => {
 }
 
 .page-title {
-  font-size: 1.875rem;
+  font-size: 32px;
   font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
+  color: var(--el-text-color-primary);
+  margin: 0 0 8px 0;
 }
 
 .page-subtitle {
-  font-size: 1rem;
-  color: #4b5563;
-}
-
-.el-button.el-button--large {
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-}
-
-/* Control Bar Card styles - consistent with Invoices.vue card header */
-.control-bar-card {
-  --el-card-padding: 24px;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  margin-bottom: 1.5rem;
-  background-color: #ffffff;
-}
-
-.control-bar-card :deep(.el-card__header) {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.control-bar-card .card-header {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.control-bar-card h3 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #1f2937;
+  font-size: 16px;
+  color: var(--el-text-color-regular);
   margin: 0;
 }
 
-.control-bar-card .header-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: center;
+.stats-section {
+  margin-bottom: 32px;
 }
 
-.control-input,
-.control-select {
-  width: 100%;
+.stats-card {
+  background: var(--el-bg-color);
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: var(--el-box-shadow-light);
+  transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--el-box-shadow);
+}
+
+.stats-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stats-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stats-icon.total {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+}
+
+.stats-icon.active {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.stats-icon.company {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+}
+
+.stats-info {
   flex: 1;
 }
 
-.control-input :deep(.el-input__wrapper),
-.control-select :deep(.el-select__wrapper) {
-  border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
-  box-shadow: none !important;
-  padding: 0.625rem 0.75rem;
+.stats-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--el-text-color-primary);
+  line-height: 1.2;
+  margin-bottom: 4px;
 }
 
-.control-input :deep(.el-input__wrapper.is-focus),
-.control-select :deep(.el-select__wrapper.is-focused) {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+.stats-label {
+  font-size: 14px;
+  color: var(--el-text-color-regular);
 }
 
-.clear-filters-button {
-  border-radius: 0.5rem;
-  color: #4b5563;
-  transition-property: background-color, color;
-  transition-duration: 0.15s;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+.filters-card {
+  margin-bottom: 32px;
+  --el-card-padding: 24px;
 }
 
-.clear-filters-button:hover {
-  background-color: #f3f4f6;
-  color: #1f2937;
+.filter-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
 }
 
-.view-toggle :deep(.el-radio-button__inner) {
-  border-radius: 0.5rem;
-  border: 1px solid #d1d5db;
-  background-color: #ffffff;
-  color: #374151;
-  padding: 0.5rem 1rem;
-  box-shadow: none !important;
+.view-toggle {
+  margin-left: 12px;
 }
 
-.view-toggle :deep(.el-radio-button__orig-radio:checked+.el-radio-button__inner) {
-  background-color: #2563eb;
-  border-color: #2563eb;
-  color: #ffffff;
+.loading-container {
+  background: var(--el-bg-color);
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: var(--el-box-shadow-light);
 }
 
-.view-toggle :deep(.el-radio-button__orig-radio:checked+.el-radio-button__inner:hover) {
-  background-color: #1d4ed8;
-  border-color: #1d4ed8;
+.agencies-grid {
+  min-height: 300px;
 }
 
-/* Agency Card Styling (for grid view) */
+
+
 .agency-card {
-  background-color: #ffffff;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  transition-property: box-shadow;
-  transition-duration: 0.3s;
-  padding: 1.5rem;
-  --el-card-padding: 0px;
+  --el-card-padding: 24px;
+  transition: all 0.3s ease;
+  height: 100%;
+  border-radius: 12px;
 }
 
 .agency-card:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transform: translateY(-4px);
+  box-shadow: var(--el-box-shadow-dark);
 }
 
-.agency-card :deep(.el-card__body) {
-  padding: 0;
+.agency-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
 }
 
-/* Table Styling (for list view) - consistent with Invoices.vue table */
-.agencies-list {
-  background-color: #ffffff;
-  border-radius: 0.75rem;
+.agency-avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.agency-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.agency-avatar {
+  --el-avatar-bg-color: linear-gradient(135deg, #f59e0b, #d97706);
+  flex-shrink: 0;
+}
+
+.agency-basic-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.agency-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+  margin: 0 0 8px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agency-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.agency-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-icon {
+  color: var(--el-text-color-secondary);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.info-text {
+  font-size: 14px;
+  color: var(--el-text-color-regular);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.agency-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--el-fill-color-lighter);
+  border-radius: 8px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.agency-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid var(--el-border-color-lighter);
+}
+
+.created-date {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.rating-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.agencies-table {
+  background: var(--el-bg-color);
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 12px;
+  box-shadow: var(--el-box-shadow-light);
+}
+
+.modern-table {
+  --el-table-border-radius: 12px;
+}
+
+.agency-logo-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
   overflow: hidden;
 }
 
-/* New wrapper for table to handle overflow and ensure full width */
-.table-responsive-wrapper {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+.logo-image-small {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-:deep(.el-table) {
-  border-radius: 0.75rem;
-  min-width: 800px;
+.agency-avatar-small {
+  --el-avatar-bg-color: linear-gradient(135deg, #f59e0b, #d97706);
 }
 
-:deep(.el-table th.el-table__cell) {
-  background-color: #f3f4f6;
-  color: #374151;
+.agency-name-cell .name {
   font-weight: 600;
-  padding: 0.75rem 1rem;
+  color: var(--el-text-color-primary);
+  margin-bottom: 2px;
 }
 
-:deep(.el-table td.el-table__cell) {
-  color: #374151;
-  padding: 0.75rem 1rem;
+.agency-name-cell .tagline {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
 }
 
-:deep(.el-table__row--striped td.el-table__cell) {
-  background-color: #f9fafb;
+.location-cell .city {
+  font-weight: 500;
+  color: var(--el-text-color-primary);
 }
 
-:deep(.el-table__row:hover) {
-  background-color: #f3f4f6;
+.budget-cell {
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.rating-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.rating-text {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.date-text {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
 }
 
 .action-buttons {
   display: flex;
-  gap: 0.5rem;
-  justify-content: center;
+  gap: 4px;
 }
 
-.el-button.el-button--link.el-button--small {
-  font-size: 0.875rem;
-  font-weight: 500;
+.mr-1 {
+  margin-right: 4px;
 }
 
 .mr-2 {
   margin-right: 8px;
 }
 
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-  .page-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-
-  .page-title {
-    margin-bottom: 0;
-  }
-
-  .control-bar-card .card-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .control-input,
-  .control-select {
-    max-width: 100%;
-  }
-}
-
 @media (max-width: 768px) {
   .agencies-container {
-    padding: 1rem;
+    padding: 16px;
   }
 
   .page-header {
     flex-direction: column;
-    gap: 1rem;
+    gap: 16px;
     align-items: stretch;
   }
 
-  .page-title {
-    font-size: 1.5rem;
+  .filter-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
 
-  .control-bar-card .card-header {
+  .agency-header {
     flex-direction: column;
+    gap: 12px;
     align-items: stretch;
   }
 
-  .action-buttons {
-    flex-direction: column;
-    align-items: flex-start;
+  .agency-stats {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
-
-
 }
 </style>

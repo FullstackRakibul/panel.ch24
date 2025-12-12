@@ -356,7 +356,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { useDashboardStore } from '@/stores/dashboard'
+import { useDashboardStore } from '../stores/dashboard'
 import {
   Document,
   Money,

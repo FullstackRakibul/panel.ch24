@@ -1,22 +1,14 @@
 <template>
   <!-- Desktop Sidebar -->
-  <el-aside
-    v-if="!isMobile"
-    :width="themeStore.sidebarCollapsed ? '85px' : '280px'"
-    class="sidebar-container"
-  >
+  <el-aside v-if="!isMobile" :width="themeStore.sidebarCollapsed ? '85px' : '280px'" class="sidebar-container">
     <!-- Header Section -->
     <div class="sidebar-header">
       <div class="header-content" :class="{ collapsed: themeStore.sidebarCollapsed }">
         <!-- Logo and Brand -->
         <div class="brand-section">
           <div class="logo-wrapper">
-            <img
-              src="@/assets/CH24.png"
-              alt="Channel 24"
-              class="logo-image"
-              :class="{ collapsed: themeStore.sidebarCollapsed }"
-            />
+            <img src="@/assets/CH24.png" alt="Channel 24" class="logo-image"
+              :class="{ collapsed: themeStore.sidebarCollapsed }" />
             <div v-if="!themeStore.sidebarCollapsed" class="brand-info">
               <h1 class="brand-title">Channel 24</h1>
               <p class="brand-subtitle">Billing System</p>
@@ -26,14 +18,8 @@
 
         <!-- Search Bar -->
         <div v-if="!themeStore.sidebarCollapsed" class="search-section">
-          <el-input
-            v-model="searchQuery"
-            placeholder="Search"
-            :prefix-icon="Search"
-            size="large"
-            class="sidebar-search"
-            clearable
-          />
+          <el-input v-model="searchQuery" placeholder="Search" :prefix-icon="Search" size="large" class="sidebar-search"
+            clearable />
           <div class="search-shortcut">Ctrl+D</div>
         </div>
       </div>
@@ -49,19 +35,9 @@
           </div>
 
           <nav class="nav-menu">
-            <router-link
-              v-for="item in generalItems"
-              :key="item.path"
-              :to="item.path"
-              class="nav-item"
-              :class="{ active: isActiveRoute(item.path) }"
-            >
-              <el-tooltip
-                v-if="themeStore.sidebarCollapsed"
-                :content="item.name"
-                placement="right"
-                :show-after="300"
-              >
+            <router-link v-for="item in generalItems" :key="item.path" :to="item.path" class="nav-item"
+              :class="{ active: isActiveRoute(item.path) }">
+              <el-tooltip v-if="themeStore.sidebarCollapsed" :content="item.name" placement="right" :show-after="300">
                 <div class="nav-content">
                   <el-icon class="nav-icon">
                     <component :is="item.icon" />
@@ -69,12 +45,8 @@
                   <span v-if="!themeStore.sidebarCollapsed" class="nav-label">{{
                     item.name
                   }}</span>
-                  <el-tag
-                    v-if="item.badge && !themeStore.sidebarCollapsed"
-                    :type="item.badgeType || 'warning'"
-                    size="small"
-                    class="nav-badge"
-                  >
+                  <el-tag v-if="item.badge && !themeStore.sidebarCollapsed" :type="item.badgeType || 'warning'"
+                    size="small" class="nav-badge">
                     {{ item.badge }}
                   </el-tag>
                 </div>
@@ -85,12 +57,7 @@
                   <component :is="item.icon" />
                 </el-icon>
                 <span class="nav-label">{{ item.name }}</span>
-                <el-tag
-                  v-if="item.badge"
-                  :type="item.badgeType || 'warning'"
-                  size="small"
-                  class="nav-badge"
-                >
+                <el-tag v-if="item.badge" :type="item.badgeType || 'warning'" size="small" class="nav-badge">
                   {{ item.badge }}
                 </el-tag>
               </div>
@@ -105,19 +72,9 @@
           </div>
 
           <nav class="nav-menu">
-            <router-link
-              v-for="item in managementItems"
-              :key="item.path"
-              :to="item.path"
-              class="nav-item"
-              :class="{ active: isActiveRoute(item.path) }"
-            >
-              <el-tooltip
-                v-if="themeStore.sidebarCollapsed"
-                :content="item.name"
-                placement="right"
-                :show-after="300"
-              >
+            <router-link v-for="item in managementItems" :key="item.path" :to="item.path" class="nav-item"
+              :class="{ active: isActiveRoute(item.path) }">
+              <el-tooltip v-if="themeStore.sidebarCollapsed" :content="item.name" placement="right" :show-after="300">
                 <div class="nav-content">
                   <el-icon class="nav-icon">
                     <component :is="item.icon" />
@@ -125,12 +82,8 @@
                   <span v-if="!themeStore.sidebarCollapsed" class="nav-label">{{
                     item.name
                   }}</span>
-                  <el-tag
-                    v-if="item.badge && !themeStore.sidebarCollapsed"
-                    :type="item.badgeType || 'warning'"
-                    size="small"
-                    class="nav-badge"
-                  >
+                  <el-tag v-if="item.badge && !themeStore.sidebarCollapsed" :type="item.badgeType || 'warning'"
+                    size="small" class="nav-badge">
                     {{ item.badge }}
                   </el-tag>
                 </div>
@@ -141,12 +94,7 @@
                   <component :is="item.icon" />
                 </el-icon>
                 <span class="nav-label">{{ item.name }}</span>
-                <el-tag
-                  v-if="item.badge"
-                  :type="item.badgeType || 'warning'"
-                  size="small"
-                  class="nav-badge"
-                >
+                <el-tag v-if="item.badge" :type="item.badgeType || 'warning'" size="small" class="nav-badge">
                   {{ item.badge }}
                 </el-tag>
               </div>
@@ -161,19 +109,9 @@
           </div>
 
           <nav class="nav-menu">
-            <router-link
-              v-for="item in systemItems"
-              :key="item.path"
-              :to="item.path"
-              class="nav-item"
-              :class="{ active: isActiveRoute(item.path) }"
-            >
-              <el-tooltip
-                v-if="themeStore.sidebarCollapsed"
-                :content="item.name"
-                placement="right"
-                :show-after="300"
-              >
+            <router-link v-for="item in systemItems" :key="item.path" :to="item.path" class="nav-item"
+              :class="{ active: isActiveRoute(item.path) }">
+              <el-tooltip v-if="themeStore.sidebarCollapsed" :content="item.name" placement="right" :show-after="300">
                 <div class="nav-content">
                   <el-icon class="nav-icon">
                     <component :is="item.icon" />
@@ -181,12 +119,8 @@
                   <span v-if="!themeStore.sidebarCollapsed" class="nav-label">{{
                     item.name
                   }}</span>
-                  <el-tag
-                    v-if="item.badge && !themeStore.sidebarCollapsed"
-                    :type="item.badgeType || 'warning'"
-                    size="small"
-                    class="nav-badge"
-                  >
+                  <el-tag v-if="item.badge && !themeStore.sidebarCollapsed" :type="item.badgeType || 'warning'"
+                    size="small" class="nav-badge">
                     {{ item.badge }}
                   </el-tag>
                 </div>
@@ -196,12 +130,7 @@
                   <component :is="item.icon" />
                 </el-icon>
                 <span class="nav-label">{{ item.name }}</span>
-                <el-tag
-                  v-if="item.badge"
-                  :type="item.badgeType || 'warning'"
-                  size="small"
-                  class="nav-badge"
-                >
+                <el-tag v-if="item.badge" :type="item.badgeType || 'warning'" size="small" class="nav-badge">
                   {{ item.badge }}
                 </el-tag>
               </div>
@@ -214,12 +143,8 @@
     <!-- User Profile Section -->
     <div class="user-section">
       <div class="user-content" :class="{ collapsed: themeStore.sidebarCollapsed }">
-        <el-dropdown
-          trigger="click"
-          placement="top-start"
-          :disabled="themeStore.sidebarCollapsed"
-          @command="handleUserCommand"
-        >
+        <el-dropdown trigger="click" placement="top-start" :disabled="themeStore.sidebarCollapsed"
+          @command="handleUserCommand">
           <div class="user-profile">
             <el-avatar :size="36" class="user-avatar">
               <img :src="currentUser.avatar" alt="User Avatar" />
@@ -271,24 +196,13 @@
     </div>
 
     <!-- Collapse Toggle - Always visible, repositioned for better UX -->
-    <el-button
-      :icon="themeStore.sidebarCollapsed ? Expand : Fold"
-      circle
-      size="medium"
-      class="collapse-toggle"
-      @click="themeStore.toggleSidebar"
-    />
+    <el-button :icon="themeStore.sidebarCollapsed ? Expand : Fold" circle size="small" class="collapse-toggle"
+      @click="themeStore.toggleSidebar" />
   </el-aside>
 
   <!-- Mobile Drawer Sidebar -->
-  <el-drawer
-    v-if="isMobile"
-    :model-value="props.mobileSidebarOpen"
-    direction="ltr"
-    :with-header="false"
-    size="280px"
-    @update:model-value="(newValue) => emit('update:mobileSidebarOpen', newValue)"
-  >
+  <el-drawer v-if="isMobile" :model-value="props.mobileSidebarOpen" direction="ltr" :with-header="false" size="280px"
+    @update:model-value="(newValue: any) => emit('update:mobileSidebarOpen', newValue)">
     <div class="sidebar-container-mobile">
       <!-- Header Section (Mobile) -->
       <div class="sidebar-header">
@@ -303,14 +217,8 @@
             </div>
           </div>
           <div class="search-section">
-            <el-input
-              v-model="searchQuery"
-              placeholder="Search"
-              :prefix-icon="Search"
-              size="large"
-              class="sidebar-search"
-              clearable
-            />
+            <el-input v-model="searchQuery" placeholder="Search" :prefix-icon="Search" size="large"
+              class="sidebar-search" clearable />
             <div class="search-shortcut">Ctrl+D</div>
           </div>
         </div>
@@ -325,25 +233,14 @@
               <span class="section-title">GENERAL</span>
             </div>
             <nav class="nav-menu">
-              <router-link
-                v-for="item in generalItems"
-                :key="item.path"
-                :to="item.path"
-                class="nav-item"
-                :class="{ active: isActiveRoute(item.path) }"
-                @click="closeMobileSidebar"
-              >
+              <router-link v-for="item in generalItems" :key="item.path" :to="item.path" class="nav-item"
+                :class="{ active: isActiveRoute(item.path) }" @click="closeMobileSidebar">
                 <div class="nav-content">
                   <el-icon class="nav-icon">
                     <component :is="item.icon" />
                   </el-icon>
                   <span class="nav-label">{{ item.name }}</span>
-                  <el-tag
-                    v-if="item.badge"
-                    :type="item.badgeType || 'warning'"
-                    size="small"
-                    class="nav-badge"
-                  >
+                  <el-tag v-if="item.badge" :type="item.badgeType || 'warning'" size="small" class="nav-badge">
                     {{ item.badge }}
                   </el-tag>
                 </div>
@@ -357,25 +254,14 @@
               <span class="section-title">MANAGEMENT</span>
             </div>
             <nav class="nav-menu">
-              <router-link
-                v-for="item in managementItems"
-                :key="item.path"
-                :to="item.path"
-                class="nav-item"
-                :class="{ active: isActiveRoute(item.path) }"
-                @click="closeMobileSidebar"
-              >
+              <router-link v-for="item in managementItems" :key="item.path" :to="item.path" class="nav-item"
+                :class="{ active: isActiveRoute(item.path) }" @click="closeMobileSidebar">
                 <div class="nav-content">
                   <el-icon class="nav-icon">
                     <component :is="item.icon" />
                   </el-icon>
                   <span class="nav-label">{{ item.name }}</span>
-                  <el-tag
-                    v-if="item.badge"
-                    :type="item.badgeType || 'warning'"
-                    size="small"
-                    class="nav-badge"
-                  >
+                  <el-tag v-if="item.badge" :type="item.badgeType || 'warning'" size="small" class="nav-badge">
                     {{ item.badge }}
                   </el-tag>
                 </div>
@@ -389,25 +275,14 @@
               <span class="section-title">SYSTEM</span>
             </div>
             <nav class="nav-menu">
-              <router-link
-                v-for="item in systemItems"
-                :key="item.path"
-                :to="item.path"
-                class="nav-item"
-                :class="{ active: isActiveRoute(item.path) }"
-                @click="closeMobileSidebar"
-              >
+              <router-link v-for="item in systemItems" :key="item.path" :to="item.path" class="nav-item"
+                :class="{ active: isActiveRoute(item.path) }" @click="closeMobileSidebar">
                 <div class="nav-content">
                   <el-icon class="nav-icon">
                     <component :is="item.icon" />
                   </el-icon>
                   <span class="nav-label">{{ item.name }}</span>
-                  <el-tag
-                    v-if="item.badge"
-                    :type="item.badgeType || 'warning'"
-                    size="small"
-                    class="nav-badge"
-                  >
+                  <el-tag v-if="item.badge" :type="item.badgeType || 'warning'" size="small" class="nav-badge">
                     {{ item.badge }}
                   </el-tag>
                 </div>
@@ -473,10 +348,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
-import { useRouter, useRoute } from "vue-router";
-import { useAuthStore } from "../stores/auth";
-import { useThemeStore } from "../stores/theme";
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+import { useThemeStore } from '../stores/theme'
 import {
   HomeFilled,
   User,
@@ -498,8 +373,9 @@ import {
   List,
   WindPower,
   Plus,
-  Menu, // Hamburger icon for mobile
-} from "@element-plus/icons-vue";
+  Menu // Hamburger icon for mobile
+} from '@element-plus/icons-vue'
+import { Upload } from 'lucide-vue-next'
 
 const props = defineProps<{
   mobileSidebarOpen: boolean;
@@ -600,20 +476,10 @@ const managementItems = [
     badgeType: "primary",
   },
   {
-    name: "Reports",
-    path: "/reports",
-    icon: DataAnalysis,
-    badge: undefined,
-    badgeType: undefined,
+    name: 'Reports', path: '/reports', icon: DataAnalysis, badge: 'On Hold', badgeType: undefined
   },
-  {
-    name: "Delivery Logs",
-    path: "/delivery-logs",
-    icon: Van,
-    badge: undefined,
-    badgeType: undefined,
-  },
-];
+  { name: 'Delivery Logs', path: '/delivery-logs', icon: Van, badge: 'On Hold', badgeType: undefined }
+]
 
 const systemItems = [
   {
@@ -623,7 +489,10 @@ const systemItems = [
     badge: undefined,
     badgeType: undefined,
   },
-];
+  {
+    name: 'Media Upload', path: '/media-upload', icon: Upload, badge: undefined, badgeType: undefined
+  }
+]
 
 // Check if route is active
 const isActiveRoute = (path: string) => {
@@ -1004,7 +873,7 @@ watch(isMobile, (newValue) => {
 .collapse-toggle {
   position: absolute;
   top: 20px;
-  right: -2px;
+  right: 1px;
   z-index: 100;
   background-color: #ffffff;
   border: 1px solid #e5e7eb;
@@ -1049,6 +918,7 @@ watch(isMobile, (newValue) => {
 
 /* Animations */
 @keyframes pulse {
+
   0%,
   100% {
     opacity: 1;

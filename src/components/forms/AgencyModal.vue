@@ -1,181 +1,436 @@
 <template>
-  <el-dialog v-model="dialogVisible" :title="isEditMode ? 'Edit Agency' : 'Add New Agency'" width="500px"
-    :before-close="handleClose" class="agency-modal">
-    <el-form :model="form" :rules="rules" ref="agencyFormRef" label-position="top">
-      <el-form-item label="Agency Name" prop="name">
-        <el-input v-model="form.name" placeholder="e.g., Creative Solutions Inc." />
-      </el-form-item>
-      <el-form-item label="Tagline" prop="tagline">
-        <el-input v-model="form.tagline" placeholder="e.g., Your brand, our passion." />
-      </el-form-item>
-      <el-form-item label="Logo URL" prop="logo">
-        <el-input v-model="form.logo" placeholder="e.g., https://example.com/logo.png" />
-      </el-form-item>
-      <el-form-item label="Work Type" prop="work">
-        <el-select v-model="form.work" placeholder="Select work type" class="w-full">
-          <el-option label="Advertising" value="Advertising" />
-          <el-option label="Digital Marketing" value="Digital Marketing" />
-          <el-option label="Branding" value="Branding" />
-          <el-option label="SEO" value="SEO" />
-          <el-option label="Media Buying" value="Media Buying" />
-          <el-option label="Web Design" value="Web Design" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="Location" prop="location">
-        <el-input v-model="form.location" placeholder="e.g., Dhaka, Bangladesh" />
-      </el-form-item>
-      <el-form-item label="Budget (৳)" prop="budget">
-        <el-input-number v-model="form.budget" :min="0" :precision="0" controls-position="right" class="w-full" />
-      </el-form-item>
-      <el-form-item label="Team Size" prop="size">
-        <el-select v-model="form.size" placeholder="Select team size" class="w-full">
-          <el-option label="1-10" value="1-10" />
-          <el-option label="11-50" value="11-50" />
-          <el-option label="51-200" value="51-200" />
-          <el-option label="201-500" value="201-500" />
-          <el-option label="500+" value="500+" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="Rating" prop="rating">
-        <el-rate v-model="form.rating" :max="5" allow-half />
-      </el-form-item>
-      <el-form-item label="Review Count" prop="reviewCount">
-        <el-input-number v-model="form.reviewCount" :min="0" :precision="0" controls-position="right" class="w-full" />
-      </el-form-item>
-      <el-form-item label="Slogan (Optional)" prop="slogan">
-        <el-input v-model="form.slogan" type="textarea" :rows="2" placeholder="A short slogan for the agency." />
-      </el-form-item>
-      <el-form-item label="Contact Email (Optional)" prop="contactEmail">
-        <el-input v-model="form.contactEmail" placeholder="e.g., contact@agency.com" />
-      </el-form-item>
-      <el-form-item label="Phone Number (Optional)" prop="phoneNumber">
-        <el-input v-model="form.phoneNumber" placeholder="e.g., +8801XXXXXXXXX" />
-      </el-form-item>
-      <el-form-item label="Website (Optional)" prop="website">
-        <el-input v-model="form.website" placeholder="e.g., https://www.agency.com" />
-      </el-form-item>
+  <el-dialog v-model="showModal" :title="isEdit ? 'Edit Agency' : 'Add New Agency'" width="800px"
+    :close-on-click-modal="false" :close-on-press-escape="false" class="agency-modal" top="5vh"
+    @close="handleDialogClose">
+    <template #header>
+      <div class="modal-header">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <Building2 class="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+              {{ isEdit ? 'Edit Agency' : 'Create New Agency' }}
+            </h2>
+            <p class="text-sm text-gray-900 dark:text-white">
+              {{ isEdit ? 'Update agency information below' : 'Fill in the details to add a new agency' }}
+              <span v-if="agencyModalStore.hasAgencyModalData && !isEdit" class="text-xs text-blue-500 ml-2">
+                (Draft saved)
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <el-form ref="formRef" :model="agencyModalStore.agencyModalData" :rules="rules" label-position="top" size="default"
+      class="agency-form">
+      <!-- Basic Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-blue-50 flex items-center justify-center rounded-full">
+              <Building2 class="w-4 h-4 text-blue-600" />
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Basic Information</h3>
+          </div>
+        </div>
+
+        <el-row :gutter="16">
+          <el-col :span="24">
+            <el-form-item label="Agency Name" prop="agencyName">
+              <el-input v-model="agencyModalStore.agencyModalData.agencyName" placeholder="Enter agency name"
+                :prefix-icon="Building2" @input="handleFormChange" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="Tagline" prop="tagline">
+              <el-input v-model="agencyModalStore.agencyModalData.tagline" placeholder="Enter tagline"
+                :prefix-icon="Tag" @input="handleFormChange" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Slogan" prop="slogan">
+              <el-input v-model="agencyModalStore.agencyModalData.slogan" placeholder="Enter slogan"
+                :prefix-icon="MessageSquare" @input="handleFormChange" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="Email" prop="email">
+              <el-input v-model="agencyModalStore.agencyModalData.email" type="email" placeholder="Enter email address"
+                :prefix-icon="Mail" @input="handleFormChange" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Phone" prop="phone">
+              <el-input v-model="agencyModalStore.agencyModalData.phone" placeholder="Enter phone number"
+                :prefix-icon="Phone" @input="handleFormChange" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </div>
+
+      <!-- Location Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center">
+              <MapPin class="w-4 h-4 text-green-600" />
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Location Information</h3>
+          </div>
+        </div>
+
+        <el-row :gutter="16">
+          <el-col :span="24">
+            <el-form-item label="Location" prop="location">
+              <el-input v-model="agencyModalStore.agencyModalData.location" placeholder="Enter location"
+                :prefix-icon="MapPin" @input="handleFormChange" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </div>
+
+      <!-- Company Details Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-purple-50 rounded-full flex items-center justify-center">
+              <Users class="w-4 h-4 text-purple-600" />
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Company Details</h3>
+          </div>
+        </div>
+
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="Company Size" prop="companySize">
+              <el-select v-model="agencyModalStore.agencyModalData.companySize" placeholder="Select company size"
+                class="w-full" @change="handleFormChange">
+                <el-option label="1-10" :value="10" />
+                <el-option label="11-50" :value="50" />
+                <el-option label="51-200" :value="200" />
+                <el-option label="201-500" :value="500" />
+                <el-option label="501-1000" :value="1000" />
+                <el-option label="1000+" :value="1001" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Budget">
+              <el-input-number v-model="agencyModalStore.agencyModalData.budget" :min="0" :precision="2"
+                placeholder="Enter budget" controls-position="right" style="width: 100%" @change="handleFormChange">
+                <template #prefix>৳</template>
+              </el-input-number>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="Rating">
+              <el-input-number v-model="agencyModalStore.agencyModalData.rating" :min="0" :max="5" :step="0.1"
+                placeholder="Enter rating" controls-position="right" style="width: 100%" @change="handleFormChange" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Review Count">
+              <el-input-number v-model="agencyModalStore.agencyModalData.reviewCount" :min="0"
+                placeholder="Review count" controls-position="right" style="width: 100%" @change="handleFormChange" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </div>
+
+      <!-- Additional Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-orange-50 rounded-full flex items-center justify-center">
+              <Globe class="w-4 h-4 text-orange-600" />
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Additional Information</h3>
+          </div>
+        </div>
+
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="Logo URL">
+              <el-input v-model="agencyModalStore.agencyModalData.logo" placeholder="Enter logo URL"
+                :prefix-icon="Image" @input="handleFormChange" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Portfolio URL">
+              <el-input v-model="agencyModalStore.agencyModalData.portfolioURL" placeholder="https://example.com"
+                :prefix-icon="Globe" @input="handleFormChange" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </div>
+
+      <!-- Draft Actions -->
+      <div v-if="agencyModalStore.hasAgencyModalData && !isEdit" class="draft-actions">
+        <el-alert title="Draft Saved" description="Your form data has been saved. You can continue where you left off."
+          type="info" :closable="false" show-icon />
+        <div class="draft-buttons">
+          <el-button size="small" @click="clearDraft">
+            Clear Draft
+          </el-button>
+          <el-button size="small" type="primary" @click="restoreDraft">
+            Restore Draft
+          </el-button>
+        </div>
+      </div>
     </el-form>
+
     <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="handleClose">Cancel</el-button>
-        <el-button type="primary" @click="handleSubmit">
-          {{ isEditMode ? 'Save Changes' : 'Add Agency' }}
+      <div class="modal-footer">
+        <el-button size="large" @click="handleClose" :disabled="loading">
+          Cancel
         </el-button>
-      </span>
+        <el-button type="primary" size="large" :loading="loading" @click="handleSubmit">
+          {{ loading ? 'Saving...' : (isEdit ? 'Update Agency' : 'Create Agency') }}
+        </el-button>
+      </div>
     </template>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, reactive } from 'vue';
-import { ElDialog, ElForm, ElFormItem, ElInput, ElInputNumber, ElSelect, ElOption, ElRate, ElButton, ElMessage } from 'element-plus';
-import type { FormInstance, FormRules } from 'element-plus';
-import { IAgency } from '@/stores/agencies';
+import { ref, watch, computed, onMounted } from 'vue';
+import { debounce } from 'lodash-es';
+import { type FormInstance, type FormRules } from 'element-plus';
+import { ElMessage } from 'element-plus';
+import {
+  Building2,
+  Mail,
+  Phone,
+  Globe,
+  MapPin,
+  Users,
+  Tag,
+  MessageSquare,
+  Image
+} from 'lucide-vue-next';
+import type { ICreateAgency, IUpdateAgency } from '@/interface/agency/agencies.interface';
+import { useAgencyModalStore } from '@/stores/agency-modal.store';
 
-const props = defineProps<{
-  visible: boolean;
-  agency?: IAgency | null;
-}>();
+const agencyModalStore = useAgencyModalStore();
+const formRef = ref<FormInstance>();
 
-const emit = defineEmits(['update:visible', 'save']);
+interface Props {
+  modelValue: boolean;
+  isEdit?: boolean;
+  loading?: boolean;
+}
 
-const dialogVisible = ref(props.visible);
-const isEditMode = ref(false);
-const agencyFormRef = ref<FormInstance>();
+interface Emits {
+  (e: 'update:modelValue', value: boolean): void;
+  (e: 'save', data: ICreateAgency | IUpdateAgency): void;
+}
 
-const defaultForm: IAgency = {
-  id: '',
-  name: '',
-  tagline: '',
-  logo: '',
-  rating: 0,
-  reviewCount: 0,
-  work: '',
-  location: '',
-  budget: 0,
-  size: '',
+const props = withDefaults(defineProps<Props>(), {
+  isEdit: false,
+  loading: false
+});
+
+const emit = defineEmits<Emits>();
+
+const showModal = computed({
+  get: () => props.modelValue,
+  set: (value) => emit('update:modelValue', value)
+});
+
+const rules: FormRules = {
+  agencyName: [
+    { required: true, message: 'Please enter agency name', trigger: 'blur' }
+  ],
+  email: [
+    { type: 'email', message: 'Please enter a valid email address', trigger: 'blur' }
+  ],
+  location: [
+    { required: true, message: 'Please enter location', trigger: 'blur' }
+  ]
 };
 
-const form = reactive<IAgency>({ ...defaultForm });
-
-watch(() => props.visible, (newVal) => {
-  dialogVisible.value = newVal;
-  if (newVal) {
-    if (props.agency) {
-      Object.assign(form, props.agency);
-      isEditMode.value = true;
-    } else {
-      Object.assign(form, defaultForm);
-      // In a real app, ID should be generated by backend or a robust UUID lib
-      form.id = Date.now().toString();
-      isEditMode.value = false;
-    }
-    agencyFormRef.value?.clearValidate(); // Clear validation on open
+// Debounced auto-save
+const handleFormChange = debounce(() => {
+  if (!props.isEdit) {
+    agencyModalStore.saveToLocalStorage();
   }
-});
+}, 500);
 
-const rules = reactive<FormRules<IAgency>>({
-  name: [{ required: true, message: 'Please enter agency name', trigger: 'blur' }],
-  tagline: [{ required: true, message: 'Please enter tagline', trigger: 'blur' }],
-  logo: [{ required: true, message: 'Please enter logo URL', trigger: 'blur' }],
-  work: [{ required: true, message: 'Please select work type', trigger: 'change' }],
-  location: [{ required: true, message: 'Please enter location', trigger: 'blur' }],
-  budget: [{ required: true, message: 'Please enter budget', trigger: 'blur' }],
-  size: [{ required: true, message: 'Please select team size', trigger: 'change' }],
-  rating: [{ required: true, message: 'Please provide a rating', trigger: 'change' }],
-  reviewCount: [{ required: true, message: 'Please enter review count', trigger: 'blur' }],
-});
-
-const handleSubmit = () => {
-  agencyFormRef.value?.validate(async (valid) => {
-    if (valid) {
-      emit('save', { ...form });
-      // ElMessage success handled by parent component now for consistency with Invoices.vue
-      handleClose();
-    } else {
-      ElMessage.error('Please correct the form errors.');
-      // return false is not needed here as it's an async callback
-    }
-  });
+const handleDialogClose = () => {
+  // Don't reset data when modal closes accidentally
+  // Data persists in store and localStorage
+  showModal.value = false;
 };
 
 const handleClose = () => {
-  dialogVisible.value = false;
-  emit('update:visible', false);
-  agencyFormRef.value?.resetFields();
+  showModal.value = false;
 };
+
+const handleSubmit = async () => {
+  if (!formRef.value) return;
+
+  const valid = await formRef.value.validate().catch(() => false);
+  if (!valid) return;
+
+  // Prepare data for emission
+  const formData = { ...agencyModalStore.agencyModalData };
+
+  // Convert numbers to strings for API compatibility
+  const emitData: any = {
+    agencyName: formData.agencyName,
+    tagline: formData.tagline,
+    location: formData.location,
+    slogan: formData.slogan,
+    logo: formData.logo,
+    email: formData.email,
+    phone: formData.phone,
+    portfolioURL: formData.portfolioURL,
+    companySize: formData.companySize,
+    rating: formData.rating?.toString(),
+    reviewCount: formData.reviewCount?.toString(),
+    budget: formData.budget?.toString(),
+  };
+
+  // Remove undefined values
+  Object.keys(emitData).forEach(key => {
+    if (emitData[key] === undefined || emitData[key] === '') {
+      delete emitData[key];
+    }
+  });
+
+  emit('save', emitData);
+};
+
+const clearDraft = () => {
+  agencyModalStore.resetAgencyModalData();
+  agencyModalStore.clearLocalStorage();
+  ElMessage.success('Draft cleared');
+};
+
+const restoreDraft = () => {
+  agencyModalStore.loadFromLocalStorage();
+  ElMessage.success('Draft restored');
+};
+
+onMounted(() => {
+  // Load any existing draft data when component mounts
+  if (!props.isEdit) {
+    agencyModalStore.loadFromLocalStorage();
+  }
+});
+
+// Auto-save to localStorage when form data changes
+watch(() => agencyModalStore.agencyModalData, (newData) => {
+  if (!props.isEdit) {
+    agencyModalStore.saveToLocalStorage();
+  }
+}, { deep: true });
 </script>
 
 <style scoped>
-/* Optional: specific modal styling if needed */
-.agency-modal :deep(.el-dialog__header) {
-  @apply border-b border-gray-100 px-6 py-4;
+.agency-modal {
+  --el-dialog-border-radius: 16px;
 }
 
-.agency-modal :deep(.el-dialog__title) {
-  @apply font-semibold text-lg text-gray-800;
+.modal-header {
+  padding-bottom: 16px;
 }
 
-.agency-modal :deep(.el-dialog__body) {
-  @apply px-6 py-4;
+.agency-form {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 8px;
 }
 
-.agency-modal :deep(.el-dialog__footer) {
-  @apply border-t border-gray-100 px-6 py-4;
+.form-section {
+  margin-bottom: 32px;
 }
 
-.dialog-footer button:first-child {
-  margin-right: 10px;
+.form-section:last-child {
+  margin-bottom: 0;
 }
 
-/* Ensure form elements within modal also inherit clean styles */
-.el-form-item :deep(.el-input__wrapper),
-.el-form-item :deep(.el-select__wrapper) {
-  @apply rounded-lg border border-gray-200 shadow-none;
+.section-header {
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
-.el-form-item :deep(.el-input__wrapper.is-focus),
-.el-form-item :deep(.el-select__wrapper.is-focused) {
-  @apply border-blue-500 ring-2 ring-blue-500/20;
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+}
+
+.draft-actions {
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--el-color-info-light-9);
+  border-radius: 8px;
+  border: 1px solid var(--el-color-info-light-5);
+}
+
+.draft-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: flex-end;
+}
+
+:deep(.el-form-item__label) {
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+  margin-bottom: 8px;
+}
+
+:deep(.el-input__wrapper) {
+  border-radius: 8px;
+}
+
+:deep(.el-select .el-input__wrapper) {
+  border-radius: 8px;
+}
+
+:deep(.el-textarea__inner) {
+  border-radius: 8px;
+}
+
+:deep(.el-date-editor.el-input) {
+  width: 100%;
+}
+
+:deep(.el-input-number) {
+  width: 100%;
+}
+
+:deep(.el-input-number .el-input__wrapper) {
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .agency-modal {
+    --el-dialog-width: 90vw;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer .el-button {
+    width: 100%;
+  }
 }
 </style>

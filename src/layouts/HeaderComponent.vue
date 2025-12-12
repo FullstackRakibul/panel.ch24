@@ -11,7 +11,7 @@
     <div class="header-left">
       <h1 class="page-title">
         {{ getPageTitle }}
-        <span v-if="getPageCount" class="page-count">({{ getPageCount }})</span>
+        <!-- <span v-if="getPageCount" class="page-count">({{ getPageCount }})</span> -->
       </h1>
     </div>
 
@@ -130,7 +130,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
-import { useClientsStore } from '@/stores/clients' // Assuming you have this store
+// Assuming you have this store
 import {
   Search,
   Bell,
@@ -156,7 +156,6 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
-const clientsStore = useClientsStore() // Initialize clients store
 
 const searchQuery = ref('')
 const isMobile = ref(window.innerWidth <= 768); // Reactive mobile state
@@ -235,7 +234,7 @@ const getPageCount = computed(() => {
   // This is a placeholder. In a real app, you'd fetch counts
   // For demonstration, let's return some dummy counts
   const path = route.path
-  if (path === '/clients') return clientsStore.clients.length // Example using client store
+  // if (path === '/clients') return clientsStore.clients.length // Example using client store
   if (path === '/agencies') return 45
   if (path === '/invoices') return 345
   if (path === '/payments') return 280
