@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <el-dialog v-model="dialogVisible" width="900px" :close-on-click-modal="false" class="certificate-view-modal"
     top="5vh">
     <div v-if="contract" class="certificate-document" ref="certificateDocument">
@@ -16,7 +16,7 @@
       <!-- Recipient Info -->
       <div class="recipient-info">
         <p class="recipient-name"><strong>{{ getRecipientName() }}</strong></p>
-        <p class="recipient-address">{{ getRecipientAddress() }}</p>
+        <p class="recipient-address">{{ recipientAddress }}</p>
       </div>
 
       <!-- Body Text -->
@@ -72,7 +72,7 @@
                 <div class="description-content">
                   <div class="main-description">
                     <div class="desc-type"><u>{{ desc.descriptionTypeName || desc.descriptionType }}</u></div>
-                    <div class="desc-text">{{ desc.descriptionText }}</div>
+                    <div class="long-description">{{ desc.descriptionText }}</div>
                   </div>
                   <div class="vertical-text" v-if="desc.descriptionTypeName">
                     {{ desc.descriptionTypeName }}
@@ -136,7 +136,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Printer, Download } from 'lucide-vue-next'
 import html2pdf from 'html2pdf.js'
 import type { ITelevisionContract } from '@/interface/contract/contracts.interface'
@@ -184,13 +184,31 @@ const getRecipientName = () => {
   return 'N/A'
 }
 
-const getRecipientAddress = async () => {
+const recipientAddress = ref('N/A')
 
-  const address = await clientService.getClientById(props.contract?.contractedClient?.guid || props.contract?.contractedAgency?.guid || '')
+const fetchRecipientAddress = async () => {
+  const guid = props.contract?.contractedClient?.guid || props.contract?.contractedAgency?.guid
 
-  console.log("props clients address", address)
-  return address.location + ', ' + address.city + ', ' + address.country
+  if (!guid) {
+    recipientAddress.value = 'N/A'
+    return
+  }
+
+  try {
+    const address = await clientService.getClientById(guid)
+    if (address) {
+      recipientAddress.value = [address.location, address.city, address.country].filter(Boolean).join(', ')
+    }
+  } catch (error) {
+    console.error('Error fetching address:', error)
+    recipientAddress.value = 'N/A'
+  }
 }
+
+watch(() => props.contract, () => {
+  fetchRecipientAddress()
+}, { immediate: true })
+
 
 const getAdvertiserName = () => {
   if (props.contract?.contractedClient) {
@@ -364,6 +382,7 @@ const downloadPDF = async () => {
 
 .schedule-section h3 {
   text-decoration: underline;
+
   margin-bottom: 10px;
   font-size: 16px;
 }
@@ -410,6 +429,7 @@ const downloadPDF = async () => {
   justify-content: space-between;
   align-items: center;
   text-align: center;
+  gap: 10px 5px;
   height: 100%;
 }
 
@@ -423,8 +443,16 @@ const downloadPDF = async () => {
   margin-bottom: 5px;
 }
 
+.long-description {
+  white-space: pre-wrap;
+
+  word-break: break-word;
+}
+
 .desc-text {
   white-space: pre-wrap;
+  text-align: justify;
+  line-height: 1.5;
 }
 
 .vertical-text {
@@ -434,7 +462,7 @@ const downloadPDF = async () => {
   padding: 0 10px;
   border-right: 1px solid #000;
   /* Actually left because rotated */
-  height: 100%;
+  max-height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
