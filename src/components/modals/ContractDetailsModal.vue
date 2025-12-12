@@ -76,8 +76,8 @@
               <!-- Main Product Row -->
               <tr>
                 <td>{{ productIndex + 1 }}</td>
-                <td>{{ product.contractProductName || 'N/A' }}</td>
-                <td>{{ product.contractProductDescription || 'N/A' }}</td>
+                <td class="product-name-cell">{{ product.contractProductName || 'N/A' }}</td>
+                <td class="description-cell">{{ product.contractProductDescription || 'N/A' }}</td>
                 <td>{{ product.quantity || 0 }}</td>
                 <td>{{ formatCurrency(getProductRate(product)) }}</td>
                 <td>{{ formatCurrency(product.total || 0) }}</td>
@@ -140,16 +140,16 @@
           <table>
             <thead>
               <tr>
-                <th>Description Type</th>
-                <th>Description</th>
-                <th>Duration</th>
-                <th>Schedule</th>
+                <th class="description-type">Description Type</th>
+                <th class="description-text">Description</th>
+                <th class="duration">Duration</th>
+                <th class="schedule">Schedule</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>{{ onAirDesc.descriptionTypeName || onAirDesc.descriptionType || 'N/A' }}</td>
-                <td>{{ onAirDesc.descriptionText || 'N/A' }}</td>
+                <td class="long-description">{{ onAirDesc.descriptionText || 'N/A' }}</td>
                 <td>{{ onAirDesc.onAirDuration || 'N/A' }}</td>
                 <td>
                   <div v-if="onAirDesc.transmissionSchedule && onAirDesc.transmissionSchedule.length > 0">
@@ -303,6 +303,19 @@ const amountToWords = (amount: number): string => {
 }
 
 const printContract = () => {
+
+  const element = contractDocument.value
+  if (!element) return
+
+  const elementClone = element.cloneNode(true) as HTMLElement;
+  // Apply PDF-specific styles to clone
+  elementClone.style.width = '210mm';
+  elementClone.style.transform = 'scale(0.98)';
+  elementClone.style.boxSizing = 'border-box';
+
+  const buttons = elementClone.querySelectorAll('.modal-footer, .el-dialog__header, .el-dialog__footer,.el-dialog__wrapper,.el-dialog');
+  buttons.forEach(el => el.remove());
+
   window.print()
 }
 
@@ -320,18 +333,20 @@ const downloadPDF = async () => {
     const contractNo = props.contract.televisionContractNo || 'Contract'
     const filename = `${contractNo}_${new Date().getTime()}.pdf`
 
+
+
     const opt = {
       margin: [5, 5, 5, 5] as [number, number, number, number],
       filename,
       image: { type: 'jpeg' as const, quality: 0.95 },
       html2canvas: {
-        scale: 1.5, // Reduced scale to fit content on one page
+        scale: 0.98,
         useCORS: true,
         letterRendering: true,
         logging: false,
-        windowWidth: 900, // Match modal width
-        // windowHeight: element.scrollHeight
-        windowHeight: 1000,
+        windowWidth: element.scrollWidth, // Match modal width
+        windowHeight: element.scrollHeight
+        // windowHeight: 1000,
       },
       jsPDF: {
         unit: 'mm' as const,
@@ -339,7 +354,7 @@ const downloadPDF = async () => {
         orientation: 'portrait' as const,
         compress: true // Enable compression
       },
-      pagebreak: { mode: 'avoid-all' as const } // Force single page
+      pagebreak: { mode: 'avoid-all' as const }
     }
 
     await html2pdf().set(opt).from(element).save()
@@ -767,6 +782,256 @@ const downloadPDF = async () => {
     font-size: 7pt !important;
     margin-top: 8px !important;
     padding-top: 5px !important;
+  }
+}
+
+
+/* Add these styles to your existing CSS */
+
+/* Table cell wrapping fixes */
+.contract-table th,
+.contract-table td {
+  border: 1px solid #333;
+  padding: 8px;
+  text-align: center;
+  word-wrap: break-word;
+  /* Ensures long words break */
+  overflow-wrap: break-word;
+  /* Modern property for word breaking */
+  hyphens: auto;
+  /* Optional: adds hyphenation where needed */
+}
+
+/* Specific styles for description columns */
+.contract-table td:nth-child(2),
+/* PRODUCT NAME */
+.contract-table td:nth-child(3) {
+  /* DESCRIPTION */
+  text-align: left;
+  max-width: 150px;
+  /* Limit width to prevent overflow */
+  min-width: 100px;
+  /* Ensure minimum width */
+}
+
+/* For product items description */
+.product-item-row td[colspan="2"] {
+  max-width: 200px;
+  /* Limit width for long descriptions */
+  word-break: break-word;
+  /* Force break long words */
+}
+
+/* On Air Description table fixes */
+.schedule-table th,
+.schedule-table td {
+  border: 1px solid #333;
+  padding: 8px;
+  text-align: left;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.schedule-table td:nth-child(2) {
+  /* Description column */
+  max-width: 250px;
+  min-width: 150px;
+}
+
+.schedule-table td:nth-child(4) {
+  /* Schedule column */
+  max-width: 200px;
+  min-width: 120px;
+}
+
+
+/* Enhanced table styling for PDF */
+.contract-table {
+  table-layout: fixed;
+  /* Use fixed layout for consistent column widths */
+  width: 100%;
+}
+
+/* Column width definitions */
+.contract-table th:nth-child(1) {
+  width: 5%;
+}
+
+/* SL# */
+.contract-table th:nth-child(2) {
+  width: 20%;
+}
+
+/* PRODUCT NAME */
+.contract-table th:nth-child(3) {
+  width: 30%;
+}
+
+/* DESCRIPTION */
+.contract-table th:nth-child(4) {
+  width: 10%;
+}
+
+/* QTY */
+.contract-table th:nth-child(5) {
+  width: 15%;
+}
+
+/* RATE */
+.contract-table th:nth-child(6) {
+  width: 15%;
+}
+
+/* AMOUNT */
+
+/* Text truncation with ellipsis for very long text */
+.description-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  /* Allow wrapping */
+  line-height: 1.3;
+}
+
+/* For print/PDF, show full text */
+@media print {
+  .description-cell {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    max-height: none !important;
+  }
+}
+
+/* Schedule table column widths */
+.schedule-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.schedule-table th.description-type {
+  width: 15%;
+}
+
+.schedule-table th.description-text {
+  width: 40%;
+}
+
+.schedule-table th.duration {
+  width: 15%;
+}
+
+.schedule-table th.schedule {
+  width: 30%;
+}
+
+/* Long description handling */
+.long-description {
+  white-space: pre-wrap;
+  /* Preserve line breaks but wrap */
+  word-break: break-word;
+  line-height: 1.3;
+  max-height: 100px;
+  overflow-y: auto;
+  /* Allow scrolling in view mode */
+}
+
+@media print {
+  .long-description {
+    overflow-y: visible;
+    max-height: none;
+  }
+}
+
+/* Modal width adjustment for better PDF generation */
+.contract-view-modal :deep(.el-dialog) {
+  max-width: 950px;
+  /* Slightly wider for better content fit */
+}
+
+.contract-document {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Enhanced print styles */
+@media print {
+
+  /* Force table rendering */
+  .contract-table,
+  .schedule-table {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Allow table cells to expand for content */
+  .contract-table td,
+  .schedule-table td {
+    max-width: none !important;
+    min-width: auto !important;
+    overflow: visible !important;
+    white-space: normal !important;
+  }
+
+  /* Ensure all text is visible */
+  .long-description,
+  .description-cell {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Reduce font size for better fit */
+  .contract-document {
+    font-size: 8pt;
+    line-height: 1.2;
+  }
+
+  /* Adjust padding for compact print */
+  .contract-table th,
+  .contract-table td {
+    padding: 2px 4px !important;
+  }
+}
+
+/* Add this to your style section */
+@media print {
+
+  /* Hide ALL modal-related elements */
+  body * {
+    visibility: hidden;
+  }
+
+  .contract-document,
+  .contract-document * {
+    visibility: visible;
+  }
+
+  .contract-document {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Specifically hide dialog container */
+  :deep(.el-dialog) {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  /* Force hide header and close button */
+  :deep(.el-dialog__header),
+  :deep(.el-dialog__headerbtn),
+  :deep(.el-dialog__close) {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
   }
 }
 </style>
