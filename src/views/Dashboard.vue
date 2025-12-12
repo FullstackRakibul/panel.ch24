@@ -15,6 +15,75 @@
       </div>
     </div>
 
+    <el-card class="chart-card mb-8 shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl">
+      <template #header>
+        <div class="chart-header">
+          <h3 class="chart-title">Monthly Wise Invoice Reports</h3>
+          <div class="chart-actions">
+            <el-select v-model="selectedReportPeriod" size="small" class="w-[120px]">
+              <el-option label="Last 12 Months" value="12month" />
+              <el-option label="Last 6 Months" value="6month" />
+            </el-select>
+            <el-button type="primary" link size="small">Export</el-button>
+          </div>
+        </div>
+      </template>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-4">
+        <div class="report-summary-item">
+          <div class="text-sm font-medium text-gray-600">Total Generated</div>
+          <div class="text-lg font-bold text-blue-700">৳{{ (dashboardStore.stats.totalGeneratedInvoices ||
+            124500).toLocaleString() }}</div>
+        </div>
+        <div class="report-summary-item">
+          <div class="text-sm font-medium text-gray-600">Total Paid</div>
+          <div class="text-lg font-bold text-green-700">৳{{ (dashboardStore.stats.totalPaidInvoices ||
+            105750).toLocaleString() }}</div>
+        </div>
+        <div class="report-summary-item">
+          <div class="text-sm font-medium text-gray-600">Total Due</div>
+          <div class="text-lg font-bold text-orange-700">৳{{ (dashboardStore.stats.totalDueInvoices ||
+            15750).toLocaleString()
+          }}</div>
+        </div>
+        <div class="report-summary-item">
+          <div class="text-sm font-medium text-gray-600">Total Cancelled</div>
+          <div class="text-lg font-bold text-red-700">৳{{ (dashboardStore.stats.totalCancelledInvoices ||
+            10000).toLocaleString() }}</div>
+        </div>
+      </div>
+    </el-card>
+
+
+    <el-row :gutter="20" class="charts-section mb-8">
+      <el-col :xs="24" :lg="12" class="mb-5">
+        <el-card class="chart-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl">
+          <template #header>
+            <div class="chart-header">
+              <h3 class="chart-title">Monthly Revenue</h3>
+              <el-button type="primary" link size="small" @click="navigateToReports">View Details</el-button>
+            </div>
+          </template>
+          <div class="chart-container">
+            <canvas ref="revenueChart"></canvas>
+          </div>
+        </el-card>
+      </el-col>
+
+      <el-col :xs="24" :lg="12" class="mb-5">
+        <el-card class="chart-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl">
+          <template #header>
+            <div class="chart-header">
+              <h3 class="chart-title">Top Clients</h3>
+              <el-button type="primary" link size="small" @click="navigateToClients">View All</el-button>
+            </div>
+          </template>
+          <div class="chart-container">
+            <canvas ref="clientsChart"></canvas>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
     <el-row :gutter="20" class="kpi-grid mb-8">
       <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-5">
         <el-card class="kpi-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl"
@@ -122,7 +191,7 @@
               </div>
             </div>
             <div class="kpi-value text-orange-700">৳{{ (dashboardStore.stats.overduesAmounts || 80550).toLocaleString()
-              }}</div>
+            }}</div>
             <div class="text-sm text-gray-500">Overdues amount of this month</div>
           </div>
         </el-card>
@@ -158,7 +227,7 @@
               </div>
             </div>
             <div class="kpi-value text-purple-700">{{ (dashboardStore.stats.activeSubscription || 980).toLocaleString()
-              }}</div>
+            }}</div>
             <div class="text-sm text-gray-500">Active & inactive subscription users</div>
           </div>
         </el-card>
@@ -236,73 +305,9 @@
       </el-col>
     </el-row>
 
-    <el-card class="chart-card mb-8 shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl">
-      <template #header>
-        <div class="chart-header">
-          <h3 class="chart-title">Monthly Wise Invoice Reports</h3>
-          <div class="chart-actions">
-            <el-select v-model="selectedReportPeriod" size="small" class="w-[120px]">
-              <el-option label="Last 12 Months" value="12month" />
-              <el-option label="Last 6 Months" value="6month" />
-            </el-select>
-            <el-button type="primary" link size="small">Export</el-button>
-          </div>
-        </div>
-      </template>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-4">
-        <div class="report-summary-item">
-          <div class="text-sm font-medium text-gray-600">Total Generated</div>
-          <div class="text-lg font-bold text-blue-700">৳{{ (dashboardStore.stats.totalGeneratedInvoices ||
-            124500).toLocaleString() }}</div>
-        </div>
-        <div class="report-summary-item">
-          <div class="text-sm font-medium text-gray-600">Total Paid</div>
-          <div class="text-lg font-bold text-green-700">৳{{ (dashboardStore.stats.totalPaidInvoices ||
-            105750).toLocaleString() }}</div>
-        </div>
-        <div class="report-summary-item">
-          <div class="text-sm font-medium text-gray-600">Total Due</div>
-          <div class="text-lg font-bold text-orange-700">৳{{ (dashboardStore.stats.totalDueInvoices ||
-            15750).toLocaleString()
-            }}</div>
-        </div>
-        <div class="report-summary-item">
-          <div class="text-sm font-medium text-gray-600">Total Cancelled</div>
-          <div class="text-lg font-bold text-red-700">৳{{ (dashboardStore.stats.totalCancelledInvoices ||
-            10000).toLocaleString() }}</div>
-        </div>
-      </div>
-    </el-card>
 
-    <el-row :gutter="20" class="charts-section mb-8">
-      <el-col :xs="24" :lg="12" class="mb-5">
-        <el-card class="chart-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl">
-          <template #header>
-            <div class="chart-header">
-              <h3 class="chart-title">Monthly Revenue</h3>
-              <el-button type="primary" link size="small" @click="navigateToReports">View Details</el-button>
-            </div>
-          </template>
-          <div class="chart-container">
-            <canvas ref="revenueChart"></canvas>
-          </div>
-        </el-card>
-      </el-col>
 
-      <el-col :xs="24" :lg="12" class="mb-5">
-        <el-card class="chart-card shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-xl">
-          <template #header>
-            <div class="chart-header">
-              <h3 class="chart-title">Top Clients</h3>
-              <el-button type="primary" link size="small" @click="navigateToClients">View All</el-button>
-            </div>
-          </template>
-          <div class="chart-container">
-            <canvas ref="clientsChart"></canvas>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+
 
     <el-row class="agency-section mb-8">
       <el-col :span="24">
