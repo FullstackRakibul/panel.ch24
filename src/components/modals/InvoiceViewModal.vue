@@ -1,7 +1,7 @@
 <template>
   <el-dialog v-model="dialogVisible" title="Invoice Details" width="900px" :close-on-click-modal="false"
     class="invoice-view-modal" top="5vh">
-    <div v-if="invoice" class="invoice-document">
+    <div v-if="invoice" class="invoice-document" id="invoiceDocument">
       <!-- Header -->
       <div class="document-header">
         <div class="company-info">
@@ -166,6 +166,14 @@ const getMonthYear = (dateString: string) => {
 }
 
 const printInvoice = () => {
+  const element = document.getElementById('invoiceDocument')
+  if (!element) return
+
+  const elementClone = element.cloneNode(true) as HTMLElement;
+  elementClone.style.width = '210mm';
+  elementClone.style.transform = 'scale(0.98)';
+  const buttons = elementClone.querySelectorAll('.modal-footer, .el-dialog__header, .el-dialog__footer,.el-dialog__wrapper,.el-dialog');
+  buttons.forEach(button => button.remove());
   window.print()
 }
 </script>

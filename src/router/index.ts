@@ -45,6 +45,7 @@ const viewsMap = {
   NotFound: () => import('@/views/NotFound.vue'),
   CompanyGolas : () => import('@/views/Goals.vue'),
   MediaUpload : () => import('@/views/MediaUpload.vue'),
+  TransmissionCertificates: () => import('@/views/TransmissionCertificate.vue'),
 }
 
 const Dashboard = lazyLoadComponent('Dashboard')
@@ -60,6 +61,7 @@ const Settings = lazyLoadComponent('Settings')
 const NotFound = lazyLoadComponent('NotFound')
 const CompanyGolas = lazyLoadComponent('CompanyGolas')
 const MediaUpload = lazyLoadComponent('MediaUpload')
+const TransmissionCertificates = lazyLoadComponent('TransmissionCertificates')
 
 
 
@@ -194,6 +196,16 @@ const router = createRouter({
         description: "Upload media files",
       },
     },
+    {
+      path: "/transmission-certificates",
+      name: "TransmissionCertificates",
+      component: TransmissionCertificates,
+      meta: {
+        requiresAuth: true,
+        title: "Transmission Certificates - Channel 24",
+        description: "View and generate transmission certificates",
+      },
+    },
     // 404 Not Found - must be last
     {
       path: "/:pathMatch(.*)*",
@@ -208,7 +220,7 @@ const router = createRouter({
 })
 
 // Enhanced route guard
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
 
   try {

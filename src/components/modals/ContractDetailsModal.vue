@@ -340,13 +340,13 @@ const downloadPDF = async () => {
       filename,
       image: { type: 'jpeg' as const, quality: 0.95 },
       html2canvas: {
-        scale: 1.2,
+        scale: 0.98,
         useCORS: true,
         letterRendering: true,
         logging: false,
-        windowWidth: 900, // Match modal width
-        // windowHeight: element.scrollHeight
-        windowHeight: 1000,
+        windowWidth: element.scrollWidth, // Match modal width
+        windowHeight: element.scrollHeight
+        // windowHeight: 1000,
       },
       jsPDF: {
         unit: 'mm' as const,
@@ -354,7 +354,7 @@ const downloadPDF = async () => {
         orientation: 'portrait' as const,
         compress: true // Enable compression
       },
-      pagebreak: { mode: 'avoid-all' as const } // Force single page
+      pagebreak: { mode: 'avoid-all' as const }
     }
 
     await html2pdf().set(opt).from(element).save()
@@ -991,6 +991,47 @@ const downloadPDF = async () => {
   .contract-table th,
   .contract-table td {
     padding: 2px 4px !important;
+  }
+}
+
+/* Add this to your style section */
+@media print {
+
+  /* Hide ALL modal-related elements */
+  body * {
+    visibility: hidden;
+  }
+
+  .contract-document,
+  .contract-document * {
+    visibility: visible;
+  }
+
+  .contract-document {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Specifically hide dialog container */
+  :deep(.el-dialog) {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  /* Force hide header and close button */
+  :deep(.el-dialog__header),
+  :deep(.el-dialog__headerbtn),
+  :deep(.el-dialog__close) {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
   }
 }
 </style>
