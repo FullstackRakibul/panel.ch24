@@ -50,10 +50,10 @@
                 <span class="text-sm text-gray-900">Remember me</span>
               </el-checkbox>
 
-              <el-button type="text" @click="fillDemoCredentials"
+              <!-- <el-button type="text" @click="fillDemoCredentials"
                 class="font-medium text-primary  hover:text-blue-800 p-0 h-auto font-sans">
                 Use demo credentials
-              </el-button>
+              </el-button> -->
             </div>
 
             <el-alert v-if="error" :title="error" type="error" show-icon :closable="false" class="rounded-lg" />
@@ -98,7 +98,7 @@
 
           <div class="text-center mt-8">
             <p class="text-xs text-gray-500 font-sans">
-              © 2024 Channel 24. All rights reserved.
+              © 2025 Channel 24. All rights reserved.
             </p>
           </div>
         </div>

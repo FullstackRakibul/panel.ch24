@@ -1,5 +1,5 @@
 import { h, defineComponent } from 'vue'
-import { createRouter, createWebHistory } from "vue-router"
+import { createRouter, createWebHashHistory, createWebHistory } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
 // Import critical components directly for faster loading
 import Login from "@/views/Login.vue"
@@ -67,7 +67,8 @@ const TransmissionCertificates = lazyLoadComponent('TransmissionCertificates')
 
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  // history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: "/login",
