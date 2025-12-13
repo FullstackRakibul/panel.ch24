@@ -231,6 +231,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const contractDocument = ref<HTMLElement>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
@@ -242,7 +243,7 @@ const dialogVisible = computed({
 })
 
 const isGeneratingPDF = ref(false)
-const contractDocument = ref<HTMLElement>()
+
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('en-BD', {

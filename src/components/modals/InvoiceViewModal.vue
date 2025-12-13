@@ -1,39 +1,38 @@
-<template>
-  <el-dialog v-model="dialogVisible" title="Invoice Details" width="900px" :close-on-click-modal="false"
-    class="invoice-view-modal" top="5vh">
-    <div v-if="invoice" class="invoice-document" id="invoiceDocument">
+﻿<template>
+  <el-dialog v-model="dialogVisible" width="900px" :close-on-click-modal="false" class="invoice-view-modal" top="5vh">
+    <div v-if="contract" class="invoice-document" id="invoiceDocument">
       <!-- Header -->
       <div class="document-header">
         <div class="company-info">
           <img src="@/assets/CH24.png" alt="Channel 24" class="company-logo" />
           <h1 class="company-name">CHANNEL 24 LTD.</h1>
         </div>
-        <h2 class="invoice-title">INVOICE FOR THE MONTH OF {{ getMonthYear(invoice.date) }}</h2>
+        <h2 class="invoice-title">INVOICE FOR THE MONTH OF {{ getMonthYear(contract.contractDate) }}</h2>
       </div>
 
       <!-- Invoice Info -->
       <div class="invoice-info-section">
         <div class="bill-to">
           <p><strong>To</strong></p>
-          <p><strong>{{ invoice.billTo.name }}</strong></p>
-          <p>{{ invoice.billTo.address }}</p>
+          <p><strong>{{ getClientName() }}</strong></p>
+          <p>{{ recipientAddress }}</p>
         </div>
         <div class="invoice-details">
           <div class="detail-row">
             <span>Invoice No:</span>
-            <span>{{ invoice.number }}</span>
+            <span>{{ contract.televisionContractNo }}</span>
           </div>
           <div class="detail-row">
             <span>Invoice Date:</span>
-            <span>{{ invoice.date }}</span>
+            <span>{{ formatDate(contract.contractDate) }}</span>
           </div>
           <div class="detail-row">
             <span>Contract No:</span>
-            <span>{{ invoice.contractNo }}</span>
+            <span>{{ contract.televisionContractNo }}</span>
           </div>
           <div class="detail-row">
             <span>Contract Date:</span>
-            <span>{{ invoice.contractDate }}</span>
+            <span>{{ formatDate(contract.contractDate) }}</span>
           </div>
         </div>
       </div>
@@ -42,11 +41,11 @@
       <div class="advertiser-section">
         <div class="advertiser-row">
           <span class="label">Advertiser</span>
-          <span class="value">: {{ invoice.advertiser }}</span>
+          <span class="value">: {{ getClientName() }}</span>
         </div>
         <div class="advertiser-row">
           <span class="label">Product</span>
-          <span class="value">: {{ invoice.product }}</span>
+          <span class="value">: {{ getProductName() }}</span>
         </div>
       </div>
 
@@ -63,21 +62,22 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in invoice.items" :key="item.sl">
-              <td>{{ item.sl }}</td>
-              <td>{{ item.particulars }}</td>
-              <td>{{ item.quantity }}</td>
-              <td>{{ formatCurrency(item.rate) }}</td>
-              <td>{{ formatCurrency(item.amount) }}</td>
-            </tr>
+            <template v-for="(product, productIndex) in contract.products" :key="product.guid">
+              <tr v-for="(item, itemIndex) in product.productItems" :key="item.guid">
+                <td>{{ getSerialNumber(productIndex, itemIndex) }}</td>
+                <td class="long-description"> {{ item.particularsName }}</td>
+                <td>{{ product.quantity || 1 }}</td>
+                <td>{{ formatCurrency(item.rate || 0) }}</td>
+                <td>Tk {{ formatCurrency((item.rate || 0) * (product.quantity || 1)) }}</td>
+              </tr>
+            </template>
             <tr class="total-row">
               <td colspan="4"><strong>SPOT TOTAL Tk</strong></td>
-              <td><strong>{{ formatCurrency(invoice.spotTotal) }}</strong></td>
+              <td><strong>{{ formatCurrency(spotTotal) }}</strong></td>
             </tr>
             <tr class="vat-row">
-              <td colspan="4">Plus {{ invoice.vatPercentage }}% VAT on Tk {{ invoice.spotTotal.toLocaleString() }} Tk
-              </td>
-              <td>{{ formatCurrency(invoice.vatAmount) }}</td>
+              <td colspan="4">Plus {{ vatRate }}% VAT on Tk {{ formatCurrency(spotTotal) }}</td>
+              <td>{{ formatCurrency(vatAmount) }}</td>
             </tr>
           </tbody>
         </table>
@@ -86,10 +86,10 @@
       <!-- Grand Total -->
       <div class="grand-total-section">
         <div class="total-words">
-          <span>In Words : {{ invoice.grandTotalWords }}</span>
+          <span>In Words : {{ numberToWords(grandTotal) }} Taka Only</span>
         </div>
         <div class="total-amount">
-          <span>Tk {{ formatCurrency(invoice.grandTotal) }}</span>
+          <span>Tk {{ formatCurrency(grandTotal) }}</span>
         </div>
       </div>
 
@@ -97,21 +97,21 @@
       <div class="signature-section">
         <div class="signature-left">
           <div class="signature-line"></div>
-          <p><strong>{{ invoice.signature1Name }}</strong></p>
-          <p>{{ invoice.signature1Title }}</p>
+          <p><strong>Rashed Ahasan</strong></p>
+          <p>Head of Marketing</p>
           <p>CHANNEL 24</p>
         </div>
         <div class="signature-right">
           <div class="signature-line"></div>
-          <p><strong>{{ invoice.signature2Name }}</strong></p>
-          <p>{{ invoice.signature2Title }}</p>
+          <p><strong>M. M. Elias</strong></p>
+          <p>DGM, Finance & Accounts</p>
           <p>CHANNEL 24</p>
         </div>
       </div>
 
       <!-- Footer -->
       <div class="document-footer">
-        <p>{{ invoice.footerContact }}</p>
+        <p>Channel 24 Limited | 387 (south), Tejgaon I/A, Dhaka 1208 | Tel: +8802 550 29724 | www.channel24bd.tv</p>
       </div>
     </div>
 
@@ -132,13 +132,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { Invoice } from '@/stores/invoices'
+import { computed, ref, watch } from 'vue'
 import { Printer } from 'lucide-vue-next'
+import type { ITelevisionContract } from '@/interface/contract/contracts.interface'
+import { clientService } from '@/services/Clients/common.services'
 
 interface Props {
   modelValue: boolean
-  invoice?: Invoice | null
+  contract?: ITelevisionContract | null
 }
 
 const props = defineProps<Props>()
@@ -152,6 +153,70 @@ const dialogVisible = computed({
   set: (value) => emit('update:modelValue', value)
 })
 
+const recipientAddress = ref('N/A')
+
+// Computed properties for nullable values
+const spotTotal = computed(() => {
+  if (!props.contract?.products) return 0
+  return props.contract.products.reduce((total, product) => {
+    const productTotal = (product.productItems || []).reduce((itemTotal, item) => {
+      return itemTotal + ((item.rate || 0) * (product.quantity || 1))
+    }, 0)
+    return total + productTotal
+  }, 0)
+})
+
+const vatRate = computed(() => props.contract?.vatRate ?? 15)
+const vatAmount = computed(() => props.contract?.vat ?? (spotTotal.value * vatRate.value / 100))
+const grandTotal = computed(() => spotTotal.value + vatAmount.value)
+
+// Helper to get serial number across all product items
+const getSerialNumber = (productIndex: number, itemIndex: number): number => {
+  if (!props.contract?.products) return 1
+  let count = 0
+  for (let i = 0; i < productIndex; i++) {
+    count += (props.contract.products[i].productItems || []).length
+  }
+  return count + itemIndex + 1
+}
+
+const fetchRecipientAddress = async () => {
+  const guid = props.contract?.contractedClient?.guid || props.contract?.contractedAgency?.guid
+  if (!guid) {
+    recipientAddress.value = 'N/A'
+    return
+  }
+  try {
+    const address = await clientService.getClientById(guid)
+    if (address) {
+      recipientAddress.value = [address.location, address.city, address.country].filter(Boolean).join(', ')
+    }
+  } catch (error) {
+    console.error('Error fetching address:', error)
+    recipientAddress.value = 'N/A'
+  }
+}
+
+watch(() => props.contract, () => {
+  fetchRecipientAddress()
+}, { immediate: true })
+
+const getClientName = () => {
+  if (props.contract?.contractedClient) {
+    return props.contract.contractedClient.clintName
+  } else if (props.contract?.contractedAgency) {
+    return props.contract.contractedAgency.agencyName
+  }
+  return 'N/A'
+}
+
+const getProductName = () => {
+  if (props.contract?.products && props.contract.products.length > 0) {
+    return props.contract.products.map(p => p.contractProductName).join(', ')
+  }
+  return 'N/A'
+}
+
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('en-BD', {
     style: 'decimal',
@@ -160,20 +225,49 @@ const formatCurrency = (value: number) => {
   }).format(value)
 }
 
-const getMonthYear = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase()
+const formatDate = (dateString: string | null | undefined) => {
+  if (!dateString) return 'N/A'
+  return new Date(dateString).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  })
+}
+
+const getMonthYear = (dateString: string | null | undefined) => {
+  if (!dateString) return ''
+  return new Date(dateString).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase()
+}
+
+const numberToWords = (num: number): string => {
+  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+    'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+
+  if (num === 0) return 'Zero'
+
+  const convert = (n: number): string => {
+    if (n < 20) return ones[n]
+    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '')
+    if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + convert(n % 100) : '')
+    if (n < 100000) return convert(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + convert(n % 1000) : '')
+    if (n < 10000000) return convert(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + convert(n % 100000) : '')
+    return convert(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 ? ' ' + convert(n % 10000000) : '')
+  }
+
+  return convert(Math.floor(num))
 }
 
 const printInvoice = () => {
   const element = document.getElementById('invoiceDocument')
   if (!element) return
-
   const elementClone = element.cloneNode(true) as HTMLElement;
   elementClone.style.width = '210mm';
   elementClone.style.transform = 'scale(0.98)';
-  const buttons = elementClone.querySelectorAll('.modal-footer, .el-dialog__header, .el-dialog__footer,.el-dialog__wrapper,.el-dialog');
-  buttons.forEach(button => button.remove());
+  elementClone.style.boxSizing = 'border-box';
+
+  const buttons = elementClone.querySelectorAll('.modal-footer, .el-dialog__header, .el-dialog__footer, .el-dialog__wrapper, .el-dialog');
+  buttons.forEach(el => el.remove());
   window.print()
 }
 </script>
@@ -366,6 +460,16 @@ const printInvoice = () => {
   margin-right: 8px;
 }
 
+.long-description {
+  white-space: pre-wrap;
+  /* Preserve line breaks but wrap */
+  word-break: break-word;
+  line-height: 1.3;
+  max-height: 100px;
+  overflow-y: auto;
+  /* Allow scrolling in view mode */
+}
+
 @media print {
   .el-dialog__wrapper {
     position: static !important;
@@ -378,7 +482,8 @@ const printInvoice = () => {
   }
 
   .el-dialog__header,
-  .el-dialog__footer {
+  .el-dialog__footer,
+  .modal-footer {
     display: none !important;
   }
 

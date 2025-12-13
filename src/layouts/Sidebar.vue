@@ -3,12 +3,12 @@
   <el-aside v-if="!isMobile" :width="themeStore.sidebarCollapsed ? '85px' : '280px'" class="sidebar-container">
     <!-- Header Section -->
     <div class="sidebar-header">
-      <div class="header-content" :class="{ 'collapsed': themeStore.sidebarCollapsed }">
+      <div class="header-content" :class="{ collapsed: themeStore.sidebarCollapsed }">
         <!-- Logo and Brand -->
         <div class="brand-section">
           <div class="logo-wrapper">
             <img src="@/assets/CH24.png" alt="Channel 24" class="logo-image"
-              :class="{ 'collapsed': themeStore.sidebarCollapsed }" />
+              :class="{ collapsed: themeStore.sidebarCollapsed }" />
             <div v-if="!themeStore.sidebarCollapsed" class="brand-info">
               <h1 class="brand-title">Channel 24</h1>
               <p class="brand-subtitle">Billing System</p>
@@ -36,13 +36,15 @@
 
           <nav class="nav-menu">
             <router-link v-for="item in generalItems" :key="item.path" :to="item.path" class="nav-item"
-              :class="{ 'active': isActiveRoute(item.path) }">
+              :class="{ active: isActiveRoute(item.path) }">
               <el-tooltip v-if="themeStore.sidebarCollapsed" :content="item.name" placement="right" :show-after="300">
                 <div class="nav-content">
                   <el-icon class="nav-icon">
                     <component :is="item.icon" />
                   </el-icon>
-                  <span v-if="!themeStore.sidebarCollapsed" class="nav-label">{{ item.name }}</span>
+                  <span v-if="!themeStore.sidebarCollapsed" class="nav-label">{{
+                    item.name
+                  }}</span>
                   <el-tag v-if="item.badge && !themeStore.sidebarCollapsed" :type="item.badgeType || 'warning'"
                     size="small" class="nav-badge">
                     {{ item.badge }}
@@ -71,13 +73,15 @@
 
           <nav class="nav-menu">
             <router-link v-for="item in managementItems" :key="item.path" :to="item.path" class="nav-item"
-              :class="{ 'active': isActiveRoute(item.path) }">
+              :class="{ active: isActiveRoute(item.path) }">
               <el-tooltip v-if="themeStore.sidebarCollapsed" :content="item.name" placement="right" :show-after="300">
                 <div class="nav-content">
                   <el-icon class="nav-icon">
                     <component :is="item.icon" />
                   </el-icon>
-                  <span v-if="!themeStore.sidebarCollapsed" class="nav-label">{{ item.name }}</span>
+                  <span v-if="!themeStore.sidebarCollapsed" class="nav-label">{{
+                    item.name
+                  }}</span>
                   <el-tag v-if="item.badge && !themeStore.sidebarCollapsed" :type="item.badgeType || 'warning'"
                     size="small" class="nav-badge">
                     {{ item.badge }}
@@ -106,13 +110,15 @@
 
           <nav class="nav-menu">
             <router-link v-for="item in systemItems" :key="item.path" :to="item.path" class="nav-item"
-              :class="{ 'active': isActiveRoute(item.path) }">
+              :class="{ active: isActiveRoute(item.path) }">
               <el-tooltip v-if="themeStore.sidebarCollapsed" :content="item.name" placement="right" :show-after="300">
                 <div class="nav-content">
                   <el-icon class="nav-icon">
                     <component :is="item.icon" />
                   </el-icon>
-                  <span v-if="!themeStore.sidebarCollapsed" class="nav-label">{{ item.name }}</span>
+                  <span v-if="!themeStore.sidebarCollapsed" class="nav-label">{{
+                    item.name
+                  }}</span>
                   <el-tag v-if="item.badge && !themeStore.sidebarCollapsed" :type="item.badgeType || 'warning'"
                     size="small" class="nav-badge">
                     {{ item.badge }}
@@ -136,7 +142,7 @@
 
     <!-- User Profile Section -->
     <div class="user-section">
-      <div class="user-content" :class="{ 'collapsed': themeStore.sidebarCollapsed }">
+      <div class="user-content" :class="{ collapsed: themeStore.sidebarCollapsed }">
         <el-dropdown trigger="click" placement="top-start" :disabled="themeStore.sidebarCollapsed"
           @command="handleUserCommand">
           <div class="user-profile">
@@ -228,7 +234,7 @@
             </div>
             <nav class="nav-menu">
               <router-link v-for="item in generalItems" :key="item.path" :to="item.path" class="nav-item"
-                :class="{ 'active': isActiveRoute(item.path) }" @click="closeMobileSidebar">
+                :class="{ active: isActiveRoute(item.path) }" @click="closeMobileSidebar">
                 <div class="nav-content">
                   <el-icon class="nav-icon">
                     <component :is="item.icon" />
@@ -249,7 +255,7 @@
             </div>
             <nav class="nav-menu">
               <router-link v-for="item in managementItems" :key="item.path" :to="item.path" class="nav-item"
-                :class="{ 'active': isActiveRoute(item.path) }" @click="closeMobileSidebar">
+                :class="{ active: isActiveRoute(item.path) }" @click="closeMobileSidebar">
                 <div class="nav-content">
                   <el-icon class="nav-icon">
                     <component :is="item.icon" />
@@ -270,7 +276,7 @@
             </div>
             <nav class="nav-menu">
               <router-link v-for="item in systemItems" :key="item.path" :to="item.path" class="nav-item"
-                :class="{ 'active': isActiveRoute(item.path) }" @click="closeMobileSidebar">
+                :class="{ active: isActiveRoute(item.path) }" @click="closeMobileSidebar">
                 <div class="nav-content">
                   <el-icon class="nav-icon">
                     <component :is="item.icon" />
@@ -375,21 +381,25 @@ const props = defineProps<{
   mobileSidebarOpen: boolean;
 }>();
 
-const emit = defineEmits(['update:mobileSidebarOpen']); // Ensure emit is defined
+const emit = defineEmits(["update:mobileSidebarOpen"]); // Ensure emit is defined
 
-const router = useRouter()
-const route = useRoute()
-const authStore = useAuthStore()
-const themeStore = useThemeStore()
+const router = useRouter();
+const route = useRoute();
+const authStore = useAuthStore();
+const themeStore = useThemeStore();
 
-const searchQuery = ref('')
+const searchQuery = ref("");
 
-const currentUser = computed(() => authStore.user || {
-  name: 'Admin User',
-  email: 'admin@ch24.com',
-  role: 'Administrator',
-  avatar: 'https://assets-v2.lottiefiles.com/a/82411e66-1184-11ee-8cfa-d707e53cae38/bccvxj7Ogv.gif'
-})
+const currentUser = computed(
+  () =>
+    authStore.user || {
+      name: "Admin User",
+      email: "admin@ch24.com",
+      role: "Administrator",
+      avatar:
+        "https://assets-v2.lottiefiles.com/a/82411e66-1184-11ee-8cfa-d707e53cae38/bccvxj7Ogv.gif",
+    }
+);
 
 // Determine if on mobile based on window width
 const isMobile = ref(window.innerWidth <= 768);
@@ -399,18 +409,18 @@ const updateIsMobile = () => {
 };
 
 onMounted(() => {
-  window.addEventListener('resize', updateIsMobile);
+  window.addEventListener("resize", updateIsMobile);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('resize', updateIsMobile);
+  window.removeEventListener("resize", updateIsMobile);
 });
 
 // Navigation items
 const generalItems = [
   {
-    name: 'Dashboard',
-    path: '/',
+    name: "Dashboard",
+    path: "/",
     icon: HomeFilled,
   },
   // {
@@ -421,13 +431,13 @@ const generalItems = [
   //   badgeType: 'warning',
   // },
   {
-    name: 'Goals',
-    path: '/goals',
+    name: "Goals",
+    path: "/goals",
     icon: WindPower,
     badge: undefined,
-    badgeType: undefined
-  }
-]
+    badgeType: undefined,
+  },
+];
 
 const managementItems = [
   { name: 'Clients', path: '/clients', icon: User, badge: undefined, badgeType: undefined },
@@ -436,11 +446,11 @@ const managementItems = [
   { name: 'Invoices', path: '/invoices', icon: Document, badge: undefined, badgeType: undefined },
   { name: 'Transmission Certificate', path: '/transmission-certificates', icon: Document, badge: undefined, badgeType: undefined },
   {
-    name: 'Payments',
-    path: '/payments',
+    name: "Payments",
+    path: "/payments",
     icon: CreditCard,
-    badge: 'On Hold',
-    badgeType: 'primary'
+    badge: "On Hold",
+    badgeType: "primary",
   },
   {
     name: 'Reports', path: '/reports', icon: DataAnalysis, badge: 'On Hold', badgeType: undefined
@@ -450,7 +460,11 @@ const managementItems = [
 
 const systemItems = [
   {
-    name: 'Settings', path: '/settings', icon: Setting, badge: undefined, badgeType: undefined
+    name: "Settings",
+    path: "/settings",
+    icon: Setting,
+    badge: undefined,
+    badgeType: undefined,
   },
   {
     name: 'Media Upload', path: '/media-upload', icon: Upload, badge: undefined, badgeType: undefined
@@ -459,45 +473,49 @@ const systemItems = [
 
 // Check if route is active
 const isActiveRoute = (path: string) => {
-  return route.path === path || route.path.startsWith(path + '/')
-}
+  return route.path === path || route.path.startsWith(path + "/");
+};
 
 // Close mobile sidebar (emits to parent)
 const closeMobileSidebar = () => {
-  emit('update:mobileSidebarOpen', false);
+  emit("update:mobileSidebarOpen", false);
 };
 
 const handleUserCommand = (command: string) => {
   switch (command) {
-    case 'profile':
-      router.push('/profile')
-      break
-    case 'settings':
-      router.push('/settings')
-      break
-    case 'help':
-      window.open('/help', '_blank')
-      break
-    case 'logout':
-      authStore.logout()
-      router.push('/login')
-      break
+    case "profile":
+      router.push("/profile");
+      break;
+    case "settings":
+      router.push("/settings");
+      break;
+    case "help":
+      window.open("/help", "_blank");
+      break;
+    case "logout":
+      authStore.logout();
+      router.push("/login");
+      break;
   }
-}
+};
 
 // Add a watch to log prop changes for debugging
-watch(() => props.mobileSidebarOpen, (newValue) => {
-  console.log('Sidebar: mobileSidebarOpen prop changed to', newValue);
-}, { immediate: true }); // Use immediate: true to run on component mount too
+watch(
+  () => props.mobileSidebarOpen,
+  (newValue) => {
+    console.log("Sidebar: mobileSidebarOpen prop changed to", newValue);
+  },
+  { immediate: true }
+); // Use immediate: true to run on component mount too
 
 watch(isMobile, (newValue) => {
-  console.log('Sidebar: isMobile changed to', newValue);
+  console.log("Sidebar: isMobile changed to", newValue);
 });
 </script>
 
 <style scoped>
 /* Import Poppins font */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
 .sidebar-container {
   background: #ffffff;
@@ -508,7 +526,7 @@ watch(isMobile, (newValue) => {
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   z-index: 999;
 }
 
@@ -518,7 +536,7 @@ watch(isMobile, (newValue) => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
 }
 
 /* Header Section */
@@ -591,7 +609,7 @@ watch(isMobile, (newValue) => {
 .sidebar-search {
   --el-input-border-radius: 8px;
   --el-input-border-color: #e5e7eb;
-  --el-input-focus-border-color: #A02408;
+  --el-input-focus-border-color: #a02408;
 }
 
 .sidebar-search :deep(.el-input__wrapper) {
@@ -606,7 +624,7 @@ watch(isMobile, (newValue) => {
 }
 
 .sidebar-search :deep(.el-input__wrapper.is-focus) {
-  border-color: #A02408;
+  border-color: #a02408;
   background-color: #ffffff;
   box-shadow: 0 0 0 3px rgba(160, 36, 8, 0.1);
 }
@@ -691,19 +709,19 @@ watch(isMobile, (newValue) => {
 
 .nav-item.active .nav-content {
   background-color: rgba(160, 36, 8, 0.1);
-  color: #A02408;
+  color: #a02408;
   font-weight: 500;
 }
 
 .nav-item.active::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   top: 50%;
   transform: translateY(-50%);
   width: 3px;
   height: 20px;
-  background-color: #A02408;
+  background-color: #a02408;
   border-radius: 0 2px 2px 0;
 }
 
@@ -726,9 +744,9 @@ watch(isMobile, (newValue) => {
   margin-left: auto;
   font-size: 10px;
   font-weight: 600;
-  --el-tag-bg-color: #A02408;
+  --el-tag-bg-color: #a02408;
   --el-tag-text-color: #ffffff;
-  --el-tag-border-color: #A02408;
+  --el-tag-border-color: #a02408;
 }
 
 .nav-badge.el-tag--warning {
@@ -782,7 +800,7 @@ watch(isMobile, (newValue) => {
 }
 
 .user-avatar {
-  --el-avatar-bg-color: linear-gradient(135deg, #A02408, #d97706);
+  --el-avatar-bg-color: linear-gradient(135deg, #a02408, #d97706);
   flex-shrink: 0;
 }
 
@@ -838,7 +856,7 @@ watch(isMobile, (newValue) => {
   border: 1px solid #e5e7eb;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --el-button-text-color: #6b7280;
-  --el-button-hover-text-color: #A02408;
+  --el-button-hover-text-color: #a02408;
   --el-button-hover-bg-color: #f9fafb;
   --el-button-border-color: #e5e7eb;
   transition: all 0.9s ease;
@@ -857,14 +875,14 @@ watch(isMobile, (newValue) => {
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-weight: 500;
   transition: all 0.2s ease;
 }
 
 .user-dropdown :deep(.el-dropdown-menu__item:hover) {
   background-color: #f8f9fa;
-  color: #A02408;
+  color: #a02408;
 }
 
 .logout-item {
@@ -940,7 +958,7 @@ watch(isMobile, (newValue) => {
 
 .dark .sidebar-search :deep(.el-input__wrapper.is-focus) {
   background-color: #4b5563;
-  border-color: #A02408;
+  border-color: #a02408;
 }
 
 /* Scrollbar styling */
