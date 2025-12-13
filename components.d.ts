@@ -16,6 +16,7 @@ declare module 'vue' {
     ContractDetailsModal: typeof import('./src/components/modals/ContractDetailsModal.vue')['default']
     ContractModal: typeof import('./src/components/forms/ContractModal.vue')['default']
     DashboardSkeleton: typeof import('./src/components/skeletons/DashboardSkeleton.vue')['default']
+    ElAlert: typeof import('element-plus/es')['ElAlert']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElBadge: typeof import('element-plus/es')['ElBadge']
