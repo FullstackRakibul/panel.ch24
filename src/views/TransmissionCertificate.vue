@@ -81,8 +81,23 @@ const loadContracts = async () => {
   loading.value = true
   try {
     const response = await contractService.getAllTelevisionContracts()
-    contracts.value = response
-    totalContracts.value = response.length
+    // Apply client-side search filter if query present
+    const query = searchQuery.value.trim().toLowerCase()
+    let filtered = response
+    if (query) {
+      filtered = response.filter((c) => {
+        const contractNo = c.televisionContractNo?.toString().toLowerCase() ?? ''
+        const clientName = c.contractedClient?.clintName?.toLowerCase() ?? ''
+        const agencyName = c.contractedAgency?.agencyName?.toLowerCase() ?? ''
+        return (
+          contractNo.includes(query) ||
+          clientName.includes(query) ||
+          agencyName.includes(query)
+        )
+      })
+    }
+    contracts.value = filtered
+    totalContracts.value = filtered.length
   } catch (error) {
     console.error('Failed to load contracts:', error)
   } finally {
