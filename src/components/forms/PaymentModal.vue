@@ -192,6 +192,50 @@
         </el-row>
       </div>
 
+      <!-- Bank/Check Details Section (Conditional) -->
+      <div v-if="showBankDetails" class="form-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="section-icon orange">
+              <Building2 class="w-4 h-4" />
+            </span>
+            {{ form.paymentType === 'Check' ? 'Check Details' : 'Bank Details' }}
+          </h3>
+        </div>
+
+        <el-row :gutter="20">
+          <el-col v-if="form.paymentType === 'Check'" :span="8">
+            <el-form-item label="Check Reference">
+              <el-input v-model="form.checkRef" placeholder="Enter check number">
+                <template #prefix>
+                  <FileCheck class="w-4 h-4 text-gray-400" />
+                </template>
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col v-if="form.paymentType === 'Bank Transfer' || form.paymentType === 'Check'" :span="8">
+            <el-form-item label="Bank Name">
+              <el-input v-model="form.bankName" placeholder="Enter bank name" />
+            </el-form-item>
+          </el-col>
+          <el-col v-if="form.paymentType === 'Bank Transfer' || form.paymentType === 'Check'" :span="8">
+            <el-form-item label="Branch Name">
+              <el-input v-model="form.branchName" placeholder="Enter branch name" />
+            </el-form-item>
+          </el-col>
+          <el-col v-if="form.paymentType === 'Bank Transfer'" :span="8">
+            <el-form-item label="Bank Reference / Transaction ID">
+              <el-input v-model="form.bankRef" placeholder="Enter reference number" />
+            </el-form-item>
+          </el-col>
+          <el-col v-if="form.paymentType === 'Online' || form.paymentType === 'Mobile Banking'" :span="8">
+            <el-form-item label="Transaction ID">
+              <el-input v-model="form.transactionId" placeholder="Enter transaction ID" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </div>
+
       <!-- Amount Input Section -->
       <div class="form-section">
         <div class="section-header">
@@ -202,7 +246,6 @@
             Payment Amount
           </h3>
         </div>
-
         <div class="amount-input-grid">
           <!-- Contract Amount -->
           <div class="amount-card" :class="{ disabled: form.paymentCategory === 'VAT Amount' }">
@@ -252,49 +295,7 @@
         </div>
       </div>
 
-      <!-- Bank/Check Details Section (Conditional) -->
-      <div v-if="showBankDetails" class="form-section">
-        <div class="section-header">
-          <h3 class="section-title">
-            <span class="section-icon orange">
-              <Building2 class="w-4 h-4" />
-            </span>
-            {{ form.paymentType === 'Check' ? 'Check Details' : 'Bank Details' }}
-          </h3>
-        </div>
 
-        <el-row :gutter="20">
-          <el-col v-if="form.paymentType === 'Check'" :span="8">
-            <el-form-item label="Check Reference">
-              <el-input v-model="form.checkRef" placeholder="Enter check number">
-                <template #prefix>
-                  <FileCheck class="w-4 h-4 text-gray-400" />
-                </template>
-              </el-input>
-            </el-form-item>
-          </el-col>
-          <el-col v-if="form.paymentType === 'Bank Transfer' || form.paymentType === 'Check'" :span="8">
-            <el-form-item label="Bank Name">
-              <el-input v-model="form.bankName" placeholder="Enter bank name" />
-            </el-form-item>
-          </el-col>
-          <el-col v-if="form.paymentType === 'Bank Transfer' || form.paymentType === 'Check'" :span="8">
-            <el-form-item label="Branch Name">
-              <el-input v-model="form.branchName" placeholder="Enter branch name" />
-            </el-form-item>
-          </el-col>
-          <el-col v-if="form.paymentType === 'Bank Transfer'" :span="8">
-            <el-form-item label="Bank Reference / Transaction ID">
-              <el-input v-model="form.bankRef" placeholder="Enter reference number" />
-            </el-form-item>
-          </el-col>
-          <el-col v-if="form.paymentType === 'Online' || form.paymentType === 'Mobile Banking'" :span="8">
-            <el-form-item label="Transaction ID">
-              <el-input v-model="form.transactionId" placeholder="Enter transaction ID" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </div>
 
       <!-- Remarks Section -->
       <div class="form-section">
@@ -365,9 +366,7 @@ import {
 } from 'lucide-vue-next'
 import { usePaymentStore } from '@/stores/payments'
 import { paymentUtils } from '@/services/Payments/payment.services'
-import { useNumberToWords } from '@/components/helper/useNumberToWords'
-import type { ITelevisionContract } from '@/interface/contract/contracts.interface'
-
+import { useNumberToWords } from '@/components/helper/useNumberToWords.js'
 
 interface Props {
   modelValue: boolean
@@ -455,12 +454,6 @@ const formatDate = (dateString: string) => {
 }
 
 const numberToWords = (num: number) => useNumberToWords(num)
-
-// Handlers
-const handleContractChange = (contractId: string) => {
-  store.selectContract(contractId)
-}
-
 const handlePaymentModeChange = () => {
   store.updatePaymentAmounts()
 }
@@ -506,6 +499,13 @@ const handleSubmit = async () => {
   } catch (error) {
     console.error('Form validation failed:', error)
   }
+}
+
+
+// handle handleContractChange
+
+const handleContractChange = () => {
+  store.updatePaymentAmounts()
 }
 
 // Lifecycle

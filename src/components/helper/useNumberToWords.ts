@@ -1,4 +1,4 @@
-export const useNumberToWords = (num) => {
+export const useNumberToWords = (num:number) => {
     const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
     const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 
                   'Seventeen', 'Eighteen', 'Nineteen'];
@@ -6,7 +6,7 @@ export const useNumberToWords = (num) => {
   
     if (num === 0) return 'Zero Taka Only';
   
-    function convertLessThanOneThousand(n) {
+    function convertLessThanOneThousand(n: number): string {
       if (n === 0) return '';
       if (n < 10) return units[n];
       if (n < 20) return teens[n - 10];
@@ -16,7 +16,7 @@ export const useNumberToWords = (num) => {
       return units[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' ' + convertLessThanOneThousand(n % 100) : '');
     }
   
-    function convertNumber(n) {
+    function convertNumber(n:number): string {
       if (n === 0) return '';
       
       let result = '';
