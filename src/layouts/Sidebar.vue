@@ -375,7 +375,8 @@ import {
   Plus,
   Menu // Hamburger icon for mobile
 } from '@element-plus/icons-vue'
-import { Upload } from 'lucide-vue-next'
+import { Upload, Earth } from 'lucide-vue-next'
+import type { url } from 'inspector'
 
 const props = defineProps<{
   mobileSidebarOpen: boolean;
@@ -449,8 +450,8 @@ const managementItems = [
     name: "Payments",
     path: "/payments",
     icon: CreditCard,
-    badge: "On Hold",
-    badgeType: "primary",
+    badge: "NEW",
+    badgeType: "alert",
   },
   {
     name: 'Reports', path: '/reports', icon: DataAnalysis, badge: 'On Hold', badgeType: undefined
@@ -468,6 +469,13 @@ const systemItems = [
   },
   {
     name: 'Media Upload', path: '/media-upload', icon: Upload, badge: undefined, badgeType: undefined
+  },
+  {
+    name: 'Go to Channel 24',
+    route: 'https://www.channel24bd.tv',
+    icon: Earth,
+    badge: 'NEW',
+    badgeType: 'alert'
   }
 ]
 
