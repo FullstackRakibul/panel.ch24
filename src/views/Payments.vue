@@ -64,7 +64,7 @@
           </template>
         </el-input>
 
-        <el-select v-model="filterPaymentType" placeholder="Payment Type" clearable>
+        <el-select style="width: 200px;" v-model="filterPaymentType" placeholder="Payment Type" clearable>
           <el-option label="All Types" value="" />
           <el-option label="Cash" value="Cash" />
           <el-option label="Bank Transfer" value="Bank Transfer" />
@@ -73,7 +73,7 @@
           <el-option label="Mobile Banking" value="Mobile Banking" />
         </el-select>
 
-        <el-select v-model="filterStatus" placeholder="Status" clearable>
+        <el-select style="width: 200px;" v-model="filterStatus" placeholder="Status" clearable>
           <el-option label="All Status" value="" />
           <el-option label="Completed" value="Completed" />
           <el-option label="Pending" value="Pending" />
@@ -558,19 +558,20 @@ onMounted(async () => {
 
 /* Filter Card */
 .filter-card {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   border-radius: 12px;
 }
 
 .filter-row {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
-  align-items: center;
+  overflow-x: auto;
+  align-items: start;
 }
 
 .search-input {
-  width: 300px;
+  width: 400px;
 }
 
 /* Table Card */

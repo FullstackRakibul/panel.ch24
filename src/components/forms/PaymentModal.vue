@@ -530,7 +530,7 @@ watch(() => props.modelValue, (visible) => {
 .payment-form {
   max-height: 75vh;
   overflow-y: auto;
-  padding-right: 8px;
+  padding-right: 10px;
 }
 
 .form-section {
