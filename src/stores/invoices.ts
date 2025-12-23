@@ -9,16 +9,18 @@ export interface InvoiceItem {
   amount: number
 }
 
+export interface InvoiceBiller {
+  name: string
+  address: string
+}
+
 export interface Invoice {
   id?: number
   number: string
   date: string
   contractNo: string
   contractDate: string
-  billTo: {
-    name: string
-    address: string
-  }
+  billTo: InvoiceBiller
   advertiser: string
   product: string
   items: InvoiceItem[]
