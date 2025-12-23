@@ -1,6 +1,9 @@
 import { ref } from "vue"
 import { defineStore } from "pinia"
 
+
+
+
 export interface InvoiceItem {
   sl: number
   particulars: string
@@ -9,16 +12,20 @@ export interface InvoiceItem {
   amount: number
 }
 
+export interface InvoiceBiller {
+  guid?: string
+  name: string
+  address: string
+}
+
+
 export interface Invoice {
   id?: number
   number: string
   date: string
   contractNo: string
   contractDate: string
-  billTo: {
-    name: string
-    address: string
-  }
+  billTo: InvoiceBiller
   advertiser: string
   product: string
   items: InvoiceItem[]
