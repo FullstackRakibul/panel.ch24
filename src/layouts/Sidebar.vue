@@ -438,8 +438,8 @@ const generalItems = [
 const managementItems = [
   { name: 'Clients', path: '/clients', icon: User, badge: undefined, badgeType: undefined },
   { name: 'Agencies', path: '/agencies', icon: OfficeBuilding, badge: undefined, badgeType: undefined },
-  { name: 'Ad Bookings', path: '/ad-bookings', icon: Calendar, badge: undefined, badgeType: undefined },
-  { name: 'Invoices', path: '/invoices', icon: Document, badge: undefined, badgeType: undefined },
+  { name: 'TV Contract', path: '/ad-bookings', icon: Calendar, badge: undefined, badgeType: undefined },
+  { name: 'Contract Invoices', path: '/invoices', icon: Document, badge: undefined, badgeType: undefined },
   { name: 'Transmission Certificate', path: '/transmission-certificates', icon: Document, badge: undefined, badgeType: undefined },
   {
     name: "Payments",
