@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="dialogVisible" :title="isEdit ? 'Edit Payment' : 'Add New Payment'" width="1100px"
+  <el-dialog v-model="dialogVisible" :title="isEdit ? 'Edit Payment' : 'Add New Payment'" width="1200px"
     :close-on-click-modal="false" :close-on-press-escape="false" class="payment-modal font-sans" top="3vh">
     <el-form ref="formRef" :model="form" :rules="rules" label-position="top" size="default" class="payment-form">
       <!-- Contract Selection Section -->

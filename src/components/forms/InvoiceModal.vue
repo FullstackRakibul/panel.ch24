@@ -38,13 +38,13 @@
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="Status">
-              <el-select v-model="form.status" placeholder="Select status" class="w-full">
-                <el-option label="Draft" value="draft" />
-                <el-option label="Sent" value="sent" />
-                <el-option label="Paid" value="paid" />
-                <el-option label="Overdue" value="overdue" />
-                <el-option label="Cancelled" value="cancelled" />
+            <el-form-item label="Status" prop="statusId">
+              <el-select v-model="form.statusId" placeholder="Select status" class="w-full">
+                <el-option label="Draft" :value="1" />
+                <el-option label="Sent" :value="2" />
+                <el-option label="Paid" :value="3" />
+                <el-option label="Overdue" :value="4" />
+                <el-option label="Cancelled" :value="5" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -57,25 +57,20 @@
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="Client Name" prop="billTo.name">
-              <el-input v-model="form.billTo.name" placeholder="Enter client name" />
+              <el-input v-model="form.billTo?.name" placeholder="Enter client name" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="Address" prop="billTo.address">
-              <el-input v-model="form.billTo.address" type="textarea" :rows="3" placeholder="Enter client address" />
+              <el-input v-model="form.billTo?.address" type="textarea" :rows="3" placeholder="Enter client address" />
             </el-form-item>
           </el-col>
         </el-row>
 
         <el-row :gutter="16">
-          <el-col :span="12">
+          <el-col :span="24">
             <el-form-item label="Advertiser" prop="advertiser">
               <el-input v-model="form.advertiser" placeholder="Enter advertiser name" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="Product" prop="product">
-              <el-input v-model="form.product" placeholder="Enter product name" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -93,7 +88,7 @@
             </el-col>
             <el-col :span="10">
               <el-form-item label="Particulars">
-                <el-input v-model="item.particulars" placeholder="Enter particulars" />
+                <el-input v-model="item.particularsName" placeholder="Enter particulars" />
               </el-form-item>
             </el-col>
             <el-col :span="4">
@@ -121,27 +116,51 @@
         <el-button type="primary" :icon="Plus" plain @click="addItem">Add Item</el-button>
       </div>
 
-      <!-- Signature Information -->
+      <!-- Signaturers Section -->
       <div class="form-section">
-        <h3 class="section-title">Signature Information</h3>
-        <el-row :gutter="16">
-          <el-col :span="12">
-            <el-form-item label="Signature 1 Name">
-              <el-input v-model="form.signature1Name" placeholder="Enter name" />
-            </el-form-item>
-            <el-form-item label="Signature 1 Title">
-              <el-input v-model="form.signature1Title" placeholder="Enter title" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="Signature 2 Name">
-              <el-input v-model="form.signature2Name" placeholder="Enter name" />
-            </el-form-item>
-            <el-form-item label="Signature 2 Title">
-              <el-input v-model="form.signature2Title" placeholder="Enter title" />
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <h3 class="section-title">Signaturers</h3>
+        <div v-for="(signaturer, index) in form.signaturers" :key="index" class="signaturer-row">
+          <el-row :gutter="16" align="middle">
+            <el-col :span="6">
+              <el-form-item :label="'Signaturer ' + (index + 1)">
+                <el-select v-model="signaturer.signaturerId" placeholder="Select signaturer" class="w-full"
+                  @change="(val: number) => updateSignaturerInfo(index, val)">
+                  <el-option v-for="s in availableSignaturers" :key="s.id" :label="s.name" :value="s.id" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="Name">
+                <el-input v-model="signaturer.name" disabled placeholder="Name" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="Title">
+                <el-input v-model="signaturer.title" disabled placeholder="Title" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="3">
+              <el-form-item label="Sort Order">
+                <el-input-number v-model="signaturer.sortOrder" :min="1" controls-position="right" class="w-full" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="3">
+              <el-form-item label=" ">
+                <el-button v-if="form.signaturers.length > 1" type="danger" :icon="Minus" circle
+                  @click="removeSignaturer(index)" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </div>
+        <el-button type="primary" :icon="Plus" plain @click="addSignaturer">Add Signaturer</el-button>
+      </div>
+
+      <!-- Footer Contact -->
+      <div class="form-section">
+        <h3 class="section-title">Footer Contact</h3>
+        <el-form-item prop="footerContact">
+          <el-input v-model="form.footerContact" type="textarea" :rows="2" placeholder="Enter footer contact info" />
+        </el-form-item>
       </div>
 
       <!-- Totals Summary -->
@@ -153,7 +172,7 @@
             <span>{{ formatCurrency(spotTotal) }}</span>
           </div>
           <div class="total-row">
-            <span>VAT (15%):</span>
+            <span>VAT ({{ form.vatPercentage }}%):</span>
             <span>{{ formatCurrency(vatAmount) }}</span>
           </div>
           <div class="total-row grand-total">
@@ -182,14 +201,37 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import type { FormInstance } from 'element-plus'
-import type { Invoice } from '@/stores/invoices'
+import type {
+  IInvoiceRequest,
+  IInvoiceResponse,
+  IInvoiceProductItemRequest,
+  IInvoiceSignaturerRequest,
+  IContractSignaturer,
+} from '@/interface/invoice/invoice.interface'
 import { Plus, Minus } from 'lucide-vue-next'
+
+// Extended type for form items with display fields
+interface FormInvoiceItem extends IInvoiceProductItemRequest {
+  particularsName?: string
+}
+
+// Extended type for form signaturers with display fields
+interface FormSignaturer extends IInvoiceSignaturerRequest {
+  name?: string
+  title?: string
+}
+
+// Form type that matches IInvoiceRequest but with extended items
+interface InvoiceFormData extends Omit<IInvoiceRequest, 'items' | 'signaturers'> {
+  items: FormInvoiceItem[]
+  signaturers: FormSignaturer[]
+}
 
 interface Props {
   modelValue: boolean
-  invoice?: Invoice | null
+  invoice?: IInvoiceResponse | null
   isEdit?: boolean
   loading?: boolean
 }
@@ -202,7 +244,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  save: [invoice: Invoice]
+  save: [invoice: IInvoiceRequest]
 }>()
 
 const formRef = ref<FormInstance>()
@@ -210,6 +252,34 @@ const dialogVisible = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value)
 })
+
+// Available signaturers (should be fetched from API in real implementation)
+const availableSignaturers = ref<IContractSignaturer[]>([
+  {
+    id: 1,
+    guid: 'sig-1',
+    name: 'Rashed Ahasan',
+    title: 'Head of Marketing',
+    designation: 'Head of Marketing',
+    sortOrder: 1
+  },
+  {
+    id: 2,
+    guid: 'sig-2',
+    name: 'M. M. Elias',
+    title: 'DGM, Finance & Accounts',
+    designation: 'DGM, Finance & Accounts',
+    sortOrder: 2
+  },
+  {
+    id: 3,
+    guid: 'sig-3',
+    name: 'John Doe',
+    title: 'Managing Director',
+    designation: 'Managing Director',
+    sortOrder: 3
+  }
+])
 
 // Helper functions defined first
 const formatCurrency = (value: number) => {
@@ -269,44 +339,15 @@ const numberToWords = (num: number): string => {
   return result.trim() + ' Taka Only'
 }
 
-const resetForm = () => {
-  form.value = {
-    number: '',
-    date: '',
-    contractNo: '',
-    contractDate: '',
-    billTo: {
-      name: '',
-      address: ''
-    },
-    advertiser: '',
-    product: '',
-    items: [
-      {
-        sl: 1,
-        particulars: '',
-        quantity: 1,
-        rate: 0,
-        amount: 0
-      }
-    ],
-    spotTotal: 0,
-    vatPercentage: 15,
-    vatAmount: 0,
-    grandTotal: 0,
-    grandTotalWords: '',
-    signature1Name: 'Rashed Ahasan',
-    signature1Title: 'Head of Marketing',
-    signature2Name: 'M. M. Elias',
-    signature2Title: 'DGM, Finance & Accounts',
-    footerContact: 'Channel 24 Limited | 387 (south), Tejgaon I/A, Dhaka 1208 | Tel: +8802 550 29724 | Fax: +8802 550 29709 | www.channel24bd.tv',
-    status: 'draft',
-    dueDate: ''
-  }
-  formRef.value?.clearValidate()
+const generateProductItemId = (): string => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = Math.random() * 16 | 0
+    const v = c === 'x' ? r : (r & 0x3 | 0x8)
+    return v.toString(16)
+  })
 }
 
-const form = ref<Invoice>({
+const getDefaultFormData = (): InvoiceFormData => ({
   number: '',
   date: '',
   contractNo: '',
@@ -316,14 +357,29 @@ const form = ref<Invoice>({
     address: ''
   },
   advertiser: '',
-  product: '',
+  productId: undefined,
   items: [
     {
       sl: 1,
-      particulars: '',
+      productItemId: generateProductItemId(),
+      particularsName: '',
       quantity: 1,
       rate: 0,
       amount: 0
+    }
+  ],
+  signaturers: [
+    {
+      signaturerId: 1,
+      name: 'Rashed Ahasan',
+      title: 'Head of Marketing',
+      sortOrder: 1
+    },
+    {
+      signaturerId: 2,
+      name: 'M. M. Elias',
+      title: 'DGM, Finance & Accounts',
+      sortOrder: 2
     }
   ],
   spotTotal: 0,
@@ -331,14 +387,17 @@ const form = ref<Invoice>({
   vatAmount: 0,
   grandTotal: 0,
   grandTotalWords: '',
-  signature1Name: 'Rashed Ahasan',
-  signature1Title: 'Head of Marketing',
-  signature2Name: 'M. M. Elias',
-  signature2Title: 'DGM, Finance & Accounts',
   footerContact: 'Channel 24 Limited | 387 (south), Tejgaon I/A, Dhaka 1208 | Tel: +8802 550 29724 | Fax: +8802 550 29709 | www.channel24bd.tv',
-  status: 'draft',
+  statusId: 1,
   dueDate: ''
 })
+
+const resetForm = () => {
+  form.value = getDefaultFormData()
+  formRef.value?.clearValidate()
+}
+
+const form = ref<InvoiceFormData>(getDefaultFormData())
 
 const rules = {
   number: [
@@ -361,9 +420,6 @@ const rules = {
   ],
   advertiser: [
     { required: true, message: 'Please enter advertiser name', trigger: 'blur' }
-  ],
-  product: [
-    { required: true, message: 'Please enter product name', trigger: 'blur' }
   ],
   dueDate: [
     { required: true, message: 'Please select due date', trigger: 'change' }
@@ -391,16 +447,82 @@ const isFormValid = computed(() => {
     form.value.date &&
     form.value.contractNo.trim() &&
     form.value.contractDate &&
-    form.value.billTo.name.trim() &&
-    form.value.billTo.address.trim() &&
+    form.value.billTo?.name?.trim() &&
+    form.value.billTo?.address?.trim() &&
     form.value.advertiser.trim() &&
-    form.value.product.trim() &&
     form.value.dueDate
 })
 
+// Map response to form data
+const mapResponseToForm = (response: IInvoiceResponse): InvoiceFormData => {
+  return {
+    number: response.number,
+    date: response.date,
+    contractNo: response.contractNo,
+    contractDate: response.contractDate,
+    billTo: response.billTo || { name: '', address: '' },
+    advertiser: response.advertiser,
+    productId: response.product?.guid,
+    items: response.items?.map(item => ({
+      sl: item.sl,
+      productItemId: item.productItemId,
+      particularsName: item.particularsName,
+      quantity: item.quantity,
+      rate: item.rate,
+      amount: item.amount
+    })) || [{ sl: 1, productItemId: generateProductItemId(), particularsName: '', quantity: 1, rate: 0, amount: 0 }],
+    signaturers: response.signaturers?.map(sig => ({
+      signaturerId: sig.signaturerId,
+      name: sig.name,
+      title: sig.title,
+      sortOrder: sig.sortOrder
+    })) || [],
+    spotTotal: response.spotTotal,
+    vatPercentage: response.vatPercentage,
+    vatAmount: response.vatAmount,
+    grandTotal: response.grandTotal,
+    grandTotalWords: response.grandTotalWords,
+    footerContact: response.footerContact,
+    statusId: 1, // Map from status.guid if needed
+    dueDate: response.dueDate
+  }
+}
+
+// Map form data to request
+const mapFormToRequest = (): IInvoiceRequest => {
+  return {
+    number: form.value.number,
+    date: form.value.date,
+    contractNo: form.value.contractNo,
+    contractDate: form.value.contractDate,
+    billTo: form.value.billTo,
+    advertiser: form.value.advertiser,
+    productId: form.value.productId,
+    items: form.value.items.map(item => ({
+      sl: item.sl,
+      productItemId: item.productItemId,
+      quantity: item.quantity,
+      rate: item.rate,
+      amount: item.quantity * item.rate
+    })),
+    signaturers: form.value.signaturers.map(sig => ({
+      signaturerId: sig.signaturerId,
+      sortOrder: sig.sortOrder
+    })),
+    spotTotal: spotTotal.value,
+    vatPercentage: form.value.vatPercentage,
+    vatAmount: vatAmount.value,
+    grandTotal: grandTotal.value,
+    grandTotalWords: grandTotalWords.value,
+    footerContact: form.value.footerContact,
+    statusId: form.value.statusId,
+    dueDate: form.value.dueDate
+  }
+}
+
 watch(() => props.invoice, (newInvoice) => {
   if (newInvoice) {
-    form.value = { ...newInvoice }
+    form.value = mapResponseToForm(newInvoice)
   } else {
     resetForm()
   }
@@ -423,7 +545,8 @@ watch([spotTotal, vatAmount, grandTotal, grandTotalWords], () => {
 const addItem = () => {
   form.value.items.push({
     sl: form.value.items.length + 1,
-    particulars: '',
+    productItemId: generateProductItemId(),
+    particularsName: '',
     quantity: 1,
     rate: 0,
     amount: 0
@@ -438,6 +561,31 @@ const removeItem = (index: number) => {
   })
 }
 
+const addSignaturer = () => {
+  form.value.signaturers.push({
+    signaturerId: 0,
+    name: '',
+    title: '',
+    sortOrder: form.value.signaturers.length + 1
+  })
+}
+
+const removeSignaturer = (index: number) => {
+  form.value.signaturers.splice(index, 1)
+  // Reorder sort orders
+  form.value.signaturers.forEach((sig, idx) => {
+    sig.sortOrder = idx + 1
+  })
+}
+
+const updateSignaturerInfo = (index: number, signaturerId: number) => {
+  const signaturer = availableSignaturers.value.find(s => s.id === signaturerId)
+  if (signaturer) {
+    form.value.signaturers[index].name = signaturer.name
+    form.value.signaturers[index].title = signaturer.title
+  }
+}
+
 const handleClose = () => {
   dialogVisible.value = false
 }
@@ -447,11 +595,17 @@ const handleSubmit = async () => {
 
   try {
     await formRef.value.validate()
-    emit('save', form.value)
+    const requestData = mapFormToRequest()
+    emit('save', requestData)
   } catch (error) {
     console.error('Form validation failed:', error)
   }
 }
+
+onMounted(() => {
+  // TODO: Fetch available signaturers from API
+  // fetchSignaturers()
+})
 </script>
 
 <style scoped>
@@ -483,7 +637,8 @@ const handleSubmit = async () => {
   margin: 0 0 20px 0;
 }
 
-.item-row {
+.item-row,
+.signaturer-row {
   background: var(--el-fill-color-lighter);
   padding: 16px;
   border-radius: 8px;
