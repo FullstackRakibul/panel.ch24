@@ -167,22 +167,27 @@
         <el-divider />
 
         <div class="preview-section">
-          <h4>Items</h4>
-          <el-table :data="selectedInvoice.items" border size="small">
-            <el-table-column prop="sl" label="SL" width="60" align="center" />
-            <el-table-column prop="particularsName" label="Particulars" min-width="200" />
-            <el-table-column prop="quantity" label="Qty" width="80" align="center" />
-            <el-table-column prop="rate" label="Rate" width="120" align="right">
-              <template #default="{ row }">
-                {{ formatCurrency(row.rate) }}
-              </template>
-            </el-table-column>
-            <el-table-column prop="amount" label="Amount" width="120" align="right">
-              <template #default="{ row }">
-                {{ formatCurrency(row.amount) }}
-              </template>
-            </el-table-column>
-          </el-table>
+          <h4>Products & Items</h4>
+          <template v-for="(product, pIndex) in selectedInvoice.products" :key="pIndex">
+            <div class="product-preview-header" v-if="selectedInvoice.products && selectedInvoice.products.length > 1">
+              <strong>{{ product.productName }}</strong>
+            </div>
+            <el-table :data="product.items" border size="small" class="mb-4">
+              <el-table-column prop="sl" label="SL" width="60" align="center" />
+              <el-table-column prop="particularsName" label="Particulars" min-width="200" />
+              <el-table-column prop="quantity" label="Qty" width="80" align="center" />
+              <el-table-column prop="rate" label="Rate" width="120" align="right">
+                <template #default="{ row }">
+                  {{ formatCurrency(row.rate) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="amount" label="Amount" width="120" align="right">
+                <template #default="{ row }">
+                  {{ formatCurrency(row.amount) }}
+                </template>
+              </el-table-column>
+            </el-table>
+          </template>
         </div>
 
         <div class="preview-totals">
@@ -612,6 +617,18 @@ onMounted(() => {
   font-style: italic;
   font-size: 12px;
   color: var(--el-text-color-secondary);
+}
+
+.product-preview-header {
+  background: var(--el-fill-color);
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.mb-4 {
+  margin-bottom: 16px;
 }
 
 /* Responsive */

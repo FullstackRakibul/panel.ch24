@@ -52,43 +52,53 @@
             <span class="w-24 font-semibold text-gray-700">Advertiser</span>
             <span class="flex-1 text-gray-900">: {{ invoice.advertiser }}</span>
           </div>
-          <div class="flex">
-            <span class="w-24 font-semibold text-gray-700">Product</span>
-            <span class="flex-1 text-gray-900">: {{ invoice.product }}</span>
+          <div class="flex" v-if="invoice.products && invoice.products.length > 0">
+            <span class="w-24 font-semibold text-gray-700">Product(s)</span>
+            <span class="flex-1 text-gray-900">: {{invoice.products.map(p => p.productName).join(', ')}}</span>
           </div>
         </div>
 
         <!-- Items Table -->
         <div class="items-table-wrapper mb-8">
+          <template v-for="(product, pIndex) in invoice.products" :key="pIndex">
+            <div v-if="invoice.products.length > 1" class="product-section-header">
+              <strong>{{ product.productName }}</strong>
+            </div>
+            <table class="w-full border-collapse text-sm mb-4">
+              <thead>
+                <tr class="bg-gray-100">
+                  <th class="border border-gray-300 py-2 px-3 text-center w-12">SL #</th>
+                  <th class="border border-gray-300 py-2 px-3 text-left">PARTICULARS</th>
+                  <th class="border border-gray-300 py-2 px-3 text-center w-24">QUANTITY</th>
+                  <th class="border border-gray-300 py-2 px-3 text-right w-28">RATE (Tk.)</th>
+                  <th class="border border-gray-300 py-2 px-3 text-right w-32">AMOUNT (Tk.)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in product.items" :key="index">
+                  <td class="border border-gray-300 py-2 px-3 text-center">{{ item.sl }}</td>
+                  <td class="border border-gray-300 py-2 px-3 text-left">{{ item.particularsName }}</td>
+                  <td class="border border-gray-300 py-2 px-3 text-center">{{ item.quantity }}</td>
+                  <td class="border border-gray-300 py-2 px-3 text-right">{{ formatCurrency(item.rate) }}</td>
+                  <td class="border border-gray-300 py-2 px-3 text-right">{{ formatCurrency(item.amount) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </template>
+
+          <!-- Spot Total Row -->
           <table class="w-full border-collapse text-sm">
-            <thead>
-              <tr class="bg-gray-100">
-                <th class="border border-gray-300 py-2 px-3 text-center w-12">SL #</th>
-                <th class="border border-gray-300 py-2 px-3 text-left">PARTICULARS</th>
-                <th class="border border-gray-300 py-2 px-3 text-center w-24">QUANTITY</th>
-                <th class="border border-gray-300 py-2 px-3 text-right w-28">RATE (Tk.)</th>
-                <th class="border border-gray-300 py-2 px-3 text-right w-32">AMOUNT (Tk.)</th>
-              </tr>
-            </thead>
             <tbody>
-              <tr v-for="(item, index) in invoice.items" :key="index">
-                <td class="border border-gray-300 py-2 px-3 text-center">{{ item.sl }}</td>
-                <td class="border border-gray-300 py-2 px-3 text-left">{{ item.particulars }}</td>
-                <td class="border border-gray-300 py-2 px-3 text-center">{{ item.quantity }}</td>
-                <td class="border border-gray-300 py-2 px-3 text-right">{{ formatCurrency(item.rate) }}</td>
-                <td class="border border-gray-300 py-2 px-3 text-right">{{ formatCurrency(item.amount) }}</td>
-              </tr>
-              <!-- Spot Total Row -->
               <tr>
                 <td colspan="4" class="border border-gray-300 py-2 px-3 text-right font-semibold">SPOT TOTAL Tk</td>
-                <td class="border border-gray-300 py-2 px-3 text-right font-semibold">{{
+                <td class="border border-gray-300 py-2 px-3 text-right font-semibold w-32">{{
                   formatCurrency(invoice.spotTotal) }}</td>
               </tr>
               <!-- VAT Row -->
               <tr>
                 <td colspan="4" class="border border-gray-300 py-2 px-3 text-right text-gray-600">Plus {{
                   invoice.vatPercentage }}% VAT on Tk {{ invoice.spotTotal.toLocaleString() }} Tk</td>
-                <td class="border border-gray-300 py-2 px-3 text-right text-gray-600">{{
+                <td class="border border-gray-300 py-2 px-3 text-right text-gray-600 w-32">{{
                   formatCurrency(invoice.vatAmount) }}</td>
               </tr>
             </tbody>
@@ -102,17 +112,17 @@
         </div>
 
         <!-- Signature Section -->
-        <div class="grid grid-cols-2 gap-8 text-sm mb-16">
+        <div class="grid grid-cols-2 gap-8 text-sm mb-16" v-if="invoice.signaturers && invoice.signaturers.length >= 2">
           <div class="text-left">
             <div class="border-t border-gray-700 pt-2 mb-1"></div>
-            <p class="font-semibold text-gray-900">{{ invoice.signature1Name }}</p>
-            <p class="text-gray-700">{{ invoice.signature1Title }}</p>
+            <p class="font-semibold text-gray-900">{{ invoice.signaturers[0]?.name }}</p>
+            <p class="text-gray-700">{{ invoice.signaturers[0]?.title }}</p>
             <p class="text-gray-700">CHANNEL 24</p>
           </div>
           <div class="text-right">
             <div class="border-t border-gray-700 pt-2 mb-1"></div>
-            <p class="font-semibold text-gray-900">{{ invoice.signature2Name }}</p>
-            <p class="text-gray-700">{{ invoice.signature2Title }}</p>
+            <p class="font-semibold text-gray-900">{{ invoice.signaturers[1]?.name }}</p>
+            <p class="text-gray-700">{{ invoice.signaturers[1]?.title }}</p>
             <p class="text-gray-700">CHANNEL 24</p>
           </div>
         </div>
@@ -149,91 +159,111 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import {
-  Document,
   Back,
   HomeFilled,
-  Printer // Added Printer icon for print functionality
+  Printer
 } from '@element-plus/icons-vue'
+import type { IInvoiceResponse, IInvoiceProduct, IInvoiceSignaturer } from '@/interface/invoice/invoice.interface'
+import { invoiceService } from '@/services/Invoices/invoice.services'
 
 const route = useRoute()
 
-interface InvoiceItem {
-  sl: number;
-  particulars: string;
-  quantity: number;
-  rate: number; // Renamed from unitPrice to rate for exact match with image
-  amount: number; // Computed or provided directly
-}
-
+// Invoice data structure matching the API response
 interface Invoice {
-  id: string; // From route params
-  number: string;
-  date: string;
-  contractNo: string; // New field from image
-  contractDate: string; // New field from image
+  id: string
+  guid: string
+  number: string
+  date: string
+  contractNo: string
+  contractDate: string
   billTo: {
-    name: string;
-    address: string;
-  };
-  advertiser: string; // New field from image
-  product: string; // New field from image
-  items: InvoiceItem[];
-  spotTotal: number; // New field from image, or computed
-  vatPercentage: number; // New field for VAT calculation
-  vatAmount: number; // New field from image, or computed
-  grandTotalWords: string; // New field from image
-  grandTotal: number; // New field from image, or computed
-  signature1Name: string;
-  signature1Title: string;
-  signature2Name: string;
-  signature2Title: string;
-  footerContact: string;
+    name: string
+    address: string
+  }
+  advertiser: string
+  products: IInvoiceProduct[]
+  signaturers: IInvoiceSignaturer[]
+  spotTotal: number
+  vatPercentage: number
+  vatAmount: number
+  grandTotalWords: string
+  grandTotal: number
+  footerContact: string
 }
 
-// Dummy invoice data to match the image precisely
+// Default invoice data
 const invoice = ref<Invoice>({
   id: route.params.id as string,
-  number: 'TML2506039',
-  date: '01 Jul, 2025',
-  contractNo: 'TML2506039',
-  contractDate: '31 May, 2025',
+  guid: '',
+  number: '',
+  date: '',
+  contractNo: '',
+  contractDate: '',
   billTo: {
-    name: 'Mercantile Bank PLC',
-    address: '61,Dilkusha,Commercial Area\nDhaka-1000', // Use \n for line breaks
+    name: '',
+    address: '',
   },
-  advertiser: 'Mercantile Bank PLC',
-  product: 'Mercantile Bank PLC',
-  items: [
-    { sl: 1, particulars: 'Mercantile Bank PLC "Business24"', quantity: 1, rate: 300000.00, amount: 300000.00 },
-  ],
-  spotTotal: 300000.00, // Hardcoded from image
+  advertiser: '',
+  products: [],
+  signaturers: [],
+  spotTotal: 0,
   vatPercentage: 15,
-  vatAmount: 45000.00, // Hardcoded from image (15% of 300,000)
-  grandTotalWords: 'Three Lac Forty Five Thousand Taka Only', // Hardcoded from image
-  grandTotal: 345000.00, // Hardcoded from image
-  signature1Name: 'Rashed Ahasan',
-  signature1Title: 'Head of Marketing',
-  signature2Name: 'M. M. Elias',
-  signature2Title: 'DGM, Finance & Accounts',
+  vatAmount: 0,
+  grandTotalWords: '',
+  grandTotal: 0,
   footerContact: 'Channel 24 Limited | 387 (south), Tejgaon I/A, Dhaka 1208 | Tel: +8802 550 29724 | Fax: +8802 550 29709 | www.channel24bd.tv',
 })
 
 // Function to format currency
 const formatCurrency = (value: number, includeCurrencySymbol: boolean = true) => {
   return new Intl.NumberFormat('en-BD', {
-    style: 'decimal', // Use decimal style for precise control over Tk placement
+    style: 'decimal',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(value);
+  }).format(value)
 }
 
 // Simple print function
 const printInvoice = () => {
-  window.print();
+  window.print()
 }
+
+// Load invoice data from API
+const loadInvoice = async () => {
+  try {
+    const id = route.params.id as string
+    if (id) {
+      const response = await invoiceService.getInvoiceById(id)
+      invoice.value = {
+        id: response.id?.toString() || '',
+        guid: response.guid,
+        number: response.number,
+        date: response.date,
+        contractNo: response.contractNo,
+        contractDate: response.contractDate,
+        billTo: response.billTo || { name: '', address: '' },
+        advertiser: response.advertiser,
+        products: response.products || [],
+        signaturers: response.signaturers || [],
+        spotTotal: response.spotTotal,
+        vatPercentage: response.vatPercentage,
+        vatAmount: response.vatAmount,
+        grandTotalWords: response.grandTotalWords,
+        grandTotal: response.grandTotal,
+        footerContact: response.footerContact,
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load invoice:', error)
+  }
+}
+
+onMounted(() => {
+  loadInvoice()
+})
 </script>
 
 <style scoped>
@@ -261,19 +291,15 @@ const printInvoice = () => {
 
 .invoice-document-card {
   @apply rounded-xl shadow-lg border border-gray-100;
-  /* Prominent card for the invoice document */
   --el-card-padding: 0px;
-  /* Control padding internally */
 }
 
 .invoice-document-card :deep(.el-card__body) {
   @apply p-8 bg-white;
-  /* White background for the invoice content */
 }
 
 .invoice-document-content {
   @apply max-w-4xl mx-auto;
-  /* Center the invoice content and limit its width */
 }
 
 .invoice-header-section {
@@ -282,23 +308,24 @@ const printInvoice = () => {
 
 .invoice-header-section img {
   @apply h-10 w-auto;
-  /* Adjust logo size */
 }
 
 .invoice-header-section h2 {
   @apply text-center text-xl font-bold text-gray-800 mb-8;
 }
 
+.product-section-header {
+  @apply bg-gray-100 py-2 px-3 mb-2 rounded;
+}
+
 /* Specific styling for the table to match the image */
 .items-table-wrapper {
   @apply overflow-x-auto;
-  /* Ensures horizontal scrolling on small screens */
   -webkit-overflow-scrolling: touch;
 }
 
 .items-table-wrapper table {
   @apply min-w-[700px];
-  /* Ensure table doesn't get too narrow, adjust as needed */
 }
 
 .items-table-wrapper th,
@@ -315,28 +342,23 @@ const printInvoice = () => {
 }
 
 .items-table-wrapper td:nth-child(1),
-/* SL # */
 .items-table-wrapper th:nth-child(1) {
   @apply text-center;
 }
 
 .items-table-wrapper td:nth-child(2),
-/* Particulars */
 .items-table-wrapper th:nth-child(2) {
   @apply text-left;
 }
 
 .items-table-wrapper td:nth-child(3),
-/* Quantity */
 .items-table-wrapper th:nth-child(3) {
   @apply text-center;
 }
 
 .items-table-wrapper td:nth-child(4),
-/* Rate */
 .items-table-wrapper th:nth-child(4),
 .items-table-wrapper td:nth-child(5),
-/* Amount */
 .items-table-wrapper th:nth-child(5) {
   @apply text-right;
 }
@@ -379,7 +401,6 @@ const printInvoice = () => {
   .page-header,
   .el-button {
     display: none;
-    /* Hide header and buttons when printing */
   }
 
   .invoice-document-card {
@@ -398,26 +419,21 @@ const printInvoice = () => {
 
   .items-table-wrapper {
     overflow-x: visible;
-    /* Ensure table is fully visible on print */
   }
 
   .items-table-wrapper table {
     min-width: unset;
-    /* Allow table to shrink if needed for print */
   }
 }
 
 @media (max-width: 768px) {
   .grid-cols-2 {
     grid-template-columns: 1fr;
-    /* Stack columns on smaller screens */
     gap: 24px;
-    /* Add spacing between stacked sections */
   }
 
   .invoice-document-card :deep(.el-card__body) {
     padding: 20px;
-    /* Slightly less padding on mobile */
   }
 
   .invoice-document-content {

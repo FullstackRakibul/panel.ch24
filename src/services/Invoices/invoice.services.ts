@@ -97,17 +97,32 @@ export const invoiceService = {
 // Invoice utility functions
 export const invoiceUtils = {
   /**
-   * Calculate invoice totals from items
+   * Calculate invoice totals from products
    */
-  calculateTotals: (items: { rate: number; quantity: number }[], vatPercentage: number) => {
-    const spotTotal = items.reduce((sum, item) => sum + item.rate * item.quantity, 0)
-    const vatAmount = spotTotal * (vatPercentage / 100)
+  calculateTotals: (products: { total: number; vat: number }[], vatPercentage: number) => {
+    const spotTotal = products.reduce((sum, product) => sum + product.total, 0)
+    const vatAmount = products.reduce((sum, product) => sum + product.vat, 0) || spotTotal * (vatPercentage / 100)
     const grandTotal = spotTotal + vatAmount
 
     return {
       spotTotal,
       vatAmount,
       grandTotal,
+    }
+  },
+
+  /**
+   * Calculate product totals from items
+   */
+  calculateProductTotals: (items: { rate: number; quantity: number }[], vatRate: number = 0) => {
+    const subtotal = items.reduce((sum, item) => sum + item.rate * item.quantity, 0)
+    const vat = subtotal * (vatRate / 100)
+    const total = subtotal + vat
+
+    return {
+      subtotal,
+      vat,
+      total,
     }
   },
 
@@ -191,16 +206,25 @@ export const invoiceUtils = {
       errors.push('Bill To name is required')
     }
 
-    if (!invoice.items || invoice.items.length === 0) {
-      errors.push('At least one item is required')
+    // Validate products array
+    if (!invoice.products || invoice.products.length === 0) {
+      errors.push('At least one product is required')
     }
 
-    invoice.items?.forEach((item, index) => {
-      if (item.rate <= 0) {
-        errors.push(`Item ${index + 1}: Rate must be greater than 0`)
+    invoice.products?.forEach((product, productIndex) => {
+      if (!product.productName?.trim()) {
+        errors.push(`Product ${productIndex + 1}: Product name is required`)
       }
-      if (item.quantity <= 0) {
-        errors.push(`Item ${index + 1}: Quantity must be greater than 0`)
+
+      if (product.items && product.items.length > 0) {
+        product.items.forEach((item, itemIndex) => {
+          if (item.rate <= 0) {
+            errors.push(`Product ${productIndex + 1}, Item ${itemIndex + 1}: Rate must be greater than 0`)
+          }
+          if (item.quantity <= 0) {
+            errors.push(`Product ${productIndex + 1}, Item ${itemIndex + 1}: Quantity must be greater than 0`)
+          }
+        })
       }
     })
 

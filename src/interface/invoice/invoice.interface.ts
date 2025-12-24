@@ -1,5 +1,6 @@
 // ============================================
 // Invoice Interfaces - Aligned with API DTOs
+// Updated: Support for Multiple Products per Invoice
 // ============================================
 
 // Signaturer Interfaces
@@ -27,22 +28,54 @@ export interface IInvoiceSignaturerRequest {
   sortOrder: number
 }
 
-// Product Item Interfaces
+// Product Item Interfaces (Snapshot of TelevisionContractProductItem)
 export interface IInvoiceProductItem {
+  guid: string
+  originalProductItemId?: string
   sl: number
-  productItemId: string
-  particularsName?: string
+  particularsName: string
   quantity: number
   rate: number
   amount: number
+  vat: number
+  vatRate: number
 }
 
 export interface IInvoiceProductItemRequest {
+  originalProductItemId?: string
   sl: number
-  productItemId: string
+  particularsName: string
   quantity: number
   rate: number
   amount: number
+  vat: number
+  vatRate: number
+}
+
+// Product Interfaces (Snapshot of TelevisionContractProduct)
+export interface IInvoiceProduct {
+  guid: string
+  originalProductId?: string
+  productName: string
+  productDescription?: string
+  quantity: number
+  vat: number
+  vatRate: number
+  total: number
+  remarks?: string
+  items?: IInvoiceProductItem[]
+}
+
+export interface IInvoiceProductRequest {
+  originalProductId?: string
+  productName: string
+  productDescription?: string
+  quantity: number
+  vat: number
+  vatRate: number
+  total: number
+  remarks?: string
+  items?: IInvoiceProductItemRequest[]
 }
 
 // Biller Interface
@@ -52,19 +85,14 @@ export interface IInvoiceBiller {
   address: string
 }
 
-// Product Reference Interface
-export interface IInvoiceProduct {
-  guid: string
-  contractProductName?: string
-  contractProductDescription?: string
-}
-
 // Status Interface
 export interface IInvoiceStatus {
-  guid: string
+  id?: number
   statusName: string
   description?: string
   module?: string
+  isActive?: boolean
+  sortOrder?: number
 }
 
 // Query Parameters for Filtering
@@ -87,8 +115,7 @@ export interface IInvoiceRequest {
   contractDate: string
   billTo?: IInvoiceBiller
   advertiser: string
-  productId?: string
-  items?: IInvoiceProductItemRequest[]
+  products?: IInvoiceProductRequest[]
   signaturers?: IInvoiceSignaturerRequest[]
   spotTotal: number
   vatPercentage: number
@@ -110,8 +137,7 @@ export interface IInvoiceResponse {
   contractDate: string
   billTo?: IInvoiceBiller
   advertiser: string
-  product?: IInvoiceProduct
-  items?: IInvoiceProductItem[]
+  products?: IInvoiceProduct[]
   signaturers?: IInvoiceSignaturer[]
   spotTotal: number
   vatPercentage: number
@@ -166,7 +192,7 @@ export interface IInvoiceFromContractResponse {
   invoiceNumber: string
   contractNo: string
   grandTotal: number
-  createdAt: string,
+  createdAt: string
   statusCode: number
 }
 
@@ -176,3 +202,4 @@ export interface IInvoiceFromContractResponse {
 export type Invoice = IInvoiceResponse
 export type InvoiceItem = IInvoiceProductItem
 export type InvoiceBiller = IInvoiceBiller
+export type InvoiceProduct = IInvoiceProduct
