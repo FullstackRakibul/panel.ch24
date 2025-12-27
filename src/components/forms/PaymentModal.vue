@@ -17,18 +17,10 @@
           <el-col :span="16">
             <el-form-item label="Search Contract/Invoice" prop="contractId">
               <div class="search-container w-full">
-                <el-input v-model="searchQuery" placeholder="Type to search..." clearable @input="handleSearchInput"
-                  @focus="showSearchResults = true" @blur="handleSearchBlur">
-                  <template #prepend>
-                    <el-select v-model="searchCategory" style="width: 140px" @change="executeSearch">
-                      <el-option label="Contract No" value="contractNo" />
-                      <el-option label="Client Name" value="client" />
-                      <el-option label="Agency Name" value="agency" />
-                      <el-option label="Status" value="status" />
-                    </el-select>
-                  </template>
-                  <template #append>
-                    <el-button :icon="Search" @click="executeSearch" />
+                <el-input v-model="searchQuery" placeholder="Search by Contract No, Client, Agency, or Invoice ID..."
+                  clearable @input="handleSearchInput" @focus="showSearchResults = true" @blur="handleSearchBlur">
+                  <template #prefix>
+                    <Search class="w-4 h-4 text-gray-400" />
                   </template>
                 </el-input>
 
@@ -38,6 +30,9 @@
                     @mousedown.prevent="selectSearchResult(contract)">
                     <div class="result-main">
                       <span class="contract-no">{{ contract.televisionContractNo }}</span>
+                      <el-tag size="small" :type="contract.contractedClient ? 'success' : 'warning'">
+                        {{ contract.contractedClient ? 'Client' : 'Agency' }}
+                      </el-tag>
                       <el-tag size="small" :type="getPaymentStatusType(contract)">
                         {{ getPaymentStatus(contract) }}
                       </el-tag>
@@ -55,8 +50,7 @@
                 <div v-if="showSearchResults && filteredSearchResults.length === 0 && searchQuery.trim()"
                   class="search-results-dropdown no-results">
                   <p>No contracts found matching "{{ searchQuery }}"</p>
-                  <p class="hint">Try searching by {{ searchCategory === 'contractNo' ? 'contract number' :
-                    searchCategory }}</p>
+                  <p class="hint">Try searching by contract number, client name, or agency name</p>
                 </div>
 
                 <!-- Selected Contract Display -->
@@ -436,51 +430,27 @@ const contractTotals = computed(() => store.contractTotals)
 const dueAmounts = computed(() => store.dueAmounts)
 
 // Search state
-const searchCategory = ref('contractNo')
 const searchQuery = ref('')
 const showSearchResults = ref(false)
 
 // Debounce timeout
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
-// Filtered search results based on category and query
+// Filtered search results - searches across all fields (contract no, client, agency, invoice)
 const filteredSearchResults = computed(() => {
   if (!searchQuery.value.trim()) {
     return contracts.value.slice(0, 10) // Show first 10 when empty
   }
 
   const query = searchQuery.value.toLowerCase().trim()
-  let results = contracts.value
 
-  switch (searchCategory.value) {
-    case 'contractNo':
-      results = contracts.value.filter(c =>
-        c.televisionContractNo?.toLowerCase().includes(query)
-      )
-      break
-    case 'client':
-      results = contracts.value.filter(c =>
-        c.contractedClient?.clintName?.toLowerCase().includes(query)
-      )
-      break
-    case 'agency':
-      results = contracts.value.filter(c =>
-        c.contractedAgency?.agencyName?.toLowerCase().includes(query)
-      )
-      break
-    case 'status':
-      results = contracts.value.filter(c => {
-        const status = getPaymentStatus(c)
-        return status.toLowerCase().includes(query)
-      })
-      break
-    default:
-      results = contracts.value.filter(c =>
-        c.televisionContractNo?.toLowerCase().includes(query) ||
-        c.contractedClient?.clintName?.toLowerCase().includes(query) ||
-        c.contractedAgency?.agencyName?.toLowerCase().includes(query)
-      )
-  }
+  // Search across all fields: contract number, client name, agency name
+  const results = contracts.value.filter(c =>
+    c.televisionContractNo?.toLowerCase().includes(query) ||
+    c.contractedClient?.clintName?.toLowerCase().includes(query) ||
+    c.contractedAgency?.agencyName?.toLowerCase().includes(query) ||
+    c.guid?.toLowerCase().includes(query) // Also search by ID
+  )
 
   return results.slice(0, 10) // Limit to 10 results
 })
@@ -518,10 +488,6 @@ const handleSearchInput = () => {
   searchTimeout = setTimeout(() => {
     showSearchResults.value = true
   }, 300) // 300ms debounce
-}
-
-const executeSearch = () => {
-  showSearchResults.value = true
 }
 
 const handleSearchBlur = () => {
