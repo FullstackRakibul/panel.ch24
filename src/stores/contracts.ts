@@ -120,7 +120,7 @@ export const useContractStore = defineStore('contract', () => {
       contractProductDescription: '',
       quantity: 1,
       vat: 0,
-      vatRate: 15,
+      vatRate: 0,
       total: 0,
       remarks: '',
       productItems: [

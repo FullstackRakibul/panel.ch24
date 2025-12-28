@@ -186,7 +186,7 @@
     </el-tabs>
 
     <!-- Invoice Modal for Approved Invoices (uses InvoiceViewModal) -->
-    <InvoiceViewModal v-model="showApprovedInvoiceModal" :contract="selectedContract" />
+    <InvoiceViewModal v-model="showApprovedInvoiceModal" :invoice="selectedInvoice" />
 
     <!-- Preview Modal for Pending Contracts -->
     <el-dialog v-model="showInvoiceModal" title="Contract Preview" width="800px" top="5vh">
@@ -498,8 +498,13 @@ const handleViewInvoice = (contract: ITelevisionContract) => {
   showInvoiceModal.value = true
 }
 
-const handleViewApprovedInvoice = (invoice: IInvoiceResponse) => {
-  selectedInvoice.value = invoice
+const handleViewApprovedInvoice = async (invoice: IInvoiceResponse) => {
+
+  const response = await invoiceService.getInvoiceById(invoice.guid)
+  selectedInvoice.value = response
+
+
+
   showApprovedInvoiceModal.value = true
 }
 

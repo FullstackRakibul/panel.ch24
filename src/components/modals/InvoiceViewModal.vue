@@ -1,13 +1,13 @@
 ﻿<template>
   <el-dialog v-model="dialogVisible" width="900px" :close-on-click-modal="false" class="invoice-view-modal" top="5vh">
-    <div v-if="contract" class="invoice-document" id="invoiceDocument">
+    <div v-if="invoice" class="invoice-document" id="invoiceDocument">
       <!-- Header -->
       <div class="document-header">
         <div class="company-info">
           <img src="@/assets/CH24.png" alt="Channel 24" class="company-logo" />
           <h1 class="company-name">CHANNEL 24 LTD.</h1>
         </div>
-        <h2 class="invoice-title">INVOICE FOR THE MONTH OF {{ getMonthYear(contract.contractDate) }}</h2>
+        <h2 class="invoice-title">INVOICE FOR THE MONTH OF {{ getMonthYear(invoice?.contractDate) }}</h2>
       </div>
 
       <!-- Invoice Info -->
@@ -20,19 +20,19 @@
         <div class="invoice-details">
           <div class="detail-row">
             <span>Invoice No:</span>
-            <span>{{ contract.televisionContractNo }}</span>
+            <span>{{ invoice?.number }}</span>
           </div>
           <div class="detail-row">
             <span>Invoice Date:</span>
-            <span>{{ formatDate(contract.contractDate) }}</span>
+            <span>{{ formatDate(invoice?.date) }}</span>
           </div>
           <div class="detail-row">
             <span>Contract No:</span>
-            <span>{{ contract.televisionContractNo }}</span>
+            <span>{{ invoice?.contractNo }}</span>
           </div>
           <div class="detail-row">
             <span>Contract Date:</span>
-            <span>{{ formatDate(contract.contractDate) }}</span>
+            <span>{{ formatDate(invoice?.contractDate) }}</span>
           </div>
         </div>
       </div>
@@ -50,7 +50,7 @@
       </div>
 
       <!-- Items Table -->
-      <div class="items-table-section" v-if="contract.products && contract.products.length > 0">
+      <div class="items-table-section" v-if="invoice?.products && invoice.products.length > 0">
         <table class="contract-table">
           <thead>
             <tr>
@@ -63,23 +63,22 @@
             </tr>
           </thead>
           <tbody>
-            <template v-for="(product, productIndex) in contract.products" :key="product.guid">
+            <template v-for="(product, productIndex) in invoice?.products" :key="product.guid">
               <!-- Main Product Row -->
               <tr>
                 <td>{{ productIndex + 1 }}</td>
-                <td class="product-name-cell">{{ product.contractProductName || 'N/A' }}</td>
-                <td class="description-cell">{{ product.contractProductDescription || 'N/A' }}</td>
+                <td class="product-name-cell">{{ product.productName || 'N/A' }}</td>
+                <td class="description-cell">{{ product.productDescription || 'N/A' }}</td>
                 <td>{{ product.quantity || 0 }}</td>
                 <td>{{ formatCurrency(getProductRate(product)) }}</td>
                 <td>{{ formatCurrency(product.total || 0) }}</td>
               </tr>
 
               <!-- Product Items -->
-              <tr v-for="item in product.productItems" :key="item.guid" class="product-item-row">
+              <tr v-for="item in product.items" :key="item.guid" class="product-item-row">
                 <td></td>
                 <td colspan="2" style="padding-left: 20px;">
                   {{ item.particularsName || 'N/A' }}
-                  <span v-if="item.remarks" class="remarks-text">({{ item.remarks }})</span>
                 </td>
                 <td>1</td>
                 <td>{{ formatCurrency(item.rate || 0) }}</td>
@@ -153,12 +152,11 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { Printer } from 'lucide-vue-next'
-import type { ITelevisionContract } from '@/interface/contract/contracts.interface'
-import { clientService } from '@/services/Clients/common.services'
+import type { IInvoiceResponse } from '@/interface/invoice/invoice.interface'
 
 interface Props {
   modelValue: boolean
-  contract?: ITelevisionContract | null
+  invoice?: IInvoiceResponse | null
 }
 
 const props = defineProps<Props>()
@@ -174,61 +172,45 @@ const dialogVisible = computed({
 
 const recipientAddress = ref('N/A')
 
+//let spotTotal = props.invoice?.spotTotal || 0
+
 // Computed properties for nullable values
 const spotTotal = computed(() => {
-  if (!props.contract?.products) return 0
-  return props.contract.products.reduce((total, product) => {
-    const productTotal = (product.productItems || []).reduce((itemTotal, item) => {
-      return itemTotal + ((item.rate || 0) * (product.quantity || 1))
-    }, 0)
-    return total + productTotal
-  }, 0)
+  if (!props.invoice?.spotTotal) return 0
+  return props.invoice.spotTotal
 })
 
-const vatRate = computed(() => props.contract?.vatRate ?? 15)
-const vatAmount = computed(() => props.contract?.vat ?? (spotTotal.value * vatRate.value / 100))
+const vatRate = computed(() => props.invoice?.vatPercentage ?? 15)
+const vatAmount = computed(() => props.invoice?.vatAmount ?? (spotTotal.value * vatRate.value / 100))
 const grandTotal = computed(() => spotTotal.value + vatAmount.value)
 
 const fetchRecipientAddress = async () => {
-  const guid = props.contract?.contractedClient?.guid || props.contract?.contractedAgency?.guid
-  if (!guid) {
-    recipientAddress.value = 'N/A'
+  const billToAddress = props.invoice?.billTo?.address
+  if (billToAddress) {
+    recipientAddress.value = billToAddress
     return
   }
-  try {
-    const address = await clientService.getClientById(guid)
-    if (address) {
-      recipientAddress.value = [address.location, address.city, address.country].filter(Boolean).join(', ')
-    }
-  } catch (error) {
-    console.error('Error fetching address:', error)
-    recipientAddress.value = 'N/A'
-  }
+  recipientAddress.value = 'N/A'
 }
 
-watch(() => props.contract, () => {
+watch(() => props.invoice, () => {
   fetchRecipientAddress()
 }, { immediate: true })
 
 const getClientName = () => {
-  if (props.contract?.contractedClient) {
-    return props.contract.contractedClient.clintName
-  } else if (props.contract?.contractedAgency) {
-    return props.contract.contractedAgency.agencyName
-  }
-  return 'N/A'
+  return props.invoice?.billTo?.name || props.invoice?.advertiser || 'N/A'
 }
 
 const getProductName = () => {
-  if (props.contract?.products && props.contract.products.length > 0) {
-    return props.contract.products.map(p => p.contractProductName).join(', ')
+  if (props.invoice?.products && props.invoice.products.length > 0) {
+    return props.invoice.products.map(p => p.productName).join(', ')
   }
   return 'N/A'
 }
 
 const getProductRate = (product: any) => {
-  if (product.productItems && product.productItems.length > 0) {
-    return product.productItems.reduce((sum: number, item: any) => sum + (item.rate || 0), 0)
+  if (product.items && product.items.length > 0) {
+    return product.items.reduce((sum: number, item: any) => sum + (item.rate || 0), 0)
   }
   return product.total || 0
 }
