@@ -7,7 +7,7 @@
       </div>
       <div class="header-right">
         <el-input v-model="searchQuery"
-          :placeholder="activeTab === 'contracts' ? 'Search contracts...' : 'Search invoices...'" prefix-icon="Search"
+          :placeholder="activeTab === 'contracts' ? 'Search pending...' : 'Search approved...'" prefix-icon="Search"
           class="search-input" clearable @input="handleSearch" />
         <el-button type="primary" :icon="Plus" @click="handleAddInvoice">Add Invoice</el-button>
       </div>
@@ -15,9 +15,29 @@
 
     <!-- Tabs -->
     <el-tabs v-model="activeTab" class="invoice-tabs" @tab-change="handleTabChange">
-      <!-- Contracts Tab -->
-      <el-tab-pane label="All Contracts" name="contracts">
+      <!-- Pending for review Tab -->
+      <el-tab-pane label="Pending for review" name="contracts">
         <el-card class="table-card" shadow="never">
+          <!-- Filter Section -->
+          <div class="filter-section">
+            <el-row :gutter="16" align="middle">
+              <el-col :span="6">
+                <el-date-picker v-model="contractDateRange" type="daterange" range-separator="to"
+                  start-placeholder="Start date" end-placeholder="End date" format="DD MMM, YYYY"
+                  value-format="YYYY-MM-DD" clearable class="w-full" @change="handleContractDateFilter" />
+              </el-col>
+              <el-col :span="5">
+                <el-select v-model="contractClientFilter" placeholder="Filter by Client/Agency" clearable class="w-full"
+                  @change="handleContractFilter">
+                  <el-option v-for="client in uniqueContractClients" :key="client" :label="client" :value="client" />
+                </el-select>
+              </el-col>
+              <el-col :span="3">
+                <el-button @click="clearContractFilters" :icon="RefreshCw" plain>Clear</el-button>
+              </el-col>
+            </el-row>
+          </div>
+
           <el-table v-loading="loading" :data="filteredContracts" style="width: 100%" border stripe>
             <el-table-column prop="televisionContractNo" label="Contract No" width="180" sortable />
             <el-table-column label="Contract Date" width="180" align="center">
@@ -63,9 +83,39 @@
         </el-card>
       </el-tab-pane>
 
-      <!-- Approved Invoices Tab -->
-      <el-tab-pane label="Approved Invoices" name="approved">
+      <!-- Approved Tab -->
+      <el-tab-pane label="Approved" name="approved">
         <el-card class="table-card" shadow="never">
+          <!-- Filter Section -->
+          <div class="filter-section">
+            <el-row :gutter="16" align="middle">
+              <el-col :span="6">
+                <el-date-picker v-model="invoiceDateRange" type="daterange" range-separator="to"
+                  start-placeholder="Start date" end-placeholder="End date" format="DD MMM, YYYY"
+                  value-format="YYYY-MM-DD" clearable class="w-full" @change="handleInvoiceDateFilter" />
+              </el-col>
+              <el-col :span="5">
+                <el-select v-model="invoiceClientFilter" placeholder="Filter by Client" clearable class="w-full"
+                  @change="handleInvoiceFilter">
+                  <el-option v-for="client in uniqueInvoiceClients" :key="client" :label="client" :value="client" />
+                </el-select>
+              </el-col>
+              <el-col :span="4">
+                <el-select v-model="invoiceStatusFilter" placeholder="Filter by Status" clearable class="w-full"
+                  @change="handleInvoiceFilter">
+                  <el-option label="Draft" value="draft" />
+                  <el-option label="Sent" value="sent" />
+                  <el-option label="Paid" value="paid" />
+                  <el-option label="Overdue" value="overdue" />
+                  <el-option label="Cancelled" value="cancelled" />
+                </el-select>
+              </el-col>
+              <el-col :span="3">
+                <el-button @click="clearInvoiceFilters" :icon="RefreshCw" plain>Clear</el-button>
+              </el-col>
+            </el-row>
+          </div>
+
           <el-table v-loading="loading" :data="filteredInvoices" style="width: 100%" border stripe
             :empty-text="invoices.length === 0 ? 'No invoices found' : 'No matching invoices'">
             <el-table-column prop="number" label="Invoice No" width="150" sortable />
@@ -135,83 +185,90 @@
       </el-tab-pane>
     </el-tabs>
 
-    <!-- Invoice Modal for Contracts -->
-    <InvoiceViewModal v-model="showInvoiceModal" :contract="selectedContract" />
+    <!-- Invoice Modal for Approved Invoices (uses InvoiceViewModal) -->
+    <InvoiceViewModal v-model="showApprovedInvoiceModal" :contract="selectedContract" />
 
-    <!-- Invoice Modal for Viewing Approved Invoices -->
-    <el-dialog v-model="showApprovedInvoiceModal" title="Invoice Details" width="800px" top="5vh">
-      <div v-if="selectedInvoice" class="invoice-preview">
+    <!-- Preview Modal for Pending Contracts -->
+    <el-dialog v-model="showInvoiceModal" title="Contract Preview" width="800px" top="5vh">
+      <div v-if="selectedContract" class="invoice-preview">
         <div class="preview-header">
           <div class="preview-row">
-            <span class="label">Invoice No:</span>
-            <span class="value">{{ selectedInvoice.number }}</span>
+            <span class="label">Contract No:</span>
+            <span class="value">{{ selectedContract.televisionContractNo }}</span>
           </div>
           <div class="preview-row">
             <span class="label">Date:</span>
-            <span class="value">{{ selectedInvoice.date }}</span>
+            <span class="value">{{ selectedContract.contractDate }}</span>
           </div>
           <div class="preview-row">
-            <span class="label">Contract No:</span>
-            <span class="value">{{ selectedInvoice.contractNo }}</span>
+            <span class="label">Client/Agency:</span>
+            <span class="value">{{ selectedContract.contractedClient?.clintName ||
+              selectedContract.contractedAgency?.agencyName || 'N/A' }}</span>
           </div>
-        </div>
-
-        <el-divider />
-
-        <div class="preview-section">
-          <h4>Bill To</h4>
-          <p class="font-medium">{{ selectedInvoice.billTo?.name }}</p>
-          <p class="text-gray-500">{{ selectedInvoice.billTo?.address }}</p>
         </div>
 
         <el-divider />
 
         <div class="preview-section">
           <h4>Products & Items</h4>
-          <template v-for="(product, pIndex) in selectedInvoice.products" :key="pIndex">
-            <div class="product-preview-header" v-if="selectedInvoice.products && selectedInvoice.products.length > 1">
-              <strong>{{ product.productName }}</strong>
-            </div>
-            <el-table :data="product.items" border size="small" class="mb-4">
-              <el-table-column prop="sl" label="SL" width="60" align="center" />
-              <el-table-column prop="particularsName" label="Particulars" min-width="200" />
-              <el-table-column prop="quantity" label="Qty" width="80" align="center" />
-              <el-table-column prop="rate" label="Rate" width="120" align="right">
-                <template #default="{ row }">
-                  {{ formatCurrency(row.rate) }}
+          <div class="items-table-section" v-if="selectedContract.products && selectedContract.products.length > 0">
+            <table class="contract-table">
+              <thead>
+                <tr>
+                  <th>SL#</th>
+                  <th>PRODUCT NAME</th>
+                  <th>DESCRIPTION</th>
+                  <th>QTY</th>
+                  <th>RATE (Tk.)</th>
+                  <th>AMOUNT (Tk.)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-for="(product, productIndex) in selectedContract.products" :key="productIndex">
+                  <!-- Main Product Row -->
+                  <tr>
+                    <td>{{ productIndex + 1 }}</td>
+                    <td class="product-name-cell">{{ product.contractProductName || 'N/A' }}</td>
+                    <td class="description-cell">{{ product.contractProductDescription || 'N/A' }}</td>
+                    <td>{{ product.quantity || 0 }}</td>
+                    <td>{{ formatCurrency(getContractProductRate(product)) }}</td>
+                    <td>{{ formatCurrency(product.total || 0) }}</td>
+                  </tr>
+
+                  <!-- Product Items -->
+                  <tr v-for="item in product.productItems" :key="item.guid" class="product-item-row">
+                    <td></td>
+                    <td colspan="2" style="padding-left: 20px;">
+                      {{ item.particularsName || 'N/A' }}
+                    </td>
+                    <td>1</td>
+                    <td>{{ formatCurrency(item.rate || 0) }}</td>
+                    <td>{{ formatCurrency(item.rate || 0) }}</td>
+                  </tr>
                 </template>
-              </el-table-column>
-              <el-table-column prop="amount" label="Amount" width="120" align="right">
-                <template #default="{ row }">
-                  {{ formatCurrency(row.amount) }}
-                </template>
-              </el-table-column>
-            </el-table>
-          </template>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div class="preview-totals">
           <div class="total-row">
-            <span>Spot Total:</span>
-            <span>{{ formatCurrency(selectedInvoice.spotTotal) }}</span>
+            <span>Subtotal:</span>
+            <span>{{ formatCurrency(getContractSubtotal()) }}</span>
           </div>
           <div class="total-row">
-            <span>VAT ({{ selectedInvoice.vatPercentage }}%):</span>
-            <span>{{ formatCurrency(selectedInvoice.vatAmount) }}</span>
+            <span>VAT ({{ selectedContract.vatRate || 0 }}%):</span>
+            <span>{{ formatCurrency(selectedContract.vat || 0) }}</span>
           </div>
           <div class="total-row grand">
             <span>Grand Total:</span>
-            <span>{{ formatCurrency(selectedInvoice.grandTotal) }}</span>
-          </div>
-          <div class="total-row words">
-            <span>In Words:</span>
-            <span>{{ selectedInvoice.grandTotalWords }}</span>
+            <span>{{ formatCurrency(selectedContract.total || 0) }}</span>
           </div>
         </div>
       </div>
 
       <template #footer>
-        <el-button @click="showApprovedInvoiceModal = false">Close</el-button>
+        <el-button @click="showInvoiceModal = false">Close</el-button>
         <el-button type="primary" :icon="Printer" @click="handlePrintInvoice">Print</el-button>
       </template>
     </el-dialog>
@@ -221,7 +278,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { Document, Check } from '@element-plus/icons-vue'
-import { Plus, View, Edit, Delete, Printer } from 'lucide-vue-next'
+import { Plus, View, Edit, Delete, Printer, RefreshCw } from 'lucide-vue-next'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { contractService } from '@/services/Contracts/contract.services'
 import type { ITelevisionContract } from '@/interface/contract/contracts.interface'
@@ -235,6 +292,15 @@ const contracts = ref<ITelevisionContract[]>([])
 const invoices = ref<IInvoiceResponse[]>([])
 const searchQuery = ref('')
 const activeTab = ref('contracts')
+
+// Filter state for contracts
+const contractDateRange = ref<[string, string] | null>(null)
+const contractClientFilter = ref('')
+
+// Filter state for invoices
+const invoiceDateRange = ref<[string, string] | null>(null)
+const invoiceClientFilter = ref('')
+const invoiceStatusFilter = ref('')
 
 // Modals
 const showInvoiceModal = ref(false)
@@ -299,6 +365,25 @@ const invoicedContractNumbers = computed(() => {
   return new Set(invoices.value.map(inv => inv.contractNo))
 })
 
+// Unique clients for contract filter dropdown
+const uniqueContractClients = computed(() => {
+  const clients = new Set<string>()
+  contracts.value.forEach(c => {
+    const name = c.contractedClient?.clintName || c.contractedAgency?.agencyName
+    if (name) clients.add(name)
+  })
+  return Array.from(clients).sort()
+})
+
+// Unique clients for invoice filter dropdown
+const uniqueInvoiceClients = computed(() => {
+  const clients = new Set<string>()
+  invoices.value.forEach(inv => {
+    if (inv.billTo?.name) clients.add(inv.billTo.name)
+  })
+  return Array.from(clients).sort()
+})
+
 // Computed - Filtered Contracts (excludes contracts that already have invoices)
 const filteredContracts = computed(() => {
   // First filter out contracts that already have approved invoices
@@ -306,7 +391,25 @@ const filteredContracts = computed(() => {
     !invoicedContractNumbers.value.has(c.televisionContractNo)
   )
 
-  // Then apply search filter if there's a search query
+  // Apply date range filter
+  if (contractDateRange.value && contractDateRange.value[0] && contractDateRange.value[1]) {
+    const [startDate, endDate] = contractDateRange.value
+    result = result.filter(c => {
+      if (!c.contractDate) return false
+      const contractDate = new Date(c.contractDate).toISOString().split('T')[0]
+      return contractDate >= startDate && contractDate <= endDate
+    })
+  }
+
+  // Apply client filter
+  if (contractClientFilter.value) {
+    result = result.filter(c => {
+      const name = c.contractedClient?.clintName || c.contractedAgency?.agencyName
+      return name === contractClientFilter.value
+    })
+  }
+
+  // Apply search filter if there's a search query
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
     result = result.filter(c =>
@@ -321,15 +424,73 @@ const filteredContracts = computed(() => {
 
 // Computed - Filtered Invoices
 const filteredInvoices = computed(() => {
-  if (!searchQuery.value) return invoices.value
-  const q = searchQuery.value.toLowerCase()
-  return invoices.value.filter(inv =>
-    inv.number?.toLowerCase().includes(q) ||
-    inv.billTo?.name?.toLowerCase().includes(q) ||
-    inv.contractNo?.toLowerCase().includes(q) ||
-    inv.advertiser?.toLowerCase().includes(q)
-  )
+  let result = invoices.value
+
+  // Apply date range filter
+  if (invoiceDateRange.value && invoiceDateRange.value[0] && invoiceDateRange.value[1]) {
+    const [startDate, endDate] = invoiceDateRange.value
+    result = result.filter(inv => {
+      if (!inv.date) return false
+      const invoiceDate = new Date(inv.date).toISOString().split('T')[0]
+      return invoiceDate >= startDate && invoiceDate <= endDate
+    })
+  }
+
+  // Apply client filter
+  if (invoiceClientFilter.value) {
+    result = result.filter(inv => inv.billTo?.name === invoiceClientFilter.value)
+  }
+
+  // Apply status filter
+  if (invoiceStatusFilter.value) {
+    result = result.filter(inv =>
+      inv.status?.statusName?.toLowerCase() === invoiceStatusFilter.value.toLowerCase()
+    )
+  }
+
+  // Apply search filter
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    result = result.filter(inv =>
+      inv.number?.toLowerCase().includes(q) ||
+      inv.billTo?.name?.toLowerCase().includes(q) ||
+      inv.contractNo?.toLowerCase().includes(q) ||
+      inv.advertiser?.toLowerCase().includes(q)
+    )
+  }
+
+  return result
 })
+
+// Filter handlers
+const handleContractDateFilter = () => {
+  // The computed will automatically update
+}
+
+const handleContractFilter = () => {
+  // The computed will automatically update
+}
+
+const clearContractFilters = () => {
+  contractDateRange.value = null
+  contractClientFilter.value = ''
+  searchQuery.value = ''
+}
+
+const handleInvoiceDateFilter = () => {
+  // The computed will automatically update
+}
+
+const handleInvoiceFilter = () => {
+  // The computed will automatically update
+}
+
+const clearInvoiceFilters = () => {
+  invoiceDateRange.value = null
+  invoiceClientFilter.value = ''
+  invoiceStatusFilter.value = ''
+  searchQuery.value = ''
+}
 
 // Handlers
 const handleViewInvoice = (contract: ITelevisionContract) => {
@@ -411,6 +572,19 @@ const formatCurrency = (value: number) => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(value)
+}
+
+// Contract preview helpers
+const getContractProductRate = (product: any) => {
+  if (product.productItems && product.productItems.length > 0) {
+    return product.productItems.reduce((sum: number, item: any) => sum + (item.rate || 0), 0)
+  }
+  return product.total || 0
+}
+
+const getContractSubtotal = () => {
+  if (!selectedContract.value?.products) return 0
+  return selectedContract.value.products.reduce((sum: number, product: any) => sum + (product.total || 0), 0)
 }
 
 const isOverdue = (dueDate: string) => {
@@ -510,6 +684,17 @@ onMounted(() => {
 
 .table-card {
   border-radius: 12px;
+}
+
+.filter-section {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--el-fill-color-lighter);
+  border-radius: 8px;
+}
+
+.w-full {
+  width: 100%;
 }
 
 .client-info {
@@ -625,6 +810,95 @@ onMounted(() => {
   border-radius: 6px;
   margin-bottom: 8px;
   font-size: 14px;
+}
+
+/* Contract-style table for invoice preview */
+.items-table-section {
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+
+.contract-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 15px;
+  table-layout: fixed;
+}
+
+.contract-table th,
+.contract-table td {
+  border: 1px solid #333;
+  padding: 8px;
+  text-align: center;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Column widths */
+.contract-table th:nth-child(1),
+.contract-table td:nth-child(1) {
+  width: 40px;
+}
+
+.contract-table th:nth-child(2),
+.contract-table td:nth-child(2) {
+  width: 30%;
+}
+
+.contract-table th:nth-child(3),
+.contract-table td:nth-child(3) {
+  width: 25%;
+}
+
+.contract-table th:nth-child(4),
+.contract-table td:nth-child(4) {
+  width: 50px;
+}
+
+.contract-table th:nth-child(5),
+.contract-table td:nth-child(5),
+.contract-table th:nth-child(6),
+.contract-table td:nth-child(6) {
+  width: 90px;
+}
+
+.contract-table th {
+  background-color: #f5f5f5;
+  font-weight: bold;
+}
+
+.contract-table td:nth-child(2),
+.contract-table td:nth-child(3) {
+  text-align: left;
+}
+
+.contract-table td:nth-child(4),
+.contract-table td:nth-child(5),
+.contract-table td:nth-child(6) {
+  text-align: right;
+}
+
+.product-name-cell {
+  font-weight: 600;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.description-cell {
+  color: #666;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-item-row {
+  background-color: #fafafa;
+}
+
+.product-item-row td {
+  font-size: 12px;
 }
 
 .mb-4 {

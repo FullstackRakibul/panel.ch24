@@ -50,33 +50,52 @@
       </div>
 
       <!-- Items Table -->
-      <div class="items-table-section">
-        <table class="invoice-table">
+      <div class="items-table-section" v-if="contract.products && contract.products.length > 0">
+        <table class="contract-table">
           <thead>
             <tr>
-              <th>SL #</th>
-              <th>PARTICULARS</th>
-              <th>QUANTITY</th>
+              <th>SL#</th>
+              <th>PRODUCT NAME</th>
+              <th>DESCRIPTION</th>
+              <th>QTY</th>
               <th>RATE (Tk.)</th>
               <th>AMOUNT (Tk.)</th>
             </tr>
           </thead>
           <tbody>
             <template v-for="(product, productIndex) in contract.products" :key="product.guid">
-              <tr v-for="(item, itemIndex) in product.productItems" :key="item.guid">
-                <td>{{ getSerialNumber(productIndex, itemIndex) }}</td>
-                <td class="long-description"> {{ item.particularsName }}</td>
-                <td>{{ product.quantity || 1 }}</td>
+              <!-- Main Product Row -->
+              <tr>
+                <td>{{ productIndex + 1 }}</td>
+                <td class="product-name-cell">{{ product.contractProductName || 'N/A' }}</td>
+                <td class="description-cell">{{ product.contractProductDescription || 'N/A' }}</td>
+                <td>{{ product.quantity || 0 }}</td>
+                <td>{{ formatCurrency(getProductRate(product)) }}</td>
+                <td>{{ formatCurrency(product.total || 0) }}</td>
+              </tr>
+
+              <!-- Product Items -->
+              <tr v-for="item in product.productItems" :key="item.guid" class="product-item-row">
+                <td></td>
+                <td colspan="2" style="padding-left: 20px;">
+                  {{ item.particularsName || 'N/A' }}
+                  <span v-if="item.remarks" class="remarks-text">({{ item.remarks }})</span>
+                </td>
+                <td>1</td>
                 <td>{{ formatCurrency(item.rate || 0) }}</td>
-                <td>Tk {{ formatCurrency((item.rate || 0) * (product.quantity || 1)) }}</td>
+                <td>{{ formatCurrency(item.rate || 0) }}</td>
               </tr>
             </template>
+
+            <!-- Totals -->
             <tr class="total-row">
-              <td colspan="4"><strong>SPOT TOTAL Tk</strong></td>
+              <td colspan="5"><strong>SPOT TOTAL Tk</strong></td>
               <td><strong>{{ formatCurrency(spotTotal) }}</strong></td>
             </tr>
             <tr class="vat-row">
-              <td colspan="4">Plus {{ vatRate }}% VAT on Tk {{ formatCurrency(spotTotal) }}</td>
+              <td colspan="5">
+                Plus {{ vatRate }}% VAT on Tk {{ formatCurrency(spotTotal) }}
+              </td>
               <td>{{ formatCurrency(vatAmount) }}</td>
             </tr>
           </tbody>
@@ -170,16 +189,6 @@ const vatRate = computed(() => props.contract?.vatRate ?? 15)
 const vatAmount = computed(() => props.contract?.vat ?? (spotTotal.value * vatRate.value / 100))
 const grandTotal = computed(() => spotTotal.value + vatAmount.value)
 
-// Helper to get serial number across all product items
-const getSerialNumber = (productIndex: number, itemIndex: number): number => {
-  if (!props.contract?.products) return 1
-  let count = 0
-  for (let i = 0; i < productIndex; i++) {
-    count += (props.contract.products[i].productItems || []).length
-  }
-  return count + itemIndex + 1
-}
-
 const fetchRecipientAddress = async () => {
   const guid = props.contract?.contractedClient?.guid || props.contract?.contractedAgency?.guid
   if (!guid) {
@@ -215,6 +224,13 @@ const getProductName = () => {
     return props.contract.products.map(p => p.contractProductName).join(', ')
   }
   return 'N/A'
+}
+
+const getProductRate = (product: any) => {
+  if (product.productItems && product.productItems.length > 0) {
+    return product.productItems.reduce((sum: number, item: any) => sum + (item.rate || 0), 0)
+  }
+  return product.total || 0
 }
 
 const formatCurrency = (value: number) => {
@@ -355,37 +371,99 @@ const printInvoice = () => {
 
 .items-table-section {
   margin-bottom: 25px;
+  overflow-x: auto;
 }
 
-.invoice-table {
+.contract-table {
   width: 100%;
   border-collapse: collapse;
+  margin-bottom: 15px;
+  table-layout: fixed;
 }
 
-.invoice-table th,
-.invoice-table td {
+.contract-table th,
+.contract-table td {
   border: 1px solid #333;
   padding: 8px;
   text-align: center;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
-.invoice-table th {
+/* Column widths */
+.contract-table th:nth-child(1),
+.contract-table td:nth-child(1) {
+  width: 40px;
+}
+
+.contract-table th:nth-child(2),
+.contract-table td:nth-child(2) {
+  width: 30%;
+}
+
+.contract-table th:nth-child(3),
+.contract-table td:nth-child(3) {
+  width: 25%;
+}
+
+.contract-table th:nth-child(4),
+.contract-table td:nth-child(4) {
+  width: 50px;
+}
+
+.contract-table th:nth-child(5),
+.contract-table td:nth-child(5),
+.contract-table th:nth-child(6),
+.contract-table td:nth-child(6) {
+  width: 90px;
+}
+
+.contract-table th {
   background-color: #f5f5f5;
   font-weight: bold;
 }
 
-.invoice-table td:nth-child(2) {
+.contract-table td:nth-child(2),
+.contract-table td:nth-child(3) {
   text-align: left;
 }
 
-.invoice-table td:nth-child(4),
-.invoice-table td:nth-child(5) {
+.contract-table td:nth-child(4),
+.contract-table td:nth-child(5),
+.contract-table td:nth-child(6) {
   text-align: right;
+}
+
+.product-name-cell {
+  font-weight: 600;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.description-cell {
+  color: #666;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-item-row {
+  background-color: #fafafa;
+}
+
+.product-item-row td {
+  font-size: 12px;
+}
+
+.remarks-text {
+  font-style: italic;
+  color: #666;
 }
 
 .total-row {
   background-color: #f9f9f9;
-  font-weight: bold;
 }
 
 .vat-row {

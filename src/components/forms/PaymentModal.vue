@@ -15,26 +15,55 @@
 
         <el-row :gutter="20">
           <el-col :span="16">
-            <el-form-item label="Select Contract" prop="contractId">
-              <el-select v-model="form.contractId" placeholder="Search by Contract No, Client, or Agency" class="w-full"
-                filterable clearable @change="handleContractChange">
-                <el-option v-for="contract in contracts" :key="contract.guid"
-                  :label="`${contract.televisionContractNo} - ${contract.contractedClient?.clintName || contract.contractedAgency?.agencyName || 'N/A'}`"
-                  :value="contract.guid">
-                  <div class="contract-option">
-                    <div class="contract-option-main">
+            <el-form-item label="Search Contract/Invoice" prop="contractId">
+              <div class="search-container w-full">
+                <el-input v-model="searchQuery" placeholder="Search by Contract No, Client, Agency, or Invoice ID..."
+                  clearable @input="handleSearchInput" @focus="showSearchResults = true" @blur="handleSearchBlur">
+                  <template #prefix>
+                    <Search class="w-4 h-4 text-gray-400" />
+                  </template>
+                </el-input>
+
+                <!-- Search Results Dropdown -->
+                <div v-if="showSearchResults && filteredSearchResults.length > 0" class="search-results-dropdown">
+                  <div v-for="contract in filteredSearchResults" :key="contract.guid" class="search-result-item"
+                    @mousedown.prevent="selectSearchResult(contract)">
+                    <div class="result-main">
                       <span class="contract-no">{{ contract.televisionContractNo }}</span>
-                      <el-tag size="small" type="info">
+                      <el-tag size="small" :type="contract.contractedClient ? 'success' : 'warning'">
                         {{ contract.contractedClient ? 'Client' : 'Agency' }}
                       </el-tag>
+                      <el-tag size="small" :type="getPaymentStatusType(contract)">
+                        {{ getPaymentStatus(contract) }}
+                      </el-tag>
                     </div>
-                    <div class="contract-option-sub">
-                      <span>{{ contract.contractedClient?.clintName || contract.contractedAgency?.agencyName }}</span>
-                      <span class="contract-amount">Tk. {{ formatCurrency(contract.total || 0) }}</span>
+                    <div class="result-sub">
+                      <span class="client-name">
+                        {{ contract.contractedClient?.clintName || contract.contractedAgency?.agencyName || 'N/A' }}
+                      </span>
+                      <span class="amount">Tk. {{ formatCurrency(contract.total || 0) }}</span>
                     </div>
                   </div>
-                </el-option>
-              </el-select>
+                </div>
+
+                <!-- No Results Message -->
+                <div v-if="showSearchResults && filteredSearchResults.length === 0 && searchQuery.trim()"
+                  class="search-results-dropdown no-results">
+                  <p>No contracts found matching "{{ searchQuery }}"</p>
+                  <p class="hint">Try searching by contract number, client name, or agency name</p>
+                </div>
+
+                <!-- Selected Contract Display -->
+                <div v-if="selectedContract && !showSearchResults" class="selected-contract-badge">
+                  <span class="badge-label">Selected:</span>
+                  <span class="badge-value">{{ selectedContract.televisionContractNo }}</span>
+                  <span class="badge-client">
+                    - {{ selectedContract.contractedClient?.clintName || selectedContract.contractedAgency?.agencyName
+                    }}
+                  </span>
+                  <el-button text type="primary" size="small" @click="clearSelection">Change</el-button>
+                </div>
+              </div>
             </el-form-item>
           </el-col>
           <el-col :span="8">
@@ -362,7 +391,7 @@ import { ElMessage, type FormInstance } from 'element-plus'
 import {
   FileText, CreditCard, Calculator, Building2, Hash,
   MessageSquare, RotateCcw, Banknote, FileCheck,
-  Globe, Smartphone, CircleDot
+  Globe, Smartphone, CircleDot, Search
 } from 'lucide-vue-next'
 import { usePaymentStore } from '@/stores/payments'
 import { paymentUtils } from '@/services/Payments/payment.services'
@@ -395,9 +424,92 @@ const dialogVisible = computed({
 // Form data
 const form = computed(() => store.currentPayment)
 const contracts = computed(() => store.contracts)
+const payments = computed(() => store.payments)
 const selectedContract = computed(() => store.selectedContract)
 const contractTotals = computed(() => store.contractTotals)
 const dueAmounts = computed(() => store.dueAmounts)
+
+// Search state
+const searchQuery = ref('')
+const showSearchResults = ref(false)
+
+// Debounce timeout
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
+
+// Filtered search results - searches across all fields (contract no, client, agency, invoice)
+const filteredSearchResults = computed(() => {
+  if (!searchQuery.value.trim()) {
+    return contracts.value.slice(0, 10) // Show first 10 when empty
+  }
+
+  const query = searchQuery.value.toLowerCase().trim()
+
+  // Search across all fields: contract number, client name, agency name
+  const results = contracts.value.filter(c =>
+    c.televisionContractNo?.toLowerCase().includes(query) ||
+    c.contractedClient?.clintName?.toLowerCase().includes(query) ||
+    c.contractedAgency?.agencyName?.toLowerCase().includes(query) ||
+    c.guid?.toLowerCase().includes(query) // Also search by ID
+  )
+
+  return results.slice(0, 10) // Limit to 10 results
+})
+
+// Get payment status for a contract
+const getPaymentStatus = (contract: any) => {
+  const paid = getContractPaidAmount(contract.guid)
+  const total = contract.total || 0
+
+  if (paid === 0) return 'Pending'
+  if (paid >= total) return 'Paid'
+  return 'Partial'
+}
+
+// Get paid amount for a contract
+const getContractPaidAmount = (contractId: string) => {
+  return payments.value
+    .filter((p: any) => p.contractId === contractId && p.status === 'Completed')
+    .reduce((sum: number, p: any) => sum + (p.paidAmount || 0), 0)
+}
+
+// Payment status tag type
+const getPaymentStatusType = (contract: any) => {
+  const status = getPaymentStatus(contract)
+  switch (status) {
+    case 'Paid': return 'success'
+    case 'Partial': return 'warning'
+    default: return 'danger'
+  }
+}
+
+// Search handlers
+const handleSearchInput = () => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    showSearchResults.value = true
+  }, 300) // 300ms debounce
+}
+
+const handleSearchBlur = () => {
+  // Delay hiding to allow click on results
+  setTimeout(() => {
+    showSearchResults.value = false
+  }, 200)
+}
+
+// Select search result
+const selectSearchResult = (contract: any) => {
+  store.selectContract(contract.guid)
+  searchQuery.value = contract.televisionContractNo
+  showSearchResults.value = false
+}
+
+// Clear selection
+const clearSelection = () => {
+  store.resetPaymentForm()
+  searchQuery.value = ''
+  showSearchResults.value = true
+}
 
 // Computed values
 const totalPaymentAmount = computed(() => {
@@ -501,12 +613,6 @@ const handleSubmit = async () => {
   }
 }
 
-
-// handle handleContractChange
-
-const handleContractChange = () => {
-  store.updatePaymentAmounts()
-}
 
 // Lifecycle
 onMounted(async () => {
@@ -618,6 +724,112 @@ watch(() => props.modelValue, (visible) => {
 .contract-amount {
   font-weight: 500;
   color: var(--el-color-success);
+}
+
+/* Search Container Styling */
+.search-container {
+  position: relative;
+}
+
+.search-results-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid var(--el-border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.search-result-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  transition: all 0.2s ease;
+}
+
+.search-result-item:hover {
+  background: var(--el-fill-color-light);
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.result-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.result-main .contract-no {
+  font-weight: 600;
+  color: var(--el-color-primary);
+  font-size: 14px;
+}
+
+.result-sub {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.result-sub .client-name {
+  color: var(--el-text-color-secondary);
+}
+
+.result-sub .amount {
+  font-weight: 600;
+  color: var(--el-color-success);
+}
+
+.search-results-dropdown.no-results {
+  padding: 20px;
+  text-align: center;
+}
+
+.search-results-dropdown.no-results p {
+  margin: 0;
+  color: var(--el-text-color-secondary);
+}
+
+.search-results-dropdown.no-results .hint {
+  font-size: 12px;
+  margin-top: 8px;
+  color: var(--el-text-color-placeholder);
+}
+
+.selected-contract-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #ecf5ff, #f0f9eb);
+  border: 1px solid var(--el-color-primary-light-7);
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.badge-label {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.badge-value {
+  font-weight: 600;
+  color: var(--el-color-primary);
+}
+
+.badge-client {
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
+  flex: 1;
 }
 
 /* Contract Summary Card */
