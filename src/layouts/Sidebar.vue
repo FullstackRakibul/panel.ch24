@@ -109,7 +109,7 @@
           </div>
 
           <nav class="nav-menu">
-            <router-link v-for="item in systemItems" :key="item.path" :to="item.path" class="nav-item"
+            <router-link v-for="item in systemItems" :key="item.path" :to="item.path || '/'" class="nav-item"
               :class="{ active: isActiveRoute(item.path) }">
               <el-tooltip v-if="themeStore.sidebarCollapsed" :content="item.name" placement="right" :show-after="300">
                 <div class="nav-content">
@@ -275,7 +275,7 @@
               <span class="section-title">SYSTEM</span>
             </div>
             <nav class="nav-menu">
-              <router-link v-for="item in systemItems" :key="item.path" :to="item.path" class="nav-item"
+              <router-link v-for="item in systemItems" :key="item.path" :to="item.path || '/'" class="nav-item"
                 :class="{ active: isActiveRoute(item.path) }" @click="closeMobileSidebar">
                 <div class="nav-content">
                   <el-icon class="nav-icon">
@@ -363,19 +363,15 @@ import {
   Van,
   Setting,
   Search,
-  Bell,
   Fold,
   Expand,
   ArrowUp,
   UserFilled,
   SwitchButton,
   QuestionFilled,
-  List,
   WindPower,
-  Plus,
-  Menu // Hamburger icon for mobile
 } from '@element-plus/icons-vue'
-import { Upload } from 'lucide-vue-next'
+import { Upload, Earth } from 'lucide-vue-next'
 
 const props = defineProps<{
   mobileSidebarOpen: boolean;
@@ -442,15 +438,15 @@ const generalItems = [
 const managementItems = [
   { name: 'Clients', path: '/clients', icon: User, badge: undefined, badgeType: undefined },
   { name: 'Agencies', path: '/agencies', icon: OfficeBuilding, badge: undefined, badgeType: undefined },
-  { name: 'Ad Bookings', path: '/ad-bookings', icon: Calendar, badge: undefined, badgeType: undefined },
-  { name: 'Invoices', path: '/invoices', icon: Document, badge: undefined, badgeType: undefined },
+  { name: 'TV Contract', path: '/ad-bookings', icon: Calendar, badge: undefined, badgeType: undefined },
+  { name: 'Contract Invoices', path: '/invoices', icon: Document, badge: undefined, badgeType: undefined },
   { name: 'Transmission Certificate', path: '/transmission-certificates', icon: Document, badge: undefined, badgeType: undefined },
   {
     name: "Payments",
     path: "/payments",
     icon: CreditCard,
-    badge: "On Hold",
-    badgeType: "primary",
+    badge: "NEW",
+    badgeType: "alert",
   },
   {
     name: 'Reports', path: '/reports', icon: DataAnalysis, badge: 'On Hold', badgeType: undefined
@@ -468,11 +464,19 @@ const systemItems = [
   },
   {
     name: 'Media Upload', path: '/media-upload', icon: Upload, badge: undefined, badgeType: undefined
+  },
+  {
+    name: 'Go to Channel 24',
+    route: 'https://www.channel24bd.tv',
+    icon: Earth,
+    badge: 'NEW',
+    badgeType: 'alert'
   }
 ]
 
 // Check if route is active
-const isActiveRoute = (path: string) => {
+const isActiveRoute = (path?: string) => {
+  if (!path) return false;
   return route.path === path || route.path.startsWith(path + "/");
 };
 

@@ -92,7 +92,7 @@
           <!-- Agency Selection - Only shown when isClientCopy is false -->
           <el-col :span="16" v-else>
             <el-form-item label="Agency (Contract Party)" prop="contractedAgencyId">
-              <div class="select-with-action">
+              <div class="select-with-action w-full">
                 <el-select v-model="form.contractedAgencyId" placeholder="Select Agency" class="flex-1" filterable
                   clearable @change="handleFieldUpdate('contractedAgencyId', form.contractedAgencyId)">
                   <el-option v-for="agency in agencies" :key="agency.guid" :label="agency.agencyName || agency.email"
@@ -108,8 +108,8 @@
             </el-form-item>
           </el-col>
 
-          <el-col :span="6">
-            <el-form-item label="VAT Rate (%)" prop="vatRate">
+          <el-col :span="4" class="">
+            <el-form-item label="Commission Rate (%)" prop="vatRate" class="">
               <el-input-number v-model="form.vatRate" :min="0" :max="100" :precision="2" controls-position="right"
                 class="w-full" @change="handleFieldUpdate('vatRate', form.vatRate)" />
             </el-form-item>

@@ -1,194 +1,318 @@
-import { ref } from "vue"
-import { defineStore } from "pinia"
+import { ref, computed } from 'vue'
+import { defineStore } from 'pinia'
+import type {
+  IInvoiceResponse,
+  IInvoiceRequest,
+  IInvoiceQueryRequest,
+  IInvoiceListResponse,
+} from '@/interface/invoice/invoice.interface'
+import { invoiceService } from '@/services/Invoices/invoice.services'
 
-export interface InvoiceItem {
-  sl: number
-  particulars: string
-  quantity: number
-  rate: number
-  amount: number
-}
-
-export interface Invoice {
-  id?: number
-  number: string
-  date: string
-  contractNo: string
-  contractDate: string
-  billTo: {
-    name: string
-    address: string
-  }
-  advertiser: string
-  product: string
-  items: InvoiceItem[]
-  spotTotal: number
-  vatPercentage: number
-  vatAmount: number
-  grandTotal: number
-  grandTotalWords: string
-  signature1Name: string
-  signature1Title: string
-  signature2Name: string
-  signature2Title: string
-  footerContact: string
-  status: "draft" | "sent" | "paid" | "overdue" | "cancelled"
-  dueDate: string
-  createdAt?: string
-}
-
-export const useInvoicesStore = defineStore("invoices", () => {
-  const invoices = ref<Invoice[]>([
-    {
-      id: 1,
-      number: "TML2506039",
-      date: "01 Jul, 2025",
-      contractNo: "TML2506039",
-      contractDate: "31 May, 2025",
-      billTo: {
-        name: "Mercantile Bank PLC",
-        address: "61,Dilkusha,Commercial Area\nDhaka-1000",
-      },
-      advertiser: "Mercantile Bank PLC",
-      product: "Mercantile Bank PLC",
-      items: [
-        {
-          sl: 1,
-          particulars: 'Mercantile Bank PLC "Business24"',
-          quantity: 1,
-          rate: 300000.0,
-          amount: 300000.0,
-        },
-      ],
-      spotTotal: 300000.0,
-      vatPercentage: 15,
-      vatAmount: 45000.0,
-      grandTotal: 345000.0,
-      grandTotalWords: "Three Lac Forty Five Thousand Taka Only",
-      signature1Name: "Rashed Ahasan",
-      signature1Title: "Head of Marketing",
-      signature2Name: "M. M. Elias",
-      signature2Title: "DGM, Finance & Accounts",
-      footerContact:
-        "Channel 24 Limited | 387 (south), Tejgaon I/A, Dhaka 1208 | Tel: +8802 550 29724 | Fax: +8802 550 29709 | www.channel24bd.tv",
-      status: "sent",
-      dueDate: "31 Jul, 2025",
-      createdAt: "2025-07-01T10:30:00Z",
-    },
-    {
-      id: 2,
-      number: "TML2506040",
-      date: "15 Jul, 2025",
-      contractNo: "TML2506040",
-      contractDate: "10 Jun, 2025",
-      billTo: {
-        name: "ABC Corporation Ltd",
-        address: "123 Business Street\nDhaka-1215",
-      },
-      advertiser: "ABC Corporation Ltd",
-      product: "ABC Products",
-      items: [
-        {
-          sl: 1,
-          particulars: 'ABC Corporation "Prime Time"',
-          quantity: 2,
-          rate: 150000.0,
-          amount: 300000.0,
-        },
-      ],
-      spotTotal: 300000.0,
-      vatPercentage: 15,
-      vatAmount: 45000.0,
-      grandTotal: 345000.0,
-      grandTotalWords: "Three Lac Forty Five Thousand Taka Only",
-      signature1Name: "Rashed Ahasan",
-      signature1Title: "Head of Marketing",
-      signature2Name: "M. M. Elias",
-      signature2Title: "DGM, Finance & Accounts",
-      footerContact:
-        "Channel 24 Limited | 387 (south), Tejgaon I/A, Dhaka 1208 | Tel: +8802 550 29724 | Fax: +8802 550 29709 | www.channel24bd.tv",
-      status: "paid",
-      dueDate: "15 Aug, 2025",
-      createdAt: "2025-07-15T14:20:00Z",
-    },
-  ])
-
+export const useInvoicesStore = defineStore('invoices', () => {
+  // State
+  const invoices = ref<IInvoiceResponse[]>([])
+  const currentInvoice = ref<IInvoiceResponse | null>(null)
   const loading = ref(false)
+  const error = ref<string | null>(null)
 
-  const createInvoice = async (invoiceData: Invoice) => {
+  // Pagination state
+  const pagination = ref({
+    page: 1,
+    pageSize: 10,
+    totalCount: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  })
+
+  // Filter state
+  const filters = ref<IInvoiceQueryRequest>({
+    page: 1,
+    pageSize: 10,
+    search: '',
+    sortOrder: 'desc',
+  })
+
+  // Computed
+  const isLoading = computed(() => loading.value)
+  const hasError = computed(() => error.value !== null)
+  const invoiceCount = computed(() => invoices.value.length)
+  const totalInvoices = computed(() => pagination.value.totalCount)
+
+  // Actions
+
+  /**
+   * Fetch all invoices with optional filters
+   */
+  const fetchInvoices = async (query?: IInvoiceQueryRequest) => {
     try {
       loading.value = true
-      await new Promise((resolve) => setTimeout(resolve, 800))
+      error.value = null
 
-      const newInvoice: Invoice = {
-        ...invoiceData,
-        id: Math.max(...invoices.value.map((i) => i.id || 0)) + 1,
-        createdAt: new Date().toISOString(),
+      const queryParams = query || filters.value
+      const response: IInvoiceListResponse = await invoiceService.getAllInvoices(queryParams)
+
+      invoices.value = response.data
+      pagination.value = {
+        page: response.page,
+        pageSize: response.pageSize,
+        totalCount: response.totalCount,
+        totalPages: response.totalPages,
+        hasNextPage: response.hasNextPage,
+        hasPreviousPage: response.hasPreviousPage,
       }
 
-      invoices.value.unshift(newInvoice)
-      return { success: true, invoice: newInvoice }
-    } catch (error: any) {
-      return { success: false, message: "Failed to create invoice" }
+      return { success: true, data: response }
+    } catch (err: any) {
+      error.value = err.message || 'Failed to fetch invoices'
+      return { success: false, message: error.value }
     } finally {
       loading.value = false
     }
   }
 
-  const updateInvoice = async (id: number, invoiceData: Invoice) => {
+  /**
+   * Fetch a single invoice by ID
+   */
+  const fetchInvoiceById = async (id: string) => {
     try {
       loading.value = true
-      await new Promise((resolve) => setTimeout(resolve, 800))
+      error.value = null
 
-      const index = invoices.value.findIndex((i) => i.id === id)
-      if (index !== -1) {
-        invoices.value[index] = { ...invoiceData, id }
-      }
-      return { success: true }
-    } catch (error: any) {
-      return { success: false, message: "Failed to update invoice" }
+      const invoice = await invoiceService.getInvoiceById(id)
+      currentInvoice.value = invoice
+
+      return { success: true, data: invoice }
+    } catch (err: any) {
+      error.value = err.message || 'Failed to fetch invoice'
+      return { success: false, message: error.value }
     } finally {
       loading.value = false
     }
   }
 
-  const deleteInvoice = async (id: number) => {
+  /**
+   * Fetch an invoice by invoice number
+   */
+  const fetchInvoiceByNumber = async (invoiceNumber: string) => {
     try {
       loading.value = true
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      error.value = null
 
-      invoices.value = invoices.value.filter((i) => i.id !== id)
-      return { success: true }
-    } catch (error: any) {
-      return { success: false, message: "Failed to delete invoice" }
+      const invoice = await invoiceService.getInvoiceByNumber(invoiceNumber)
+      currentInvoice.value = invoice
+
+      return { success: true, data: invoice }
+    } catch (err: any) {
+      error.value = err.message || 'Failed to fetch invoice'
+      return { success: false, message: error.value }
     } finally {
       loading.value = false
     }
   }
 
-  const updateInvoiceStatus = async (id: number, status: Invoice["status"]) => {
+  /**
+   * Get next invoice number
+   */
+  const getNextInvoiceNumber = async (lastContractNo: string) => {
     try {
       loading.value = true
-      await new Promise((resolve) => setTimeout(resolve, 300))
+      error.value = null
 
-      const index = invoices.value.findIndex((i) => i.id === id)
-      if (index !== -1) {
-        invoices.value[index].status = status
-      }
-      return { success: true }
-    } catch (error: any) {
-      return { success: false, message: "Failed to update status" }
+      const response = await invoiceService.getNextInvoiceNumber(lastContractNo)
+      return { success: true, invoiceNumber: response.invoiceNumber }
+    } catch (err: any) {
+      error.value = err.message || 'Failed to get next invoice number'
+      return { success: false, message: error.value }
     } finally {
       loading.value = false
     }
+  }
+
+  /**
+   * Create a new invoice
+   */
+  const createInvoice = async (invoiceData: IInvoiceRequest) => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const response = await invoiceService.createInvoice(invoiceData)
+
+      // Refresh the invoices list
+      await fetchInvoices()
+
+      return {
+        success: true,
+        invoiceId: response.invoiceId,
+        invoiceNumber: response.invoiceNumber,
+        message: response.message,
+      }
+    } catch (err: any) {
+      error.value = err.message || 'Failed to create invoice'
+      return { success: false, message: error.value }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Update an existing invoice
+   */
+  const updateInvoice = async (id: string, invoiceData: IInvoiceRequest) => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const response = await invoiceService.updateInvoice(id, invoiceData)
+
+      // Update local state
+      const index = invoices.value.findIndex((i) => i.guid === id)
+      if (index !== -1 && response.invoice) {
+        invoices.value[index] = response.invoice
+      }
+
+      // Update current invoice if it's the one being edited
+      if (currentInvoice.value?.guid === id && response.invoice) {
+        currentInvoice.value = response.invoice
+      }
+
+      return { success: true, invoice: response.invoice, message: response.message }
+    } catch (err: any) {
+      error.value = err.message || 'Failed to update invoice'
+      return { success: false, message: error.value }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Delete an invoice
+   */
+  const deleteInvoice = async (id: string) => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const response = await invoiceService.deleteInvoice(id)
+
+      // Remove from local state
+      invoices.value = invoices.value.filter((i) => i.guid !== id)
+
+      // Clear current invoice if it was deleted
+      if (currentInvoice.value?.guid === id) {
+        currentInvoice.value = null
+      }
+
+      return { success: true, message: response.message }
+    } catch (err: any) {
+      error.value = err.message || 'Failed to delete invoice'
+      return { success: false, message: error.value }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Generate invoice from a contract
+   */
+  const generateInvoiceFromContract = async (contractId: string, contractNo: string) => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const response = await invoiceService.generateInvoiceFromContract(contractId, contractNo)
+
+      // Refresh the invoices list
+      await fetchInvoices()
+
+      return {
+        success: true,
+        invoiceId: response.invoiceId,
+        invoiceNumber: response.invoiceNumber,
+        contractNo: response.contractNo,
+        grandTotal: response.grandTotal,
+        message: response.message,
+      }
+    } catch (err: any) {
+      error.value = err.message || 'Failed to generate invoice from contract'
+      return { success: false, message: error.value }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Update filters and fetch invoices
+   */
+  const setFilters = async (newFilters: Partial<IInvoiceQueryRequest>) => {
+    filters.value = { ...filters.value, ...newFilters }
+    return await fetchInvoices(filters.value)
+  }
+
+  /**
+   * Reset filters to defaults
+   */
+  const resetFilters = async () => {
+    filters.value = {
+      page: 1,
+      pageSize: 10,
+      search: '',
+      sortOrder: 'desc',
+    }
+    return await fetchInvoices(filters.value)
+  }
+
+  /**
+   * Go to a specific page
+   */
+  const goToPage = async (page: number) => {
+    filters.value.page = page
+    return await fetchInvoices(filters.value)
+  }
+
+  /**
+   * Clear error state
+   */
+  const clearError = () => {
+    error.value = null
+  }
+
+  /**
+   * Clear current invoice
+   */
+  const clearCurrentInvoice = () => {
+    currentInvoice.value = null
   }
 
   return {
+    // State
     invoices,
+    currentInvoice,
     loading,
+    error,
+    pagination,
+    filters,
+
+    // Computed
+    isLoading,
+    hasError,
+    invoiceCount,
+    totalInvoices,
+
+    // Actions
+    fetchInvoices,
+    fetchInvoiceById,
+    fetchInvoiceByNumber,
+    getNextInvoiceNumber,
     createInvoice,
     updateInvoice,
     deleteInvoice,
-    updateInvoiceStatus,
+    generateInvoiceFromContract,
+    setFilters,
+    resetFilters,
+    goToPage,
+    clearError,
+    clearCurrentInvoice,
   }
 })

@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="dialogVisible" :title="isEdit ? 'Edit Invoice' : 'Create New Invoice'" width="800px"
+  <el-dialog v-model="dialogVisible" :title="isEdit ? 'Edit Invoice' : 'Create New Invoice'" width="900px"
     :close-on-click-modal="false" :close-on-press-escape="false" class="invoice-modal" top="5vh">
     <el-form ref="formRef" :model="form" :rules="rules" label-position="top" size="default" class="invoice-form">
       <!-- Basic Information -->
@@ -38,13 +38,13 @@
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="Status">
-              <el-select v-model="form.status" placeholder="Select status" class="w-full">
-                <el-option label="Draft" value="draft" />
-                <el-option label="Sent" value="sent" />
-                <el-option label="Paid" value="paid" />
-                <el-option label="Overdue" value="overdue" />
-                <el-option label="Cancelled" value="cancelled" />
+            <el-form-item label="Status" prop="statusId">
+              <el-select v-model="form.statusId" placeholder="Select status" class="w-full">
+                <el-option label="Draft" :value="248" />
+                <el-option label="Sent" :value="249" />
+                <el-option label="Paid" :value="250" />
+                <el-option label="Overdue" :value="251" />
+                <el-option label="Cancelled" :value="252" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -68,80 +68,140 @@
         </el-row>
 
         <el-row :gutter="16">
-          <el-col :span="12">
+          <el-col :span="24">
             <el-form-item label="Advertiser" prop="advertiser">
               <el-input v-model="form.advertiser" placeholder="Enter advertiser name" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
-            <el-form-item label="Product" prop="product">
-              <el-input v-model="form.product" placeholder="Enter product name" />
-            </el-form-item>
-          </el-col>
         </el-row>
       </div>
 
-      <!-- Invoice Items -->
+      <!-- Products Section -->
       <div class="form-section">
-        <h3 class="section-title">Invoice Items</h3>
-        <div v-for="(item, index) in form.items" :key="index" class="item-row">
+        <div class="section-header">
+          <h3 class="section-title">Products</h3>
+          <el-button type="primary" :icon="Plus" plain size="small" @click="addProduct">Add Product</el-button>
+        </div>
+
+        <div v-for="(product, productIndex) in form.products" :key="productIndex" class="product-card">
+          <div class="product-header">
+            <h4>Product {{ productIndex + 1 }}</h4>
+            <el-button v-if="form.products.length > 1" type="danger" :icon="Minus" circle size="small"
+              @click="removeProduct(productIndex)" />
+          </div>
+
+          <el-row :gutter="16">
+            <el-col :span="12">
+              <el-form-item label="Product Name">
+                <el-input v-model="product.productName" placeholder="Enter product name" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="Description">
+                <el-input v-model="product.productDescription" placeholder="Enter description" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+
+          <!-- Product Items -->
+          <div class="items-section">
+            <div class="items-header">
+              <span class="items-title">Items</span>
+              <el-button type="primary" :icon="Plus" plain size="small" @click="addItem(productIndex)">Add
+                Item</el-button>
+            </div>
+
+            <div v-for="(item, itemIndex) in product.items" :key="itemIndex" class="item-row">
+              <el-row :gutter="12" align="middle">
+                <el-col :span="2">
+                  <el-form-item label="SL#">
+                    <el-input-number v-model="item.sl" :min="1" controls-position="right" class="w-full" size="small" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="10">
+                  <el-form-item label="Particulars">
+                    <el-input v-model="item.particularsName" placeholder="Enter particulars" size="small" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="3">
+                  <el-form-item label="Qty">
+                    <el-input-number v-model="item.quantity" :min="1" controls-position="right" class="w-full"
+                      size="small" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="4">
+                  <el-form-item label="Rate (Tk.)">
+                    <el-input-number v-model="item.rate" :min="0" :precision="2" controls-position="right"
+                      class="w-full" size="small" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="3">
+                  <el-form-item label="Amount">
+                    <span class="amount-display">{{ formatCurrency(item.quantity * item.rate) }}</span>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="2">
+                  <el-form-item label=" ">
+                    <el-button v-if="product.items && product.items.length > 1" type="danger" :icon="Minus" circle
+                      size="small" @click="removeItem(productIndex, itemIndex)" />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </div>
+          </div>
+
+          <!-- Product Totals -->
+          <div class="product-totals">
+            <span>Product Total: <strong>{{ formatCurrency(getProductTotal(product)) }}</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Signaturers Section -->
+      <div class="form-section">
+        <h3 class="section-title">Signaturers</h3>
+        <div v-for="(signaturer, index) in form.signaturers" :key="index" class="signaturer-row">
           <el-row :gutter="16" align="middle">
-            <el-col :span="2">
-              <el-form-item label="SL#">
-                <el-input-number v-model="item.sl" :min="1" controls-position="right" class="w-full" />
+            <el-col :span="6">
+              <el-form-item :label="'Signaturer ' + (index + 1)">
+                <el-select v-model="signaturer.signaturerId" placeholder="Select signaturer" class="w-full"
+                  @change="(val: number) => updateSignaturerInfo(index, val)">
+                  <el-option v-for="s in availableSignaturers" :key="s.id" :label="s.name" :value="s.id" />
+                </el-select>
               </el-form-item>
             </el-col>
-            <el-col :span="10">
-              <el-form-item label="Particulars">
-                <el-input v-model="item.particulars" placeholder="Enter particulars" />
+            <el-col :span="6">
+              <el-form-item label="Name">
+                <el-input v-model="signaturer.name" disabled placeholder="Name" />
               </el-form-item>
             </el-col>
-            <el-col :span="4">
-              <el-form-item label="Quantity">
-                <el-input-number v-model="item.quantity" :min="1" controls-position="right" class="w-full" />
+            <el-col :span="6">
+              <el-form-item label="Title">
+                <el-input v-model="signaturer.title" disabled placeholder="Title" />
               </el-form-item>
             </el-col>
-            <el-col :span="4">
-              <el-form-item label="Rate (Tk.)">
-                <el-input-number v-model="item.rate" :min="0" :precision="2" controls-position="right" class="w-full" />
+            <el-col :span="3">
+              <el-form-item label="Sort Order">
+                <el-input-number v-model="signaturer.sortOrder" :min="1" controls-position="right" class="w-full" />
               </el-form-item>
             </el-col>
-            <el-col :span="2">
-              <el-form-item label="Amount">
-                <span class="amount-display">{{ formatCurrency(item.quantity * item.rate) }}</span>
-              </el-form-item>
-            </el-col>
-            <el-col :span="2">
+            <el-col :span="3">
               <el-form-item label=" ">
-                <el-button v-if="form.items.length > 1" type="danger" :icon="Minus" circle @click="removeItem(index)" />
+                <el-button v-if="form.signaturers.length > 1" type="danger" :icon="Minus" circle
+                  @click="removeSignaturer(index)" />
               </el-form-item>
             </el-col>
           </el-row>
         </div>
-        <el-button type="primary" :icon="Plus" plain @click="addItem">Add Item</el-button>
+        <el-button type="primary" :icon="Plus" plain @click="addSignaturer">Add Signaturer</el-button>
       </div>
 
-      <!-- Signature Information -->
+      <!-- Footer Contact -->
       <div class="form-section">
-        <h3 class="section-title">Signature Information</h3>
-        <el-row :gutter="16">
-          <el-col :span="12">
-            <el-form-item label="Signature 1 Name">
-              <el-input v-model="form.signature1Name" placeholder="Enter name" />
-            </el-form-item>
-            <el-form-item label="Signature 1 Title">
-              <el-input v-model="form.signature1Title" placeholder="Enter title" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="Signature 2 Name">
-              <el-input v-model="form.signature2Name" placeholder="Enter name" />
-            </el-form-item>
-            <el-form-item label="Signature 2 Title">
-              <el-input v-model="form.signature2Title" placeholder="Enter title" />
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <h3 class="section-title">Footer Contact</h3>
+        <el-form-item prop="footerContact">
+          <el-input v-model="form.footerContact" type="textarea" :rows="2" placeholder="Enter footer contact info" />
+        </el-form-item>
       </div>
 
       <!-- Totals Summary -->
@@ -153,7 +213,7 @@
             <span>{{ formatCurrency(spotTotal) }}</span>
           </div>
           <div class="total-row">
-            <span>VAT (15%):</span>
+            <span>VAT ({{ form.vatPercentage }}%):</span>
             <span>{{ formatCurrency(vatAmount) }}</span>
           </div>
           <div class="total-row grand-total">
@@ -182,14 +242,44 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import type { FormInstance } from 'element-plus'
-import type { Invoice } from '@/stores/invoices'
+import type {
+  IInvoiceRequest,
+  IInvoiceResponse,
+  IInvoiceProductRequest,
+  IInvoiceProductItemRequest,
+  IInvoiceSignaturerRequest,
+  IContractSignaturer,
+} from '@/interface/invoice/invoice.interface'
 import { Plus, Minus } from 'lucide-vue-next'
+
+// Extended type for form product item with display fields
+interface FormProductItem extends IInvoiceProductItemRequest {
+  // All fields from IInvoiceProductItemRequest plus any display-only fields
+}
+
+// Extended type for form product with display fields
+interface FormProduct extends Omit<IInvoiceProductRequest, 'items'> {
+  items: FormProductItem[]
+}
+
+// Extended type for form signaturers with display fields
+interface FormSignaturer extends IInvoiceSignaturerRequest {
+  name?: string
+  title?: string
+}
+
+// Form type that matches IInvoiceRequest but with extended products
+interface InvoiceFormData extends Omit<IInvoiceRequest, 'products' | 'signaturers'> {
+  products: FormProduct[]
+  signaturers: FormSignaturer[]
+  billTo: { name: string; address: string }
+}
 
 interface Props {
   modelValue: boolean
-  invoice?: Invoice | null
+  invoice?: IInvoiceResponse | null
   isEdit?: boolean
   loading?: boolean
 }
@@ -202,7 +292,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  save: [invoice: Invoice]
+  save: [invoice: IInvoiceRequest]
 }>()
 
 const formRef = ref<FormInstance>()
@@ -210,6 +300,34 @@ const dialogVisible = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value)
 })
+
+// Available signaturers (should be fetched from API in real implementation)
+const availableSignaturers = ref<IContractSignaturer[]>([
+  {
+    id: 1,
+    guid: 'sig-1',
+    name: 'Rashed Ahasan',
+    title: 'Head of Marketing',
+    designation: 'Head of Marketing',
+    sortOrder: 1
+  },
+  {
+    id: 2,
+    guid: 'sig-2',
+    name: 'M. M. Elias',
+    title: 'DGM, Finance & Accounts',
+    designation: 'DGM, Finance & Accounts',
+    sortOrder: 2
+  },
+  {
+    id: 3,
+    guid: 'sig-3',
+    name: 'John Doe',
+    title: 'Managing Director',
+    designation: 'Managing Director',
+    sortOrder: 3
+  }
+])
 
 // Helper functions defined first
 const formatCurrency = (value: number) => {
@@ -269,44 +387,33 @@ const numberToWords = (num: number): string => {
   return result.trim() + ' Taka Only'
 }
 
-const resetForm = () => {
-  form.value = {
-    number: '',
-    date: '',
-    contractNo: '',
-    contractDate: '',
-    billTo: {
-      name: '',
-      address: ''
-    },
-    advertiser: '',
-    product: '',
-    items: [
-      {
-        sl: 1,
-        particulars: '',
-        quantity: 1,
-        rate: 0,
-        amount: 0
-      }
-    ],
-    spotTotal: 0,
-    vatPercentage: 15,
-    vatAmount: 0,
-    grandTotal: 0,
-    grandTotalWords: '',
-    signature1Name: 'Rashed Ahasan',
-    signature1Title: 'Head of Marketing',
-    signature2Name: 'M. M. Elias',
-    signature2Title: 'DGM, Finance & Accounts',
-    footerContact: 'Channel 24 Limited | 387 (south), Tejgaon I/A, Dhaka 1208 | Tel: +8802 550 29724 | Fax: +8802 550 29709 | www.channel24bd.tv',
-    status: 'draft',
-    dueDate: ''
-  }
-  formRef.value?.clearValidate()
+const getProductTotal = (product: FormProduct): number => {
+  if (!product.items || product.items.length === 0) return 0
+  return product.items.reduce((sum, item) => sum + (item.quantity * item.rate), 0)
 }
 
-const form = ref<Invoice>({
+const createDefaultItem = (sl: number): FormProductItem => ({
+  sl,
+  particularsName: '',
+  quantity: 1,
+  rate: 0,
+  amount: 0,
+  vat: 0,
+  vatRate: 0
+})
+
+const createDefaultProduct = (): FormProduct => ({
+  productName: '',
+  productDescription: '',
+  quantity: 1,
+  vat: 0,
+  vatRate: 15,
+  total: 0,
+  remarks: '',
+  items: [createDefaultItem(1)]
+})
+
+const getDefaultFormData = (): InvoiceFormData => ({
   number: '',
   date: '',
   contractNo: '',
@@ -316,14 +423,19 @@ const form = ref<Invoice>({
     address: ''
   },
   advertiser: '',
-  product: '',
-  items: [
+  products: [createDefaultProduct()],
+  signaturers: [
     {
-      sl: 1,
-      particulars: '',
-      quantity: 1,
-      rate: 0,
-      amount: 0
+      signaturerId: 1,
+      name: 'Rashed Ahasan',
+      title: 'Head of Marketing',
+      sortOrder: 1
+    },
+    {
+      signaturerId: 2,
+      name: 'M. M. Elias',
+      title: 'DGM, Finance & Accounts',
+      sortOrder: 2
     }
   ],
   spotTotal: 0,
@@ -331,14 +443,17 @@ const form = ref<Invoice>({
   vatAmount: 0,
   grandTotal: 0,
   grandTotalWords: '',
-  signature1Name: 'Rashed Ahasan',
-  signature1Title: 'Head of Marketing',
-  signature2Name: 'M. M. Elias',
-  signature2Title: 'DGM, Finance & Accounts',
   footerContact: 'Channel 24 Limited | 387 (south), Tejgaon I/A, Dhaka 1208 | Tel: +8802 550 29724 | Fax: +8802 550 29709 | www.channel24bd.tv',
-  status: 'draft',
+  statusId: 248,
   dueDate: ''
 })
+
+const resetForm = () => {
+  form.value = getDefaultFormData()
+  formRef.value?.clearValidate()
+}
+
+const form = ref<InvoiceFormData>(getDefaultFormData())
 
 const rules = {
   number: [
@@ -362,16 +477,13 @@ const rules = {
   advertiser: [
     { required: true, message: 'Please enter advertiser name', trigger: 'blur' }
   ],
-  product: [
-    { required: true, message: 'Please enter product name', trigger: 'blur' }
-  ],
   dueDate: [
     { required: true, message: 'Please select due date', trigger: 'change' }
   ]
 }
 
 const spotTotal = computed(() => {
-  return form.value.items.reduce((sum, item) => sum + (item.quantity * item.rate), 0)
+  return form.value.products.reduce((sum, product) => sum + getProductTotal(product), 0)
 })
 
 const vatAmount = computed(() => {
@@ -391,16 +503,106 @@ const isFormValid = computed(() => {
     form.value.date &&
     form.value.contractNo.trim() &&
     form.value.contractDate &&
-    form.value.billTo.name.trim() &&
-    form.value.billTo.address.trim() &&
+    form.value.billTo?.name?.trim() &&
+    form.value.billTo?.address?.trim() &&
     form.value.advertiser.trim() &&
-    form.value.product.trim() &&
-    form.value.dueDate
+    form.value.dueDate &&
+    form.value.products.length > 0
 })
+
+// Map response to form data
+const mapResponseToForm = (response: IInvoiceResponse): InvoiceFormData => {
+  return {
+    number: response.number,
+    date: response.date,
+    contractNo: response.contractNo,
+    contractDate: response.contractDate,
+    billTo: response.billTo || { name: '', address: '' },
+    advertiser: response.advertiser,
+    products: response.products?.map(product => ({
+      originalProductId: product.originalProductId,
+      productName: product.productName,
+      productDescription: product.productDescription,
+      quantity: product.quantity,
+      vat: product.vat,
+      vatRate: product.vatRate,
+      total: product.total,
+      remarks: product.remarks,
+      items: product.items?.map(item => ({
+        originalProductItemId: item.originalProductItemId,
+        sl: item.sl,
+        particularsName: item.particularsName,
+        quantity: item.quantity,
+        rate: item.rate,
+        amount: item.amount,
+        vat: item.vat,
+        vatRate: item.vatRate
+      })) || [createDefaultItem(1)]
+    })) || [createDefaultProduct()],
+    signaturers: response.signaturers?.map(sig => ({
+      signaturerId: sig.signaturerId,
+      name: sig.name,
+      title: sig.title,
+      sortOrder: sig.sortOrder
+    })) || [],
+    spotTotal: response.spotTotal,
+    vatPercentage: response.vatPercentage,
+    vatAmount: response.vatAmount,
+    grandTotal: response.grandTotal,
+    grandTotalWords: response.grandTotalWords,
+    footerContact: response.footerContact,
+    statusId: response.status?.id || 248,
+    dueDate: response.dueDate
+  }
+}
+
+// Map form data to request
+const mapFormToRequest = (): IInvoiceRequest => {
+  return {
+    number: form.value.number,
+    date: form.value.date,
+    contractNo: form.value.contractNo,
+    contractDate: form.value.contractDate,
+    billTo: form.value.billTo,
+    advertiser: form.value.advertiser,
+    products: form.value.products.map(product => ({
+      originalProductId: product.originalProductId,
+      productName: product.productName,
+      productDescription: product.productDescription,
+      quantity: product.quantity,
+      vat: getProductTotal(product) * (product.vatRate / 100),
+      vatRate: product.vatRate,
+      total: getProductTotal(product),
+      remarks: product.remarks,
+      items: product.items.map(item => ({
+        originalProductItemId: item.originalProductItemId,
+        sl: item.sl,
+        particularsName: item.particularsName,
+        quantity: item.quantity,
+        rate: item.rate,
+        amount: item.quantity * item.rate,
+        vat: (item.quantity * item.rate) * (item.vatRate / 100),
+        vatRate: item.vatRate
+      }))
+    })),
+    signaturers: form.value.signaturers.map(sig => ({
+      signaturerId: sig.signaturerId,
+      sortOrder: sig.sortOrder
+    })),
+    spotTotal: spotTotal.value,
+    vatPercentage: form.value.vatPercentage,
+    vatAmount: vatAmount.value,
+    grandTotal: grandTotal.value,
+    grandTotalWords: grandTotalWords.value,
+    footerContact: form.value.footerContact,
+    statusId: form.value.statusId,
+    dueDate: form.value.dueDate
+  }
+}
 
 watch(() => props.invoice, (newInvoice) => {
   if (newInvoice) {
-    form.value = { ...newInvoice }
+    form.value = mapResponseToForm(newInvoice)
   } else {
     resetForm()
   }
@@ -420,22 +622,58 @@ watch([spotTotal, vatAmount, grandTotal, grandTotalWords], () => {
   form.value.grandTotalWords = grandTotalWords.value
 })
 
-const addItem = () => {
-  form.value.items.push({
-    sl: form.value.items.length + 1,
-    particulars: '',
-    quantity: 1,
-    rate: 0,
-    amount: 0
+// Product management
+const addProduct = () => {
+  form.value.products.push(createDefaultProduct())
+}
+
+const removeProduct = (productIndex: number) => {
+  form.value.products.splice(productIndex, 1)
+}
+
+// Item management within products
+const addItem = (productIndex: number) => {
+  const product = form.value.products[productIndex]
+  if (!product.items) {
+    product.items = []
+  }
+  product.items.push(createDefaultItem(product.items.length + 1))
+}
+
+const removeItem = (productIndex: number, itemIndex: number) => {
+  const product = form.value.products[productIndex]
+  if (product.items) {
+    product.items.splice(itemIndex, 1)
+    // Reorder SL numbers
+    product.items.forEach((item, idx) => {
+      item.sl = idx + 1
+    })
+  }
+}
+
+const addSignaturer = () => {
+  form.value.signaturers.push({
+    signaturerId: 0,
+    name: '',
+    title: '',
+    sortOrder: form.value.signaturers.length + 1
   })
 }
 
-const removeItem = (index: number) => {
-  form.value.items.splice(index, 1)
-  // Reorder SL numbers
-  form.value.items.forEach((item, idx) => {
-    item.sl = idx + 1
+const removeSignaturer = (index: number) => {
+  form.value.signaturers.splice(index, 1)
+  // Reorder sort orders
+  form.value.signaturers.forEach((sig, idx) => {
+    sig.sortOrder = idx + 1
   })
+}
+
+const updateSignaturerInfo = (index: number, signaturerId: number) => {
+  const signaturer = availableSignaturers.value.find(s => s.id === signaturerId)
+  if (signaturer) {
+    form.value.signaturers[index].name = signaturer.name
+    form.value.signaturers[index].title = signaturer.title
+  }
 }
 
 const handleClose = () => {
@@ -447,11 +685,17 @@ const handleSubmit = async () => {
 
   try {
     await formRef.value.validate()
-    emit('save', form.value)
+    const requestData = mapFormToRequest()
+    emit('save', requestData)
   } catch (error) {
     console.error('Form validation failed:', error)
   }
 }
+
+onMounted(() => {
+  // TODO: Fetch available signaturers from API
+  // fetchSignaturers()
+})
 </script>
 
 <style scoped>
@@ -476,6 +720,13 @@ const handleSubmit = async () => {
   margin-bottom: 0;
 }
 
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
 .section-title {
   font-size: 18px;
   font-weight: 600;
@@ -483,7 +734,73 @@ const handleSubmit = async () => {
   margin: 0 0 20px 0;
 }
 
+.section-header .section-title {
+  margin: 0;
+}
+
+.product-card {
+  background: var(--el-fill-color-lighter);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid var(--el-border-color-light);
+}
+
+.product-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.product-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.items-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--el-border-color);
+}
+
+.items-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.items-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--el-text-color-regular);
+}
+
 .item-row {
+  background: var(--el-bg-color);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.product-totals {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--el-border-color-light);
+  text-align: right;
+  font-size: 14px;
+  color: var(--el-text-color-regular);
+}
+
+.product-totals strong {
+  color: var(--el-color-primary);
+  font-size: 16px;
+}
+
+.signaturer-row {
   background: var(--el-fill-color-lighter);
   padding: 16px;
   border-radius: 8px;
@@ -493,6 +810,7 @@ const handleSubmit = async () => {
 .amount-display {
   font-weight: 600;
   color: var(--el-color-primary);
+  font-size: 13px;
 }
 
 .totals-summary {
@@ -556,7 +874,7 @@ const handleSubmit = async () => {
 
 @media (max-width: 768px) {
   .invoice-modal {
-    --el-dialog-width: 90vw;
+    --el-dialog-width: 95vw;
   }
 
   .modal-footer {

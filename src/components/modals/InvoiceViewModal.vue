@@ -1,13 +1,13 @@
 ﻿<template>
   <el-dialog v-model="dialogVisible" width="900px" :close-on-click-modal="false" class="invoice-view-modal" top="5vh">
-    <div v-if="contract" class="invoice-document" id="invoiceDocument">
+    <div v-if="invoice" class="invoice-document" id="invoiceDocument">
       <!-- Header -->
       <div class="document-header">
         <div class="company-info">
           <img src="@/assets/CH24.png" alt="Channel 24" class="company-logo" />
           <h1 class="company-name">CHANNEL 24 LTD.</h1>
         </div>
-        <h2 class="invoice-title">INVOICE FOR THE MONTH OF {{ getMonthYear(contract.contractDate) }}</h2>
+        <h2 class="invoice-title">INVOICE FOR THE MONTH OF {{ getMonthYear(invoice?.contractDate) }}</h2>
       </div>
 
       <!-- Invoice Info -->
@@ -20,19 +20,19 @@
         <div class="invoice-details">
           <div class="detail-row">
             <span>Invoice No:</span>
-            <span>{{ contract.televisionContractNo }}</span>
+            <span>{{ invoice?.number }}</span>
           </div>
           <div class="detail-row">
             <span>Invoice Date:</span>
-            <span>{{ formatDate(contract.contractDate) }}</span>
+            <span>{{ formatDate(invoice?.date) }}</span>
           </div>
           <div class="detail-row">
             <span>Contract No:</span>
-            <span>{{ contract.televisionContractNo }}</span>
+            <span>{{ invoice?.contractNo }}</span>
           </div>
           <div class="detail-row">
             <span>Contract Date:</span>
-            <span>{{ formatDate(contract.contractDate) }}</span>
+            <span>{{ formatDate(invoice?.contractDate) }}</span>
           </div>
         </div>
       </div>
@@ -50,33 +50,51 @@
       </div>
 
       <!-- Items Table -->
-      <div class="items-table-section">
-        <table class="invoice-table">
+      <div class="items-table-section" v-if="invoice?.products && invoice.products.length > 0">
+        <table class="contract-table">
           <thead>
             <tr>
-              <th>SL #</th>
-              <th>PARTICULARS</th>
-              <th>QUANTITY</th>
+              <th>SL#</th>
+              <th>PRODUCT NAME</th>
+              <th>DESCRIPTION</th>
+              <th>QTY</th>
               <th>RATE (Tk.)</th>
               <th>AMOUNT (Tk.)</th>
             </tr>
           </thead>
           <tbody>
-            <template v-for="(product, productIndex) in contract.products" :key="product.guid">
-              <tr v-for="(item, itemIndex) in product.productItems" :key="item.guid">
-                <td>{{ getSerialNumber(productIndex, itemIndex) }}</td>
-                <td class="long-description"> {{ item.particularsName }}</td>
-                <td>{{ product.quantity || 1 }}</td>
+            <template v-for="(product, productIndex) in invoice?.products" :key="product.guid">
+              <!-- Main Product Row -->
+              <tr>
+                <td>{{ productIndex + 1 }}</td>
+                <td class="product-name-cell">{{ product.productName || 'N/A' }}</td>
+                <td class="description-cell">{{ product.productDescription || 'N/A' }}</td>
+                <td>{{ product.quantity || 0 }}</td>
+                <td>{{ formatCurrency(getProductRate(product)) }}</td>
+                <td>{{ formatCurrency(product.total || 0) }}</td>
+              </tr>
+
+              <!-- Product Items -->
+              <tr v-for="item in product.items" :key="item.guid" class="product-item-row">
+                <td></td>
+                <td colspan="2" style="padding-left: 20px;">
+                  {{ item.particularsName || 'N/A' }}
+                </td>
+                <td>1</td>
                 <td>{{ formatCurrency(item.rate || 0) }}</td>
-                <td>Tk {{ formatCurrency((item.rate || 0) * (product.quantity || 1)) }}</td>
+                <td>{{ formatCurrency(item.rate || 0) }}</td>
               </tr>
             </template>
+
+            <!-- Totals -->
             <tr class="total-row">
-              <td colspan="4"><strong>SPOT TOTAL Tk</strong></td>
+              <td colspan="5"><strong>SPOT TOTAL Tk</strong></td>
               <td><strong>{{ formatCurrency(spotTotal) }}</strong></td>
             </tr>
             <tr class="vat-row">
-              <td colspan="4">Plus {{ vatRate }}% VAT on Tk {{ formatCurrency(spotTotal) }}</td>
+              <td colspan="5">
+                Plus {{ vatRate }}% VAT on Tk {{ formatCurrency(spotTotal) }}
+              </td>
               <td>{{ formatCurrency(vatAmount) }}</td>
             </tr>
           </tbody>
@@ -134,12 +152,11 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { Printer } from 'lucide-vue-next'
-import type { ITelevisionContract } from '@/interface/contract/contracts.interface'
-import { clientService } from '@/services/Clients/common.services'
+import type { IInvoiceResponse } from '@/interface/invoice/invoice.interface'
 
 interface Props {
   modelValue: boolean
-  contract?: ITelevisionContract | null
+  invoice?: IInvoiceResponse | null
 }
 
 const props = defineProps<Props>()
@@ -155,66 +172,47 @@ const dialogVisible = computed({
 
 const recipientAddress = ref('N/A')
 
+//let spotTotal = props.invoice?.spotTotal || 0
+
 // Computed properties for nullable values
 const spotTotal = computed(() => {
-  if (!props.contract?.products) return 0
-  return props.contract.products.reduce((total, product) => {
-    const productTotal = (product.productItems || []).reduce((itemTotal, item) => {
-      return itemTotal + ((item.rate || 0) * (product.quantity || 1))
-    }, 0)
-    return total + productTotal
-  }, 0)
+  if (!props.invoice?.spotTotal) return 0
+  return props.invoice.spotTotal
 })
 
-const vatRate = computed(() => props.contract?.vatRate ?? 15)
-const vatAmount = computed(() => props.contract?.vat ?? (spotTotal.value * vatRate.value / 100))
+const vatRate = computed(() => props.invoice?.vatPercentage ?? 15)
+const vatAmount = computed(() => props.invoice?.vatAmount ?? (spotTotal.value * vatRate.value / 100))
 const grandTotal = computed(() => spotTotal.value + vatAmount.value)
 
-// Helper to get serial number across all product items
-const getSerialNumber = (productIndex: number, itemIndex: number): number => {
-  if (!props.contract?.products) return 1
-  let count = 0
-  for (let i = 0; i < productIndex; i++) {
-    count += (props.contract.products[i].productItems || []).length
-  }
-  return count + itemIndex + 1
-}
-
 const fetchRecipientAddress = async () => {
-  const guid = props.contract?.contractedClient?.guid || props.contract?.contractedAgency?.guid
-  if (!guid) {
-    recipientAddress.value = 'N/A'
+  const billToAddress = props.invoice?.billTo?.address
+  if (billToAddress) {
+    recipientAddress.value = billToAddress
     return
   }
-  try {
-    const address = await clientService.getClientById(guid)
-    if (address) {
-      recipientAddress.value = [address.location, address.city, address.country].filter(Boolean).join(', ')
-    }
-  } catch (error) {
-    console.error('Error fetching address:', error)
-    recipientAddress.value = 'N/A'
-  }
+  recipientAddress.value = 'N/A'
 }
 
-watch(() => props.contract, () => {
+watch(() => props.invoice, () => {
   fetchRecipientAddress()
 }, { immediate: true })
 
 const getClientName = () => {
-  if (props.contract?.contractedClient) {
-    return props.contract.contractedClient.clintName
-  } else if (props.contract?.contractedAgency) {
-    return props.contract.contractedAgency.agencyName
+  return props.invoice?.billTo?.name || props.invoice?.advertiser || 'N/A'
+}
+
+const getProductName = () => {
+  if (props.invoice?.products && props.invoice.products.length > 0) {
+    return props.invoice.products.map(p => p.productName).join(', ')
   }
   return 'N/A'
 }
 
-const getProductName = () => {
-  if (props.contract?.products && props.contract.products.length > 0) {
-    return props.contract.products.map(p => p.contractProductName).join(', ')
+const getProductRate = (product: any) => {
+  if (product.items && product.items.length > 0) {
+    return product.items.reduce((sum: number, item: any) => sum + (item.rate || 0), 0)
   }
-  return 'N/A'
+  return product.total || 0
 }
 
 const formatCurrency = (value: number) => {
@@ -355,37 +353,99 @@ const printInvoice = () => {
 
 .items-table-section {
   margin-bottom: 25px;
+  overflow-x: auto;
 }
 
-.invoice-table {
+.contract-table {
   width: 100%;
   border-collapse: collapse;
+  margin-bottom: 15px;
+  table-layout: fixed;
 }
 
-.invoice-table th,
-.invoice-table td {
+.contract-table th,
+.contract-table td {
   border: 1px solid #333;
   padding: 8px;
   text-align: center;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
-.invoice-table th {
+/* Column widths */
+.contract-table th:nth-child(1),
+.contract-table td:nth-child(1) {
+  width: 40px;
+}
+
+.contract-table th:nth-child(2),
+.contract-table td:nth-child(2) {
+  width: 30%;
+}
+
+.contract-table th:nth-child(3),
+.contract-table td:nth-child(3) {
+  width: 25%;
+}
+
+.contract-table th:nth-child(4),
+.contract-table td:nth-child(4) {
+  width: 50px;
+}
+
+.contract-table th:nth-child(5),
+.contract-table td:nth-child(5),
+.contract-table th:nth-child(6),
+.contract-table td:nth-child(6) {
+  width: 90px;
+}
+
+.contract-table th {
   background-color: #f5f5f5;
   font-weight: bold;
 }
 
-.invoice-table td:nth-child(2) {
+.contract-table td:nth-child(2),
+.contract-table td:nth-child(3) {
   text-align: left;
 }
 
-.invoice-table td:nth-child(4),
-.invoice-table td:nth-child(5) {
+.contract-table td:nth-child(4),
+.contract-table td:nth-child(5),
+.contract-table td:nth-child(6) {
   text-align: right;
+}
+
+.product-name-cell {
+  font-weight: 600;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.description-cell {
+  color: #666;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-item-row {
+  background-color: #fafafa;
+}
+
+.product-item-row td {
+  font-size: 12px;
+}
+
+.remarks-text {
+  font-style: italic;
+  color: #666;
 }
 
 .total-row {
   background-color: #f9f9f9;
-  font-weight: bold;
 }
 
 .vat-row {
