@@ -70,14 +70,14 @@ export const usePaymentStore = defineStore("payments", () => {
     })
 
     if (contractAmount === 0 && selectedContract.value.total) {
-      const vatRate = selectedContract.value.vatRate || 15
-      const totalWithVat = selectedContract.value.total
-      contractAmount = totalWithVat / (1 + vatRate / 100)
+      const vatRate = selectedContract.value.vatRate || 0
+      //const totalWithVat = selectedContract.value.total
+      contractAmount = selectedContract.value.total // (1 + vatRate / 100)
     }
 
-    const vatRate = selectedContract.value.vatRate || 15
-    const vatAmount = contractAmount * (vatRate / 100)
-    const totalAmount = contractAmount + vatAmount
+    const vatRate = selectedContract.value.vatRate || 0
+    const vatAmount = (selectedContract.value.vat || 0)
+    const totalAmount = (selectedContract.value.total || 0) - vatAmount
 
     return { contractAmount, vatAmount, totalAmount, vatRate }
   })
