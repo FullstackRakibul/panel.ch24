@@ -58,22 +58,24 @@ export const usePaymentStore = defineStore("payments", () => {
       return { contractAmount: 0, vatAmount: 0, totalAmount: 0, vatRate: 15 }
     }
 
+    console.log ("Selected Full Contract Invoice data : ", selectedContract.value)
+
     const products = selectedContract.value.products || []
-    let contractAmount = 0
+    let contractAmount = selectedContract.value.total || 0
 
-    products.forEach((product) => {
-      const items = product.productItems || []
-      items.forEach((item) => {
-        contractAmount += item.rate || 0
-      })
-      contractAmount *= product.quantity || 1
-    })
+    // products.forEach((product) => {
+    //   const items = product.productItems || []
+    //   items.forEach((item) => {
+    //     contractAmount += item.rate || 0
+    //   })
+    //   contractAmount *= product.quantity || 1
+    // })
 
-    if (contractAmount === 0 && selectedContract.value.total) {
-      const vatRate = selectedContract.value.vatRate || 0
-      //const totalWithVat = selectedContract.value.total
-      contractAmount = selectedContract.value.total // (1 + vatRate / 100)
-    }
+    // if (contractAmount === 0 && selectedContract.value.total) {
+    //   const vatRate = selectedContract.value.vatRate || 0
+    //   const totalWithVat = selectedContract.value.total / (1 + vatRate / 100)
+    //   contractAmount = totalWithVat
+    // }
 
     const vatRate = selectedContract.value.vatRate || 0
     const vatAmount = (selectedContract.value.vat || 0)

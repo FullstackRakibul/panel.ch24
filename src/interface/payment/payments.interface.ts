@@ -1,14 +1,19 @@
 // Payment interfaces for the Television Contract Payment System
 
+// Type aliases for reusable payment enums
+export type PaymentType = "Cash" | "Bank Transfer" | "Check" | "Online" | "Mobile Banking" | "Other"
+export type PaymentCategory = "Contract Amount" | "VAT Amount" | "Both"
+export type PaymentMode = "Full Payment" | "Partial Payment"
+
 export interface IPayment {
   guid: string
   contractId: string
   contractNo: string
   paymentReference: string
   paymentDate: string
-  paymentType: "Cash" | "Bank Transfer" | "Check" | "Online" | "Mobile Banking" | "Other"
-  paymentCategory: "Contract Amount" | "VAT Amount" | "Both"
-  paymentMode: "Full Payment" | "Partial Payment"
+  paymentType: PaymentType
+  paymentCategory: PaymentCategory
+  paymentMode: PaymentMode
 
   // Amount details
   contractAmount: number
@@ -44,9 +49,9 @@ export interface IPaymentCreateRequest {
   contractId: string
   paymentReference?: string
   paymentDate: string
-  paymentType: "Cash" | "Bank Transfer" | "Check" | "Online" | "Mobile Banking" | "Other"
-  paymentCategory: "Contract Amount" | "VAT Amount" | "Both"
-  paymentMode: "Full Payment" | "Partial Payment"
+  paymentType: PaymentType
+  paymentCategory: PaymentCategory
+  paymentMode: PaymentMode
 
   contractAmountPaid: number
   vatAmountPaid: number

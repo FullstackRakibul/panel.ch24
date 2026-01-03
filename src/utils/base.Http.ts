@@ -5,7 +5,7 @@ import { ElMessage } from "element-plus"
 export interface ApiResponse<T = any> {
   data: T
   message?: string
-  success: boolean
+  // success: boolean
   status: number
 }
 
@@ -33,10 +33,21 @@ export const setAuthTokens = (accessToken: string, refreshToken?: string) => {
   }
 }
 
-// Clear auth tokens
+// Clear auth tokens and user data
 export const clearAuthTokens = () => {
   localStorage.removeItem("access_token")
   localStorage.removeItem("refresh_token")
+  localStorage.removeItem("user")
+}
+
+// Redirect to login page (supports hash-based routing)
+export const redirectToLogin = () => {
+  clearAuthTokens()
+  ElMessage.error("Session expired. Please login again.")
+  if (typeof window !== "undefined") {
+    // Use hash routing since the app uses createWebHashHistory
+    window.location.href = window.location.origin + window.location.pathname + "#/login"
+  }
 }
 
 // Base HTTP client factory
@@ -110,36 +121,32 @@ export const createHttpClient = (baseUrl?: string, additionalHeaders: Record<str
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true
 
+        const refreshToken = getRefreshToken()
+        
+        // If no refresh token, redirect immediately
+        if (!refreshToken) {
+          redirectToLogin()
+          return Promise.reject(error)
+        }
+
         try {
-          const refreshToken = getRefreshToken()
-          if (refreshToken) {
-            // Attempt to refresh token
-            const refreshResponse = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/refresh`, {
-              refresh_token: refreshToken,
-            })
+          // Attempt to refresh token
+          const refreshResponse = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/refresh`, {
+            refresh_token: refreshToken,
+          })
 
-            const { access_token, refresh_token: newRefreshToken } = refreshResponse.data
+          const { access_token, refresh_token: newRefreshToken } = refreshResponse.data
 
-            // Update tokens
-            setAuthTokens(access_token, newRefreshToken)
+          // Update tokens
+          setAuthTokens(access_token, newRefreshToken)
 
-            // Retry original request with new token
-            originalRequest.headers.Authorization = `Bearer ${access_token}`
-            return axiosInstance(originalRequest)
-          }
+          // Retry original request with new token
+          originalRequest.headers.Authorization = `Bearer ${access_token}`
+          return axiosInstance(originalRequest)
         } catch (refreshError) {
           console.error("Token refresh failed:", refreshError)
-
-          // Clear tokens and redirect to login
-          clearAuthTokens()
-
-          // Show error message
-          ElMessage.error("Session expired. Please login again.")
-
-          // Redirect to login page
-          if (typeof window !== "undefined") {
-            window.location.href = "/login"
-          }
+          redirectToLogin()
+          return Promise.reject(refreshError)
         }
       }
 
@@ -181,7 +188,7 @@ export const useHttp = () => {
       return {
         data: response.data,
         message: response.data?.message,
-        success: response.status >= 200 && response.status < 300,
+        // success: response.status >= 200 && response.status < 300,
         status: response.status,
       }
     },
@@ -192,7 +199,7 @@ export const useHttp = () => {
       return {
         data: response.data,
         message: response.data?.message,
-        success: response.status >= 200 && response.status < 300,
+        // success: response.status >= 200 && response.status < 300,
         status: response.status,
       }
     },
@@ -203,7 +210,7 @@ export const useHttp = () => {
       return {
         data: response.data,
         message: response.data?.message,
-        success: response.status >= 200 && response.status < 300,
+        // success: response.status >= 200 && response.status < 300,
         status: response.status,
       }
     },
@@ -214,7 +221,7 @@ export const useHttp = () => {
       return {
         data: response.data,
         message: response.data?.message,
-        success: response.status >= 200 && response.status < 300,
+        // success: response.status >= 200 && response.status < 300,
         status: response.status,
       }
     },
@@ -225,7 +232,7 @@ export const useHttp = () => {
       return {
         data: response.data,
         message: response.data?.message,
-        success: response.status >= 200 && response.status < 300,
+        // success: response.status >= 200 && response.status < 300,
         status: response.status,
       }
     },
