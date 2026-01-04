@@ -1,8 +1,8 @@
 import { defineStore } from "pinia"
 import { ref, computed } from "vue"
-import type { IPayment, IPaymentCreateRequest, IContractPaymentSummary } from "@/interface/payment/payments.interface"
+import type { IPayment, IPaymentCreateRequest, IPaymentUpdateRequest, IContractPaymentSummary, IPaymentFilter } from "@/interface/payment/payments.interface"
 import type { ITelevisionContract } from "@/interface/contract/contracts.interface"
-import { paymentService, paymentUtils } from "@/services/Payments/payment.services"
+import { paymentService, paymentUtils, type IPaymentTypeMaster, type IPaymentCategoryMaster, type IPaymentModeMaster } from "@/services/Payments/payment.services"
 
 export const usePaymentStore = defineStore("payments", () => {
   // State
@@ -13,10 +13,22 @@ export const usePaymentStore = defineStore("payments", () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
+  // Master data
+  const paymentTypes = ref<IPaymentTypeMaster[]>([])
+  const paymentCategories = ref<IPaymentCategoryMaster[]>([])
+  const paymentModes = ref<IPaymentModeMaster[]>([])
+
+  // Pagination
+  const totalCount = ref(0)
+  const currentPage = ref(1)
+  const pageSize = ref(10)
+  const totalPages = ref(0)
+
   // Current payment form
   const currentPayment = ref<IPaymentCreateRequest>({
     contractId: "",
-    paymentReference: paymentUtils.generatePaymentReference(),
+    invoiceId: null,
+    paymentReference: "",
     paymentDate: new Date().toISOString().split("T")[0],
     paymentType: "Bank Transfer",
     paymentCategory: "Both",
@@ -58,28 +70,10 @@ export const usePaymentStore = defineStore("payments", () => {
       return { contractAmount: 0, vatAmount: 0, totalAmount: 0, vatRate: 15 }
     }
 
-    console.log ("Selected Full Contract Invoice data : ", selectedContract.value)
-
-    const products = selectedContract.value.products || []
-    let contractAmount = selectedContract.value.total || 0
-
-    // products.forEach((product) => {
-    //   const items = product.productItems || []
-    //   items.forEach((item) => {
-    //     contractAmount += item.rate || 0
-    //   })
-    //   contractAmount *= product.quantity || 1
-    // })
-
-    // if (contractAmount === 0 && selectedContract.value.total) {
-    //   const vatRate = selectedContract.value.vatRate || 0
-    //   const totalWithVat = selectedContract.value.total / (1 + vatRate / 100)
-    //   contractAmount = totalWithVat
-    // }
-
+    const contractAmount = selectedContract.value.total || 0
     const vatRate = selectedContract.value.vatRate || 0
-    const vatAmount = (selectedContract.value.vat || 0)
-    const totalAmount = (selectedContract.value.total || 0) - vatAmount
+    const vatAmount = selectedContract.value.vat || 0
+    const totalAmount = contractAmount + vatAmount
 
     return { contractAmount, vatAmount, totalAmount, vatRate }
   })
@@ -109,28 +103,51 @@ export const usePaymentStore = defineStore("payments", () => {
   })
 
   // Actions
-  const fetchPayments = async () => {
+
+  // Fetch payment master data
+  const fetchPaymentMasters = async () => {
+    try {
+      const [types, categories, modes] = await Promise.all([
+        paymentService.getPaymentTypes(),
+        paymentService.getPaymentCategories(),
+        paymentService.getPaymentModes(),
+      ])
+      paymentTypes.value = types
+      paymentCategories.value = categories
+      paymentModes.value = modes
+    } catch (err) {
+      console.warn("Failed to fetch payment masters:", err)
+    }
+  }
+
+  // Fetch payments with filters
+  const fetchPayments = async (filter?: IPaymentFilter) => {
     isLoading.value = true
     error.value = null
     try {
-      const response = await paymentService.getAllPayments()
-      payments.value = response.data || (response as unknown as IPayment[]) || []
+      const response = await paymentService.getAllPayments(filter)
+      payments.value = response.data || []
+      totalCount.value = response.totalCount || 0
+      currentPage.value = response.page || 1
+      pageSize.value = response.pageSize || 10
+      totalPages.value = response.totalPages || 0
     } catch (err: unknown) {
-      console.warn("Failed to fetch payments, using empty array:", err)
+      console.warn("Failed to fetch payments:", err)
       payments.value = []
-      error.value = null // Don't show error for missing API
+      error.value = null
     } finally {
       isLoading.value = false
     }
   }
 
+  // Fetch contracts for payment selection
   const fetchContracts = async () => {
     isLoading.value = true
     try {
       const response = await paymentService.getContractsForPayment()
       contracts.value = response || []
     } catch (err: unknown) {
-      console.warn("Failed to fetch contracts, using empty array:", err)
+      console.warn("Failed to fetch contracts:", err)
       contracts.value = []
       error.value = null
     } finally {
@@ -138,11 +155,11 @@ export const usePaymentStore = defineStore("payments", () => {
     }
   }
 
+  // Fetch payments by contract
   const fetchPaymentsByContract = async (contractId: string) => {
     isLoading.value = true
     try {
       const contractPayments = await paymentService.getPaymentsByContractId(contractId)
-      // Update only payments for this contract
       payments.value = payments.value.filter((p) => p.contractId !== contractId).concat(contractPayments)
     } catch (err: unknown) {
       console.warn("Failed to fetch contract payments:", err)
@@ -151,17 +168,18 @@ export const usePaymentStore = defineStore("payments", () => {
     }
   }
 
+  // Select contract
   const selectContract = (contractId: string) => {
     const contract = contracts.value.find((c) => c.guid === contractId)
     selectedContract.value = contract || null
     currentPayment.value.contractId = contractId
 
-    // Auto-fill remaining amounts based on payment mode
     if (contract) {
       updatePaymentAmounts()
     }
   }
 
+  // Update payment amounts based on mode/category
   const updatePaymentAmounts = () => {
     const { dueContractAmount, dueVatAmount } = dueAmounts.value
     const { paymentCategory, paymentMode } = currentPayment.value
@@ -180,50 +198,49 @@ export const usePaymentStore = defineStore("payments", () => {
     }
   }
 
+  // Generate payment reference from API
+  const generatePaymentReference = async () => {
+    try {
+      const ref = await paymentService.generatePaymentReference()
+      currentPayment.value.paymentReference = ref || paymentUtils.generatePaymentReference()
+    } catch {
+      currentPayment.value.paymentReference = paymentUtils.generatePaymentReference()
+    }
+  }
+
+  // Create payment
   const createPayment = async (): Promise<boolean> => {
     isLoading.value = true
     error.value = null
     try {
-      const newPayment: IPayment = {
-        guid: crypto.randomUUID(),
+      // Prepare the request data
+      const requestData: IPaymentCreateRequest = {
         contractId: currentPayment.value.contractId,
-        contractNo: selectedContract.value?.televisionContractNo || "",
-        paymentReference: currentPayment.value.paymentReference || paymentUtils.generatePaymentReference(),
+        invoiceId: currentPayment.value.invoiceId,
+        paymentReference: currentPayment.value.paymentReference || await paymentService.generatePaymentReference(),
         paymentDate: currentPayment.value.paymentDate,
         paymentType: currentPayment.value.paymentType,
         paymentCategory: currentPayment.value.paymentCategory,
         paymentMode: currentPayment.value.paymentMode,
-        contractAmount: currentPayment.value.contractAmountPaid,
-        vatAmount: currentPayment.value.vatAmountPaid,
-        totalAmount: contractTotals.value.totalAmount,
-        paidAmount: currentPayment.value.contractAmountPaid + currentPayment.value.vatAmountPaid,
-        dueAmount:
-          dueAmounts.value.dueTotalAmount -
-          (currentPayment.value.contractAmountPaid + currentPayment.value.vatAmountPaid),
+        contractAmountPaid: currentPayment.value.contractAmountPaid,
+        vatAmountPaid: currentPayment.value.vatAmountPaid || 0,
         checkRef: currentPayment.value.checkRef,
         bankRef: currentPayment.value.bankRef,
         bankName: currentPayment.value.bankName,
         branchName: currentPayment.value.branchName,
         transactionId: currentPayment.value.transactionId,
-        clientName: selectedContract.value?.contractedClient?.clintName || null,
-        agencyName: selectedContract.value?.contractedAgency?.agencyName || null,
-        contractedPartyType: selectedContract.value?.contractedClient ? "Client" : "Agency",
         remarks: currentPayment.value.remarks,
-        status: "Completed",
         receivedBy: currentPayment.value.receivedBy,
-        createdAt: new Date().toISOString(),
       }
 
-      try {
-        await paymentService.createPayment(currentPayment.value)
+      const newPayment = await paymentService.createPayment(requestData)
+      
+      if (newPayment) {
         await fetchPayments()
-      } catch {
-        // If API fails, add locally
-        payments.value.push(newPayment)
+        resetPaymentForm()
+        return true
       }
-
-      resetPaymentForm()
-      return true
+      return false
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Failed to create payment"
       error.value = errorMessage
@@ -233,14 +250,31 @@ export const usePaymentStore = defineStore("payments", () => {
     }
   }
 
+  // Update payment
+  const updatePayment = async (paymentId: string, data: IPaymentUpdateRequest): Promise<boolean> => {
+    isLoading.value = true
+    error.value = null
+    try {
+      const updated = await paymentService.updatePayment(paymentId, data)
+      if (updated) {
+        await fetchPayments()
+        return true
+      }
+      return false
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to update payment"
+      error.value = errorMessage
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Delete payment
   const deletePayment = async (paymentId: string): Promise<boolean> => {
     isLoading.value = true
     try {
-      try {
-        await paymentService.deletePayment(paymentId)
-      } catch {
-        // If API fails, delete locally
-      }
+      await paymentService.deletePayment(paymentId)
       payments.value = payments.value.filter((p) => p.guid !== paymentId)
       return true
     } catch (err: unknown) {
@@ -252,10 +286,12 @@ export const usePaymentStore = defineStore("payments", () => {
     }
   }
 
+  // Reset payment form
   const resetPaymentForm = () => {
     currentPayment.value = {
       contractId: "",
-      paymentReference: paymentUtils.generatePaymentReference(),
+      invoiceId: null,
+      paymentReference: "",
       paymentDate: new Date().toISOString().split("T")[0],
       paymentType: "Bank Transfer",
       paymentCategory: "Both",
@@ -273,13 +309,18 @@ export const usePaymentStore = defineStore("payments", () => {
     selectedContract.value = null
   }
 
+  // Set payment field
   const setPaymentField = <K extends keyof IPaymentCreateRequest>(field: K, value: IPaymentCreateRequest[K]) => {
     currentPayment.value[field] = value
 
-    // Auto-update amounts when category or mode changes
     if (field === "paymentCategory" || field === "paymentMode") {
       updatePaymentAmounts()
     }
+  }
+
+  // Check if payment can be edited
+  const canEditPayment = (payment: IPayment): boolean => {
+    return paymentUtils.canEdit(payment)
   }
 
   return {
@@ -291,6 +332,13 @@ export const usePaymentStore = defineStore("payments", () => {
     currentPayment,
     isLoading,
     error,
+    paymentTypes,
+    paymentCategories,
+    paymentModes,
+    totalCount,
+    currentPage,
+    pageSize,
+    totalPages,
 
     // Getters
     totalPaymentsAmount,
@@ -301,14 +349,18 @@ export const usePaymentStore = defineStore("payments", () => {
     dueAmounts,
 
     // Actions
+    fetchPaymentMasters,
     fetchPayments,
     fetchContracts,
     fetchPaymentsByContract,
     selectContract,
     updatePaymentAmounts,
+    generatePaymentReference,
     createPayment,
+    updatePayment,
     deletePayment,
     resetPaymentForm,
     setPaymentField,
+    canEditPayment,
   }
 })

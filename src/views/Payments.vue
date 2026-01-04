@@ -162,14 +162,24 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="Actions" width="120" fixed="right" align="center">
+        <el-table-column label="Actions" width="160" fixed="right" align="center">
           <template #default="{ row }">
             <div class="action-buttons">
-              <el-tooltip content="View Details" placement="top">
-                <el-button type="primary" :icon="Eye" circle size="small" @click="handleViewPayment(row)" />
+              <el-tooltip content="View Receipt" placement="top">
+                <el-button type="success" circle size="small" @click="handleViewReceipt(row)">
+                  <FileText class="w-4 h-4" />
+                </el-button>
+              </el-tooltip>
+              <el-tooltip :content="canEdit(row) ? 'Edit Payment' : 'Cannot edit completed payment'" placement="top">
+                <el-button type="primary" circle size="small" :disabled="!canEdit(row)" @click="handleViewPayment(row)">
+                  <Pencil class="w-4 h-4" />
+                </el-button>
               </el-tooltip>
               <el-tooltip content="Delete" placement="top">
-                <el-button type="danger" :icon="Trash2" circle size="small" @click="handleDeletePayment(row)" />
+                <el-button type="danger" circle size="small" :disabled="!canEdit(row)"
+                  @click="handleDeletePayment(row)">
+                  <Trash2 class="w-4 h-4" />
+                </el-button>
               </el-tooltip>
             </div>
           </template>
@@ -186,6 +196,9 @@
 
     <!-- Payment Modal -->
     <PaymentModal v-model="showPaymentModal" :loading="isSubmitting" @save="handlePaymentSaved" />
+
+    <!-- Payment Receipt Modal -->
+    <PaymentReceiptModal v-model="showReceiptModal" :payment="selectedPayment" />
 
     <!-- Payment Details Dialog -->
     <el-dialog v-model="showDetailsDialog" title="Payment Details" width="700px">
@@ -274,13 +287,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Plus, Search, RefreshCw, Eye, Trash2,
+  Plus, Search, RefreshCw, Trash2, FileText, Pencil,
   Banknote, CheckCircle, Clock, TrendingUp,
   Building2, FileCheck, Globe, Smartphone, CreditCard
 } from 'lucide-vue-next'
 import { usePaymentStore } from '@/stores/payments'
 import { paymentUtils } from '@/services/Payments/payment.services'
 import PaymentModal from '@/components/forms/PaymentModal.vue'
+import PaymentReceiptModal from '@/components/reports/PaymentReceiptModal.vue'
 import type { IPayment } from '@/interface/payment/payments.interface'
 
 const store = usePaymentStore()
@@ -288,6 +302,7 @@ const store = usePaymentStore()
 // State
 const showPaymentModal = ref(false)
 const showDetailsDialog = ref(false)
+const showReceiptModal = ref(false)
 const selectedPayment = ref<IPayment | null>(null)
 const isSubmitting = ref(false)
 
@@ -423,6 +438,15 @@ const handlePageChange = (page: number) => {
 const handleViewPayment = (payment: IPayment) => {
   selectedPayment.value = payment
   showDetailsDialog.value = true
+}
+
+const handleViewReceipt = (payment: IPayment) => {
+  selectedPayment.value = payment
+  showReceiptModal.value = true
+}
+
+const canEdit = (payment: IPayment): boolean => {
+  return payment.status !== 'Completed'
 }
 
 const handleDeletePayment = async (payment: IPayment) => {
