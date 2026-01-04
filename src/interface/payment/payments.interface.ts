@@ -9,6 +9,8 @@ export interface IPayment {
   guid: string
   contractId: string
   contractNo: string
+  invoiceId?: string | null
+  invoiceNo?: string | null
   paymentReference: string
   paymentDate: string
   paymentType: PaymentType
@@ -47,6 +49,7 @@ export interface IPayment {
 
 export interface IPaymentCreateRequest {
   contractId: string
+  invoiceId?: string | null
   paymentReference?: string
   paymentDate: string
   paymentType: PaymentType
