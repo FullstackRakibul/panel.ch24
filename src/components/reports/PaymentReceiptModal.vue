@@ -24,7 +24,7 @@
         <!-- Company Header -->
         <div class="company-header">
           <div class="company-logo">
-            <div class="logo-placeholder">CH24</div>
+            <img src="@/assets/CH24.png" alt="Channel 24" class="company-logo" />
           </div>
           <div class="company-info">
             <h1 class="company-name">Channel 24 Television</h1>
@@ -435,6 +435,11 @@ const getReceiptStyles = () => `
   color: #1a365d;
   margin-bottom: 15px;
   letter-spacing: 2px;
+}
+
+.company-logo {
+  width: 40px;
+  height: 40px;
 }
 
 .receipt-meta {
