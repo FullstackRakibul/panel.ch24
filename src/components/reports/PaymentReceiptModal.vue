@@ -91,8 +91,8 @@
                 <td class="text-right">{{ formatCurrency(payment?.contractAmount || 0) }}</td>
               </tr>
               <tr>
-                <td>VAT Amount Paid</td>
-                <td class="text-right">{{ formatCurrency(payment?.vatAmount || 0) }}</td>
+                <td>Commission Amount Paid</td>
+                <td class="text-right">{{ formatCurrency(payment?.commissionAmount || 0) }}</td>
               </tr>
               <tr class="total-row">
                 <td><strong>Total Amount Paid</strong></td>
@@ -224,7 +224,7 @@ const formatPaymentCategory = (category: string | undefined) => {
   if (!category) return ''
   const mapping: Record<string, string> = {
     'ContractAmount': 'Contract Amount',
-    'VatAmount': 'VAT Amount',
+    'CommissionAmount': 'Commission Amount',
   }
   return mapping[category] || category
 }

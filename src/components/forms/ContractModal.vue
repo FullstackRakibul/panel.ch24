@@ -109,9 +109,10 @@
           </el-col>
 
           <el-col :span="4" class="">
-            <el-form-item label="Commission Rate (%)" prop="vatRate" class="">
-              <el-input-number v-model="form.vatRate" :min="0" :max="100" :precision="2" controls-position="right"
-                class="w-full" @change="handleFieldUpdate('vatRate', form.vatRate)" />
+            <el-form-item label="Commission Rate (%)" prop="commissionRate" class="">
+              <el-input-number v-model="form.commissionRate" :min="0" :max="100" :precision="2"
+                controls-position="right" class="w-full"
+                @change="handleFieldUpdate('commissionRate', form.commissionRate)" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -344,12 +345,16 @@
         </div>
         <div class="totals-summary">
           <div class="total-row">
-            <span>Spot Total:</span>
-            <span>Tk. {{ formatCurrency(store.productsTotal) }}</span>
+            <span>Spot Total (Net):</span>
+            <span>Tk. {{ formatCurrency(store.netProductsTotal) }}</span>
           </div>
           <div class="total-row">
-            <span>Plus {{ form.vatRate }}% VAT on Tk. {{ formatCurrency(store.productsTotal) }}:</span>
-            <span>Tk. {{ formatCurrency(store.vatAmount) }}</span>
+            <span>Commission ({{ form.commissionRate }}%):</span>
+            <span>Tk. {{ formatCurrency(store.commissionAmount) }}</span>
+          </div>
+          <div class="total-row">
+            <span>VAT Amount:</span>
+            <span>Tk. {{ formatCurrency(store.vatTotal) }}</span>
           </div>
           <div class="total-row grand-total">
             <span>Grand Total:</span>
@@ -525,8 +530,8 @@ const rules = computed(() => ({
   contractEndDate: [
     { required: true, message: 'Please select end date', trigger: 'change' }
   ],
-  vatRate: [
-    { required: true, message: 'Please enter VAT rate', trigger: 'blur' }
+  commissionRate: [
+    { required: true, message: 'Please enter commission rate', trigger: 'blur' }
   ],
   // Conditional validation based on contract type
   contractedClientId: isClientCopy.value ? [
@@ -595,8 +600,8 @@ const convertToStoreFormat = (contract: any) => {
     contractEndDate: contract.contractEndDate,
     contractedClientId: contract.contractedClientId,
     contractedAgencyId: contract.contractedAgencyId,
-    vat: contract.vat || 0,
-    vatRate: contract.vatRate || 15,
+    commission: contract.commission || 0,
+    commissionRate: contract.commissionRate || 0,
     total: contract.total || 0,
     remarks: contract.remarks || '',
     products: contract.products?.map((product: any) => ({
@@ -604,7 +609,7 @@ const convertToStoreFormat = (contract: any) => {
       contractProductDescription: product.contractProductDescription || '',
       quantity: product.quantity || 1,
       vat: product.vat || 0,
-      vatRate: product.vatRate || 15,
+      vatRate: product.vatRate || 0,
       total: product.total || 0,
       remarks: product.remarks || '',
       productItems: product.productItems?.map((item: any) => ({
@@ -613,7 +618,7 @@ const convertToStoreFormat = (contract: any) => {
         rate: item.rate || 0,
         remarks: item.remarks || '',
         vat: item.vat || 0,
-        vatRate: item.vatRate || 15
+        vatRate: item.vatRate || 0
       })) || []
     })) || [],
     onAirDescriptions: contract.onAirDescriptions?.map((desc: any) => ({
@@ -658,8 +663,8 @@ const convertToApiFormat = (): ITelevisionContractCreateRequest | ITelevisionCon
     contractEndDate: contractData.contractEndDate,
     contractedClientId: isClientCopy.value ? contractData.contractedClientId : null,
     contractedAgencyId: !isClientCopy.value ? contractData.contractedAgencyId : null,
-    vat: store.vatAmount,
-    vatRate: contractData.vatRate,
+    commission: store.commissionAmount,
+    commissionRate: contractData.commissionRate,
     total: store.grandTotal,
     remarks: contractData.remarks || '',
     products: contractData.products.map((product) => {
@@ -855,7 +860,7 @@ const handleSubmit = async () => {
     }
 
     store.clearLocalStorage()
-    // emit('save', contractData)
+    //emit('save', contractData)
     emit('refresh')
     handleClose()
 

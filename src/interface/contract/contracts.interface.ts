@@ -8,8 +8,8 @@ export interface ITelevisionContractCreateRequest {
   contractEndDate: string
   contractedClientId: string | null
   contractedAgencyId: string | null
-  vat: number
-  vatRate: number
+  commission: number
+  commissionRate: number
   total: number
   remarks?: string | null
   products: ITelevisionContractProductRequest[]
@@ -100,8 +100,8 @@ export interface ITelevisionContract {
   contractEndDate: string
   contractedClientId: string | null
   contractedAgencyId: string | null
-  vat: number | null
-  vatRate: number | null
+  commission: number | null
+  commissionRate: number | null
   total: number | null
   remarks: string | null
   createdAt?: string | null
@@ -143,7 +143,7 @@ export interface ITelevisionContractProductItem {
   guid: string
   particularsName?: string | null
   rate: number | null
-  remarks?: string | null
+  remarks: string | null
   vat: number | null
   vatRate: number | null
   createdAt?: string | null
@@ -185,8 +185,8 @@ export interface ITelevisionContractRequest {
   contractEndDate: string
   contractedClientId: string | null
   contractedAgencyId: string | null
-  vat: number | null
-  vatRate: number | null
+  commission: number | null
+  commissionRate: number | null
   total: number | null
   remarks?: string | null
   products?: ITelevisionContractProductRequest[]

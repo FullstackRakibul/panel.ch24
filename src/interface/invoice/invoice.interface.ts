@@ -118,7 +118,7 @@ export interface IInvoiceRequest {
   products?: IInvoiceProductRequest[]
   signaturers?: IInvoiceSignaturerRequest[]
   spotTotal: number
-  vatPercentage: number
+  commissionAmount: number
   vatAmount: number
   grandTotal: number
   grandTotalWords: string
@@ -140,7 +140,7 @@ export interface IInvoiceResponse {
   products?: IInvoiceProduct[]
   signaturers?: IInvoiceSignaturer[]
   spotTotal: number
-  vatPercentage: number
+  commissionAmount: number
   vatAmount: number
   grandTotal: number
   grandTotalWords: string

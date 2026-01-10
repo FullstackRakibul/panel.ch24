@@ -51,8 +51,8 @@ export interface TelevisionContractRequestDto {
   contractEndDate: string
   contractedClientId: string | null
   contractedAgencyId: string | null
-  vat: number
-  vatRate: number
+  commission: number
+  commissionRate: number
   total: number
   remarks: string
   products: TelevisionContractProductRequestDto[]
@@ -70,18 +70,31 @@ export const useContractStore = defineStore('contract', () => {
   // Getters
   const hasDraft = computed(() => draftContracts.value.length > 0)
   const currentDraft = computed(() => draftContracts.value[draftContracts.value.length - 1])
-  const productsTotal = computed(() => {
+  const netProductsTotal = computed(() => {
     return currentContract.value.products.reduce((sum, product) => {
-      return sum + calculateProductTotal(product)
+      return sum + calculateProductNet(product)
     }, 0)
   })
-  
-  const vatAmount = computed(() => {
-    return productsTotal.value * (currentContract.value.vatRate / 100)
+
+  const vatTotal = computed(() => {
+    return currentContract.value.products.reduce((sum, product) => {
+      return sum + calculateProductVat(product)
+    }, 0)
   })
+
+  // total item vat account
+
   
+  const itemsTotalValue = computed(() => {
+    return netProductsTotal.value + vatTotal.value
+  })
+
+  const commissionAmount = computed(() => {
+    return netProductsTotal.value * (currentContract.value.commissionRate / 100)
+  })
+
   const grandTotal = computed(() => {
-    return productsTotal.value + vatAmount.value
+    return itemsTotalValue.value + commissionAmount.value
   })
 
   // Actions
@@ -130,7 +143,7 @@ export const useContractStore = defineStore('contract', () => {
           rate: 0,
           remarks: '',
           vat: 0,
-          vatRate: 15
+          vatRate: 0
         }
       ]
     })
@@ -158,7 +171,7 @@ export const useContractStore = defineStore('contract', () => {
       rate: 0,
       remarks: '',
       vat: 0,
-      vatRate: 15
+      vatRate: 0
     })
     saveToLocalStorage()
   }
@@ -322,9 +335,11 @@ export const useContractStore = defineStore('contract', () => {
 
   // Utility functions
   const calculateItemTotal = (item: TelevisionContractProductItemsRequestDto) => {
-    const rate = item.rate || 0
-    const vatRate = item.vatRate || 0
-    return rate + (rate * (vatRate / 100))
+    return item.rate + (item.rate * item.vatRate / 100) || 0
+  }
+
+  const calculateItemVat = (item: TelevisionContractProductItemsRequestDto) => {
+    return item.rate * item.vatRate / 100 || 0
   }
 
   const calculateProductTotal = (product: TelevisionContractProductRequestDto) => {
@@ -334,6 +349,20 @@ export const useContractStore = defineStore('contract', () => {
     
     const quantity = product.quantity || 1
     return itemsTotal * quantity
+  }
+
+  const calculateProductNet = (product: TelevisionContractProductRequestDto) => {
+    const itemsNet = product.productItems.reduce((sum, item) => {
+      return sum + (item.rate || 0)
+    }, 0)
+    return itemsNet * (product.quantity || 1)
+  }
+
+  const calculateProductVat = (product: TelevisionContractProductRequestDto) => {
+    const itemsVat = product.productItems.reduce((sum, item) => {
+      return sum + ((item.rate || 0) * (item.vatRate || 0) / 100)
+    }, 0)
+    return itemsVat * (product.quantity || 1)
   }
 
 
@@ -347,8 +376,8 @@ export const useContractStore = defineStore('contract', () => {
       contractEndDate: '',
       contractedClientId: null,
       contractedAgencyId: null,
-      vat: 0,
-      vatRate: 15,
+      commission: 0,
+      commissionRate: 0,
       total: 0,
       remarks: '',
       products: [
@@ -357,7 +386,7 @@ export const useContractStore = defineStore('contract', () => {
           contractProductDescription: '',
           quantity: 1,
           vat: 0,
-          vatRate: 15,
+          vatRate: 0,
           total: 0,
           remarks: '',
           productItems: [
@@ -367,7 +396,7 @@ export const useContractStore = defineStore('contract', () => {
               rate: 0,
               remarks: '',
               vat: 0,
-              vatRate: 15
+              vatRate: 0
             }
           ]
         }
@@ -404,8 +433,11 @@ export const useContractStore = defineStore('contract', () => {
     // Getters
     hasDraft,
     currentDraft,
-    productsTotal,
-    vatAmount,
+    productsTotal: netProductsTotal,
+    netProductsTotal,
+    vatTotal,
+    itemsTotalValue,
+    commissionAmount,
     grandTotal,
 
     // Actions
@@ -434,6 +466,7 @@ export const useContractStore = defineStore('contract', () => {
     autoSave,
     setEditMode,
     calculateItemTotal,
+    calculateItemVat,
     calculateProductTotal
   }
 })

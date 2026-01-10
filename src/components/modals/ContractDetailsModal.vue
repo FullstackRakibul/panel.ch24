@@ -80,7 +80,7 @@
                 <td class="description-cell">{{ product.contractProductDescription || 'N/A' }}</td>
                 <td>{{ product.quantity || 0 }}</td>
                 <td>{{ formatCurrency(getProductRate(product)) }}</td>
-                <td>{{ formatCurrency(product.total || 0) }}</td>
+                <td class="font-bold text-slate-800 ">{{ formatCurrency(product.total || 0) }}</td>
               </tr>
 
               <!-- Product Items -->
@@ -88,24 +88,24 @@
                 <td></td>
                 <td colspan="2" style="padding-left: 20px;">
                   {{ item.particularsName || 'N/A' }}
-                  <span v-if="item.remarks" class="remarks-text">({{ item.remarks }})</span>
+                  <span v-if="item.remarks" class="remarks-text ">({{ item.remarks }})</span>
                 </td>
-                <td>1</td>
+                <td></td>
                 <td>{{ formatCurrency(item.rate || 0) }}</td>
-                <td>{{ formatCurrency(item.rate || 0) }}</td>
+                <td>{{ formatCurrency((item.rate || 0) + (item.vat || 0)) }}</td>
               </tr>
             </template>
 
             <!-- Totals -->
             <tr class="total-row">
               <td colspan="5"><strong>SUBTOTAL Tk</strong></td>
-              <td><strong>{{ formatCurrency(calculateSubtotal()) }}</strong></td>
+              <td><strong>{{ formatCurrency(calculateSubtotal() - calculateVatTotal()) }}</strong></td>
             </tr>
             <tr>
               <td colspan="5">
-                Plus {{ contract.vatRate || 0 }}% VAT on Tk {{ formatCurrency(calculateSubtotal()) }}
+                Plus VAT Amount
               </td>
-              <td>{{ formatCurrency(contract.vat || 0) }}</td>
+              <td>{{ formatCurrency(calculateVatTotal()) }}</td>
             </tr>
           </tbody>
         </table>
@@ -114,10 +114,10 @@
       <!-- Grand Total -->
       <div class="grand-total-section">
         <div class="total-words">
-          <span>In Words: {{ amountToWords(contract.total || 0) }}</span>
+          <span>In Words: {{ amountToWords(calculateGrandTotal()) }} Taka Only</span>
         </div>
         <div class="total-amount">
-          <span>Tk {{ formatCurrency(contract.total || 0) }}</span>
+          <span>Tk {{ formatCurrency(calculateGrandTotal()) }}</span>
         </div>
       </div>
 
@@ -289,6 +289,26 @@ const calculateSubtotal = () => {
   if (!props.contract?.products) return 0
   return props.contract.products.reduce((sum, product) => sum + (product.total || 0), 0)
 }
+
+const calculateGrandTotal = () => {
+
+  //   return (props.contract?.total || 0) + calculateVatTotal()
+  // }
+  if (!props.contract?.products) return 0
+  return props.contract.products.reduce((sum, product) => sum + (product.total || 0), 0)
+}
+
+const calculateVatTotal = () => {
+  if (!props.contract?.products) return 0
+  return props.contract.products.reduce((sum, product) => {
+    const productVat = (product.productItems || []).reduce((pSum, item) => {
+      return pSum + ((item.rate || 0) * (item.vatRate || 0) / 100)
+    }, 0)
+    return sum + (productVat * (product.quantity || 1))
+  }, 0)
+}
+
+
 
 const amountToWords = (amount: number): string => {
   // Simple implementation - you might want to use a more robust solution
