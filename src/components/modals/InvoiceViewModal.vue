@@ -82,7 +82,7 @@
                 </td>
                 <td>1</td>
                 <td>{{ formatCurrency(item.rate || 0) }}</td>
-                <td>{{ formatCurrency(item.rate || 0) }}</td>
+                <td>{{ formatCurrency((item.rate || 0) + (item.vat || 0)) }}</td>
               </tr>
             </template>
 
@@ -91,9 +91,15 @@
               <td colspan="5"><strong>SPOT TOTAL Tk</strong></td>
               <td><strong>{{ formatCurrency(spotTotal) }}</strong></td>
             </tr>
+            <tr class="commission-row">
+              <td colspan="5">
+                Plus Commission
+              </td>
+              <td>{{ formatCurrency(commissionAmount) }}</td>
+            </tr>
             <tr class="vat-row">
               <td colspan="5">
-                Plus {{ vatRate }}% VAT on Tk {{ formatCurrency(spotTotal) }}
+                Plus VAT Amount
               </td>
               <td>{{ formatCurrency(vatAmount) }}</td>
             </tr>
@@ -175,14 +181,10 @@ const recipientAddress = ref('N/A')
 //let spotTotal = props.invoice?.spotTotal || 0
 
 // Computed properties for nullable values
-const spotTotal = computed(() => {
-  if (!props.invoice?.spotTotal) return 0
-  return props.invoice.spotTotal
-})
-
-const vatRate = computed(() => props.invoice?.vatPercentage ?? 15)
-const vatAmount = computed(() => props.invoice?.vatAmount ?? (spotTotal.value * vatRate.value / 100))
-const grandTotal = computed(() => spotTotal.value + vatAmount.value)
+const spotTotal = computed(() => props.invoice?.spotTotal || 0)
+const commissionAmount = computed(() => props.invoice?.commissionAmount || 0)
+const vatAmount = computed(() => props.invoice?.vatAmount || 0)
+const grandTotal = computed(() => props.invoice?.grandTotal || 0)
 
 const fetchRecipientAddress = async () => {
   const billToAddress = props.invoice?.billTo?.address

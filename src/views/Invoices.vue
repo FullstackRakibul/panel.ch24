@@ -15,74 +15,6 @@
 
     <!-- Tabs -->
     <el-tabs v-model="activeTab" class="invoice-tabs" @tab-change="handleTabChange">
-      <!-- Pending for review Tab -->
-      <el-tab-pane label="Pending for review" name="contracts">
-        <el-card class="table-card" shadow="never">
-          <!-- Filter Section -->
-          <div class="filter-section">
-            <el-row :gutter="16" align="middle">
-              <el-col :span="6">
-                <el-date-picker v-model="contractDateRange" type="daterange" range-separator="to"
-                  start-placeholder="Start date" end-placeholder="End date" format="DD MMM, YYYY"
-                  value-format="YYYY-MM-DD" clearable class="w-full" @change="handleContractDateFilter" />
-              </el-col>
-              <el-col :span="5">
-                <el-select v-model="contractClientFilter" placeholder="Filter by Client/Agency" clearable class="w-full"
-                  @change="handleContractFilter">
-                  <el-option v-for="client in uniqueContractClients" :key="client" :label="client" :value="client" />
-                </el-select>
-              </el-col>
-              <el-col :span="3">
-                <el-button @click="clearContractFilters" :icon="RefreshCw" plain>Clear</el-button>
-              </el-col>
-            </el-row>
-          </div>
-
-          <el-table v-loading="loading" :data="filteredContracts" style="width: 100%" border stripe>
-            <el-table-column prop="televisionContractNo" label="Contract No" width="180" sortable />
-            <el-table-column label="Contract Date" width="180" align="center">
-              <template #default="{ row }">
-                {{ row.contractDate }}
-              </template>
-            </el-table-column>
-            <el-table-column label="Client/Agency" min-width="200">
-              <template #default="{ row }">
-                <div class="client-info">
-                  <span class="font-medium">
-                    {{ row.contractedClient?.clintName || row.contractedAgency?.agencyName || 'N/A' }}
-                    <el-tag size="small" :type="row.contractedClient ? 'success' : 'warning'">
-                      {{ row.contractedClient ? 'Client' : 'Agency' }}
-                    </el-tag>
-                  </span>
-                </div>
-              </template>
-            </el-table-column>
-            <el-table-column label="Total" width="140" align="right">
-              <template #default="{ row }">
-                <span class="amount">{{ formatCurrency(row.total || 0) }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column label="Actions" width="200" align="center" fixed="right">
-              <template #default="{ row }">
-                <el-button type="success" size="small" plain
-                  @click="generateInvoiceFromContract(row.guid, row.televisionContractNo)">
-                  <el-icon class="mr-1">
-                    <Check />
-                  </el-icon>
-                  Approve
-                </el-button>
-                <el-button type="primary" size="small" plain @click="handleViewInvoice(row)">
-                  <el-icon class="mr-1">
-                    <Document />
-                  </el-icon>
-                  View
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-card>
-      </el-tab-pane>
-
       <!-- Approved Tab -->
       <el-tab-pane label="Approved" name="approved">
         <el-card class="table-card" shadow="never">
@@ -183,6 +115,77 @@
           </div>
         </el-card>
       </el-tab-pane>
+
+
+      <!-- Pending for review Tab -->
+      <el-tab-pane label="Pending for review" name="contracts">
+        <el-card class="table-card" shadow="never">
+          <!-- Filter Section -->
+          <div class="filter-section">
+            <el-row :gutter="16" align="middle">
+              <el-col :span="6">
+                <el-date-picker v-model="contractDateRange" type="daterange" range-separator="to"
+                  start-placeholder="Start date" end-placeholder="End date" format="DD MMM, YYYY"
+                  value-format="YYYY-MM-DD" clearable class="w-full" @change="handleContractDateFilter" />
+              </el-col>
+              <el-col :span="5">
+                <el-select v-model="contractClientFilter" placeholder="Filter by Client/Agency" clearable class="w-full"
+                  @change="handleContractFilter">
+                  <el-option v-for="client in uniqueContractClients" :key="client" :label="client" :value="client" />
+                </el-select>
+              </el-col>
+              <el-col :span="3">
+                <el-button @click="clearContractFilters" :icon="RefreshCw" plain>Clear</el-button>
+              </el-col>
+            </el-row>
+          </div>
+
+          <el-table v-loading="loading" :data="filteredContracts" style="width: 100%" border stripe>
+            <el-table-column prop="televisionContractNo" label="Contract No" width="180" sortable />
+            <el-table-column label="Contract Date" width="180" align="center">
+              <template #default="{ row }">
+                {{ row.contractDate }}
+              </template>
+            </el-table-column>
+            <el-table-column label="Client/Agency" min-width="200">
+              <template #default="{ row }">
+                <div class="client-info">
+                  <span class="font-medium">
+                    {{ row.contractedClient?.clintName || row.contractedAgency?.agencyName || 'N/A' }}
+                    <el-tag size="small" :type="row.contractedClient ? 'success' : 'warning'">
+                      {{ row.contractedClient ? 'Client' : 'Agency' }}
+                    </el-tag>
+                  </span>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="Total" width="140" align="right">
+              <template #default="{ row }">
+                <span class="amount">{{ formatCurrency(row.total || 0) }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="Actions" width="200" align="center" fixed="right">
+              <template #default="{ row }">
+                <el-button type="success" size="small" plain
+                  @click="generateInvoiceFromContract(row.guid, row.televisionContractNo)">
+                  <el-icon class="mr-1">
+                    <Check />
+                  </el-icon>
+                  Approve
+                </el-button>
+                <el-button type="primary" size="small" plain @click="handleViewInvoice(row)">
+                  <el-icon class="mr-1">
+                    <Document />
+                  </el-icon>
+                  View
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-card>
+      </el-tab-pane>
+
+
     </el-tabs>
 
     <!-- Invoice Modal for Approved Invoices (uses InvoiceViewModal) -->
@@ -253,16 +256,20 @@
 
         <div class="preview-totals">
           <div class="total-row">
-            <span>Subtotal:</span>
+            <span>Spot Total (Net):</span>
             <span>{{ formatCurrency(getContractSubtotal()) }}</span>
           </div>
           <div class="total-row">
-            <span>VAT ({{ selectedContract.vatRate || 0 }}%):</span>
-            <span>{{ formatCurrency(selectedContract.vat || 0) }}</span>
+            <span>Commission ({{ selectedContract.commissionRate || 0 }}%):</span>
+            <span>{{ formatCurrency(selectedContract.commission || 0) }}</span>
+          </div>
+          <div class="total-row">
+            <span>VAT Amount:</span>
+            <span>{{ formatCurrency(getContractVatTotal()) }}</span>
           </div>
           <div class="total-row grand">
             <span>Grand Total:</span>
-            <span>{{ formatCurrency(selectedContract.total || 0) }}</span>
+            <span>{{ formatCurrency(getContractGrandTotal()) }}</span>
           </div>
         </div>
       </div>
@@ -291,7 +298,7 @@ const loading = ref(false)
 const contracts = ref<ITelevisionContract[]>([])
 const invoices = ref<IInvoiceResponse[]>([])
 const searchQuery = ref('')
-const activeTab = ref('contracts')
+const activeTab = ref('approved')
 
 // Filter state for contracts
 const contractDateRange = ref<[string, string] | null>(null)
@@ -590,6 +597,20 @@ const getContractProductRate = (product: any) => {
 const getContractSubtotal = () => {
   if (!selectedContract.value?.products) return 0
   return selectedContract.value.products.reduce((sum: number, product: any) => sum + (product.total || 0), 0)
+}
+
+const getContractVatTotal = () => {
+  if (!selectedContract.value?.products) return 0
+  return selectedContract.value.products.reduce((sum: number, product: any) => {
+    const productVat = (product.productItems || []).reduce((pSum: number, item: any) => {
+      return pSum + ((item.rate || 0) * (item.vatRate || 0) / 100)
+    }, 0)
+    return sum + (productVat * (product.quantity || 1))
+  }, 0)
+}
+
+const getContractGrandTotal = () => {
+  return (selectedContract.value?.total || 0) + getContractVatTotal()
 }
 
 const isOverdue = (dueDate: string) => {

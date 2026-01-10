@@ -102,8 +102,8 @@
               <span class="summary-value">Tk. {{ formatCurrency(contractTotals.contractAmount) }}</span>
             </div>
             <div class="summary-item highlight">
-              <span class="summary-label">VAT ({{ contractTotals.vatRate }}%)</span>
-              <span class="summary-value">Tk. {{ formatCurrency(contractTotals.vatAmount) }}</span>
+              <span class="summary-label">Commission ({{ contractTotals.commissionRate }}%)</span>
+              <span class="summary-value">Tk. {{ formatCurrency(contractTotals.commissionAmount) }}</span>
             </div>
             <div class="summary-item highlight primary">
               <span class="summary-label">Total Amount</span>
@@ -208,8 +208,8 @@
               <el-select v-model="form.paymentCategory" placeholder="Select category" class="w-full"
                 @change="handleCategoryChange">
                 <el-option label="Contract Amount Only" value="Contract Amount" />
-                <el-option label="VAT Amount Only" value="VAT Amount" />
-                <el-option label="Both (Contract + VAT)" value="Both" />
+                <el-option label="Commission Amount Only" value="Commission Amount" />
+                <el-option label="Both (Contract + Commission)" value="Both" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -277,14 +277,14 @@
         </div>
         <div class="amount-input-grid">
           <!-- Contract Amount -->
-          <div class="amount-card" :class="{ disabled: form.paymentCategory === 'VAT Amount' }">
+          <div class="amount-card" :class="{ disabled: form.paymentCategory === 'Commission Amount' }">
             <div class="amount-card-header">
               <span class="amount-label">Contract Amount</span>
               <el-tag size="small" type="info">Due: Tk. {{ formatCurrency(dueAmounts.dueContractAmount) }}</el-tag>
             </div>
             <el-form-item prop="contractAmountPaid">
               <el-input-number v-model="form.contractAmountPaid" :min="0" :max="dueAmounts.dueContractAmount"
-                :precision="2" :disabled="form.paymentCategory === 'VAT Amount'" controls-position="right"
+                :precision="2" :disabled="form.paymentCategory === 'Commission Amount'" controls-position="right"
                 class="w-full amount-input" @change="validateAmounts" />
             </el-form-item>
             <div class="amount-remaining">
@@ -292,19 +292,19 @@
             </div>
           </div>
 
-          <!-- VAT Amount -->
+          <!-- Commission Amount -->
           <div class="amount-card" :class="{ disabled: form.paymentCategory === 'Contract Amount' }">
             <div class="amount-card-header">
-              <span class="amount-label">VAT Amount</span>
-              <el-tag size="small" type="warning">Due: Tk. {{ formatCurrency(dueAmounts.dueVatAmount) }}</el-tag>
+              <span class="amount-label">Commission Amount</span>
+              <el-tag size="small" type="warning">Due: Tk. {{ formatCurrency(dueAmounts.dueCommissionAmount) }}</el-tag>
             </div>
-            <el-form-item prop="vatAmountPaid">
-              <el-input-number v-model="form.vatAmountPaid" :min="0" :max="dueAmounts.dueVatAmount" :precision="2"
-                :disabled="form.paymentCategory === 'Contract Amount'" controls-position="right"
+            <el-form-item prop="commissionAmountPaid">
+              <el-input-number v-model="form.commissionAmountPaid" :min="0" :max="dueAmounts.dueCommissionAmount"
+                :precision="2" :disabled="form.paymentCategory === 'Contract Amount'" controls-position="right"
                 class="w-full amount-input" @change="validateAmounts" />
             </el-form-item>
             <div class="amount-remaining">
-              Remaining: Tk. {{ formatCurrency(dueAmounts.dueVatAmount - form.vatAmountPaid) }}
+              Remaining: Tk. {{ formatCurrency(dueAmounts.dueCommissionAmount - form.commissionAmountPaid) }}
             </div>
           </div>
 
@@ -350,8 +350,8 @@
             <span>Tk. {{ formatCurrency(form.contractAmountPaid) }}</span>
           </div>
           <div class="summary-row">
-            <span>VAT Amount Paying:</span>
-            <span>Tk. {{ formatCurrency(form.vatAmountPaid) }}</span>
+            <span>Commission Amount Paying:</span>
+            <span>Tk. {{ formatCurrency(form.commissionAmountPaid) }}</span>
           </div>
           <div class="summary-row total">
             <span>Total Payment:</span>
@@ -513,7 +513,7 @@ const clearSelection = () => {
 
 // Computed values
 const totalPaymentAmount = computed(() => {
-  return (form.value.contractAmountPaid || 0) + (form.value.vatAmountPaid || 0)
+  return (form.value.contractAmountPaid || 0) + (form.value.commissionAmountPaid || 0)
 })
 
 const paymentPercentage = computed(() => {
@@ -579,8 +579,8 @@ const validateAmounts = () => {
   if (form.value.contractAmountPaid > dueAmounts.value.dueContractAmount) {
     store.setPaymentField('contractAmountPaid', dueAmounts.value.dueContractAmount)
   }
-  if (form.value.vatAmountPaid > dueAmounts.value.dueVatAmount) {
-    store.setPaymentField('vatAmountPaid', dueAmounts.value.dueVatAmount)
+  if (form.value.commissionAmountPaid > dueAmounts.value.dueCommissionAmount) {
+    store.setPaymentField('commissionAmountPaid', dueAmounts.value.dueCommissionAmount)
   }
 }
 
