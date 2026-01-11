@@ -40,17 +40,18 @@ export const clearAuthTokens = () => {
   localStorage.removeItem("user")
 }
 
-// Redirect to login page (supports hash-based routing)
 export const redirectToLogin = () => {
   clearAuthTokens()
-  ElMessage.error("Session expired. Please login again.")
+  
   if (typeof window !== "undefined") {
-    // Use hash routing since the app uses createWebHashHistory
-    window.location.href = window.location.origin + window.location.pathname + "#/login"
+    ElMessage.error("Session expired. Please login again.")
+    setTimeout(() => {
+      window.location.href = window.location.origin + window.location.pathname + "#/login"
+      window.location.reload()
+    }, 500)
   }
 }
 
-// Base HTTP client factory
 export const createHttpClient = (baseUrl?: string, additionalHeaders: Record<string, string> = {}): AxiosInstance => {
   const authToken = getAuthToken()
 

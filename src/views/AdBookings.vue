@@ -127,22 +127,23 @@
     <el-card v-if="viewMode === 'table'" class="contracts-table-card" shadow="never">
       <template #header>
         <div class="card-header">
-          <h3>Contracts ({{ contractsData.total }})</h3>
+          <h3>Contracts ({{ filteredContracts.length }})</h3>
           <div class="header-actions">
-            <el-button :icon="Download" @click="exportContracts">
-              Export
+            <el-button :icon="Download" @click="exportToExcel">
+              Export Excel
             </el-button>
           </div>
         </div>
       </template>
 
-      <el-table :data="contractsData.data" style="width: 100%" height="600"
+      <el-table :data="displayedContracts" style="width: 100%" height="600"
         :default-sort="{ prop: 'contractDate', order: 'descending' }" empty-text="No contracts found"
         v-loading="loading" @sort-change="handleSortChange">
         <el-table-column label="Contract No" prop="televisionContractNo" width="180" sortable>
           <template #default="{ row }">
             <div class="contract-number">
-              <span class="number">{{ row.televisionContractNo }}</span>
+              <span class="number" style="cursor:pointer;" @click="copyContractNo(row.televisionContractNo)">{{
+                row.televisionContractNo }}</span>
               <el-tag v-if="row.remarks?.toLowerCase().includes('draft')" type="info" size="small">
                 Draft
               </el-tag>
@@ -388,7 +389,6 @@ onMounted(() => {
 })
 
 
-const allContracts = ref<ITelevisionContract[]>([])
 // Reactive data
 const loading = ref(false)
 const modalLoading = ref(false)
@@ -435,6 +435,15 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-BD')
 }
 
+// Copy contract number to clipboard
+const copyContractNo = (contractNo: string) => {
+  navigator.clipboard.writeText(contractNo).then(() => {
+    ElMessage.success(`Copied: ${contractNo}`)
+  }).catch(() => {
+    ElMessage.error('Failed to copy contract number')
+  })
+}
+
 const getClientOrAgencyName = (contract: ITelevisionContract) => {
   return contract.contractedClientId ? 'Client' : 'Agency'
 }
@@ -461,25 +470,10 @@ const getStatusColor = (contract: ITelevisionContract) => {
 const loadContracts = async () => {
   loading.value = true
   try {
-    const filter: ITelevisionContractFilter = {
-      page: pagination.currentPage,
-      pageSize: pagination.pageSize,
-      search: searchQuery.value || undefined,
-      status: selectedStatus.value || undefined,
-      startDate: dateRange.value[0] || undefined,
-      endDate: dateRange.value[1] || undefined
-    }
-
     const response = await contractService.getAllTelevisionContracts()
-
-    console.log("Television Contract  response", response)
+    console.log('Television Contract response', response)
     contractsData.data = response
     contractsData.total = response.length
-
-    // Load statistics
-    // const stats = await contractService.getContractStatistics()
-    // Object.assign(statistics, stats)
-
   } catch (error) {
     console.error('Failed to load contracts:', error)
     ElMessage.error('Failed to load contracts')
@@ -656,15 +650,6 @@ const handleSave = async (contractData: any) => {
   }
 }
 
-const exportContracts = async () => {
-  try {
-    ElMessage.info('Export feature coming soon...')
-    // Implement export functionality here
-  } catch (error) {
-    console.error('Export failed:', error)
-    ElMessage.error('Export failed')
-  }
-}
 
 
 // Computed property for filtered contracts
@@ -704,16 +689,31 @@ const filteredContracts = computed(() => {
   return filtered
 })
 
-// Update contractsData based on filtered results and pagination
-const updateDisplayedContracts = () => {
+// Displayed contracts with pagination applied to filtered results
+const displayedContracts = computed(() => {
   const startIndex = (pagination.currentPage - 1) * pagination.pageSize
   const endIndex = startIndex + pagination.pageSize
+  return filteredContracts.value.slice(startIndex, endIndex)
+})
 
-  contractsData.data = filteredContracts.value.slice(startIndex, endIndex)
-  contractsData.total = filteredContracts.value.length
-  pagination.total = filteredContracts.value.length
+// Export to Excel via backend API
+const exportToExcel = async () => {
+  try {
+    ElMessage.info('Generating Excel file...')
+    const blob = await contractService.exportContractsToExcel()
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    const date = new Date().toISOString().split('T')[0]
+    link.download = `TV_Contracts_${date}.xlsx`
+    link.click()
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('Excel file exported successfully')
+  } catch (error) {
+    console.error('Export failed:', error)
+    ElMessage.error('Failed to export contracts to Excel')
+  }
 }
-
 
 
 </script>

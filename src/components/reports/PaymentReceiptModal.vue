@@ -296,6 +296,10 @@ const getReceiptStyles = () => `
     padding: 20px;
     background: white;
   }
+  .company-logo {
+    width: 40px;
+    height: 40px;
+  }
   .company-header {
     display: flex;
     align-items: center;

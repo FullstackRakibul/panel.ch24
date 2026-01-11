@@ -135,6 +135,14 @@ export const contractService = {
     return response.data;
   },
 
+  // Export all contracts to Excel
+  exportContractsToExcel: async (): Promise<Blob> => {
+    const response = await useHttp().get('/television-contract/export/excel', {
+      responseType: 'blob'
+    });
+    return response.data;
+  },
+
   // Get contract statistics
   getContractStatistics: async (): Promise<{
     totalContracts: number;
@@ -208,12 +216,14 @@ export const contractUtils = {
       productsTotal += product.total;
     });
     
-    const vatAmount = productsTotal * (contract.vatRate || 0 / 100);
-    const grandTotal = productsTotal + vatAmount;
+    const commission = contract.commission || 0;
+    const vatAmount = productsTotal * (contract.products?.[0].vatRate || 0 / 100);
+    const grandTotal = productsTotal + commission;
     
     return {
       productsTotal,
       vatAmount,
+      commission,
       grandTotal
     };
   },

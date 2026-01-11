@@ -103,9 +103,15 @@
             </tr>
             <tr>
               <td colspan="5">
-                Plus VAT Amount
+                Plus Item VAT Amount
               </td>
               <td>{{ formatCurrency(calculateVatTotal()) }}</td>
+            </tr>
+            <tr>
+              <td colspan="5">
+                Plus Product VAT Amount
+              </td>
+              <td>{{ formatCurrency(calculateProductVatTotal()) }}</td>
             </tr>
             <tr>
               <td colspan="5">
@@ -309,6 +315,11 @@ const calculateVatTotal = () => {
     }, 0)
     return sum + (productVat * (product.quantity || 1))
   }, 0)
+}
+
+const calculateProductVatTotal = () => {
+  // product vat total will be product vat rate * item total for the perticuler 
+
 }
 
 const calculateCommissionTotal = () => {
