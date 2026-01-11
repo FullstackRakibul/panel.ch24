@@ -107,6 +107,12 @@
               </td>
               <td>{{ formatCurrency(calculateVatTotal()) }}</td>
             </tr>
+            <tr>
+              <td colspan="5">
+                Plus Commission Amount
+              </td>
+              <td>{{ formatCurrency(calculateCommissionTotal()) }}</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -292,10 +298,7 @@ const calculateSubtotal = () => {
 
 const calculateGrandTotal = () => {
 
-  //   return (props.contract?.total || 0) + calculateVatTotal()
-  // }
-  if (!props.contract?.products) return 0
-  return props.contract.products.reduce((sum, product) => sum + (product.total || 0), 0)
+  return (props.contract?.total || 0)
 }
 
 const calculateVatTotal = () => {
@@ -306,6 +309,11 @@ const calculateVatTotal = () => {
     }, 0)
     return sum + (productVat * (product.quantity || 1))
   }, 0)
+}
+
+const calculateCommissionTotal = () => {
+  if (!props.contract?.commission) return 0
+  return props.contract.commission
 }
 
 
