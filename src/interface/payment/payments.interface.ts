@@ -2,7 +2,7 @@
 
 // Type aliases for reusable payment enums
 export type PaymentType = "Cash" | "Bank Transfer" | "Check" | "Online" | "Mobile Banking" | "Other"
-export type PaymentCategory = "Contract Amount" | "Commission Amount" | "Both"
+export type PaymentCategory = "Contract Amount" | "Commission Amount" | "VAT Amount" | "Both" 
 export type PaymentMode = "Full Payment" | "Partial Payment"
 
 export interface IPayment {
@@ -19,6 +19,7 @@ export interface IPayment {
 
   // Amount details
   contractAmount: number
+  vatAmount?: number
   commissionAmount: number
   totalAmount: number
   paidAmount: number
@@ -58,6 +59,7 @@ export interface IPaymentCreateRequest {
 
   contractAmountPaid: number
   commissionAmountPaid: number
+  vatAmountPaid: number
 
   checkRef?: string | null
   bankRef?: string | null

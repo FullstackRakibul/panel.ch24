@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="dialogVisible" :title="isEdit ? 'Edit Payment' : 'Add New Payment'" width="1200px"
+  <el-dialog v-model="dialogVisible" :title="isEdit ? 'Edit Payment' : 'Add New Payment'" width="1400px"
     :close-on-click-modal="false" :close-on-press-escape="false" class="payment-modal font-sans" top="3vh">
     <el-form ref="formRef" :model="form" :rules="rules" label-position="top" size="default" class="payment-form">
       <!-- Contract Selection Section -->
@@ -513,7 +513,7 @@ const clearSelection = () => {
 
 // Computed values
 const totalPaymentAmount = computed(() => {
-  return (form.value.contractAmountPaid || 0) + (form.value.commissionAmountPaid || 0)
+  return (form.value.contractAmountPaid || 0) + (form.value.commissionAmountPaid || 0) + (form.value.vatAmountPaid || 0)
 })
 
 const paymentPercentage = computed(() => {
@@ -581,6 +581,9 @@ const validateAmounts = () => {
   }
   if (form.value.commissionAmountPaid > dueAmounts.value.dueCommissionAmount) {
     store.setPaymentField('commissionAmountPaid', dueAmounts.value.dueCommissionAmount)
+  }
+  if (form.value.vatAmountPaid > dueAmounts.value.dueVatAmount) {
+    store.setPaymentField('vatAmountPaid', dueAmounts.value.dueVatAmount)
   }
 }
 
