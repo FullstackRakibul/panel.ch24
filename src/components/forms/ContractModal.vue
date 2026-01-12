@@ -73,7 +73,7 @@
           <!-- Client Selection - Only shown when isClientCopy is true -->
           <el-col :span="16" v-if="isClientCopy">
             <el-form-item label="Client (Advertiser)" prop="contractedClientId">
-              <div class="select-with-action">
+              <div class="select-with-action w-full">
                 <el-select v-model="form.contractedClientId" placeholder="Select Client/Advertiser" class="flex-1"
                   filterable clearable @change="handleFieldUpdate('contractedClientId', form.contractedClientId)">
                   <el-option v-for="client in clients" :key="client.guid" :label="client.clintName || client.email"
@@ -155,13 +155,13 @@
                     @change="handleProductUpdate(productIndex, 'quantity', product.quantity)" />
                 </el-form-item>
               </el-col>
-              <el-col :span="6">
+              <!-- <el-col :span="6">
                 <el-form-item label="VAT Rate (%)">
                   <el-input-number v-model="product.vatRate" :min="0" :max="100" :precision="2"
                     controls-position="right" class="w-full"
                     @change="handleProductUpdate(productIndex, 'vatRate', product.vatRate)" />
                 </el-form-item>
-              </el-col>
+              </el-col> -->
             </el-row>
 
             <!-- Product Items (Particulars) -->

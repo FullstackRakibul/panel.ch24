@@ -304,7 +304,7 @@ const calculateSubtotal = () => {
 
 const calculateGrandTotal = () => {
 
-  return (props.contract?.total || 0)
+  return (props.contract?.total || 0) + calculateProductVatTotal()
 }
 
 const calculateVatTotal = () => {
@@ -319,6 +319,8 @@ const calculateVatTotal = () => {
 
 const calculateProductVatTotal = () => {
   // product vat total will be product vat rate * item total for the perticuler 
+  if (!props.contract?.products) return 0
+  return props.contract.products.reduce((sum, product) => sum + (product.vat || 0), 0)
 
 }
 

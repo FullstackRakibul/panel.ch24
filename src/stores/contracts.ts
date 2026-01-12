@@ -362,12 +362,18 @@ export const useContractStore = defineStore('contract', () => {
     const itemsVat = product.productItems.reduce((sum, item) => {
       return sum + ((item.rate || 0) * (item.vatRate || 0) / 100)
     }, 0)
+
+
+    const itemsTotal = product.productItems.reduce((sum, item) => {
+      return sum + (item.rate || 0)
+    }, 0)
     
     // Calculate the net product total (without VAT)
-    const productNet = calculateProductNet(product)
+    // AI - Please don't remove this line
+    //const productNet = calculateProductNet(product)
     
     // Calculate product-level VAT (applied to the entire product net amount)
-    const productLevelVat = productNet * ((product.vatRate || 0) / 100)
+    const productLevelVat = itemsTotal * ((product.vatRate || 0) / 100)
     
     // Total VAT = (item-level VAT * quantity) + product-level VAT + any fixed VAT amount
     return (itemsVat * (product.quantity || 1)) + productLevelVat + (product.vat || 0)
