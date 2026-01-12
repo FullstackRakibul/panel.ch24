@@ -105,6 +105,10 @@
               <span class="summary-label">Commission ({{ contractTotals.commissionRate }}%)</span>
               <span class="summary-value">Tk. {{ formatCurrency(contractTotals.commissionAmount) }}</span>
             </div>
+            <div class="summary-item highlight">
+              <span class="summary-label">VAT Amount</span>
+              <span class="summary-value">Tk. {{ formatCurrency(contractTotals.vatAmount) }}</span>
+            </div>
             <div class="summary-item highlight primary">
               <span class="summary-label">Total Amount</span>
               <span class="summary-value">Tk. {{ formatCurrency(contractTotals.totalAmount) }}</span>
@@ -207,9 +211,13 @@
             <el-form-item label="Payment Category" prop="paymentCategory">
               <el-select v-model="form.paymentCategory" placeholder="Select category" class="w-full"
                 @change="handleCategoryChange">
-                <el-option label="Contract Amount Only" value="Contract Amount" />
-                <el-option label="Commission Amount Only" value="Commission Amount" />
-                <el-option label="Both (Contract + Commission)" value="Both" />
+                <el-option label="Contract Amount Only" value="Contract Amount Only" />
+                <el-option label="Commission Amount Only" value="Commission Amount Only" />
+                <el-option label="Vat Amount Only" value="Vat Amount Only" />
+                <el-option label="Both (Contract + Commission)" value="Both (Contract + Commission)" />
+                <el-option label="Both (Contract + Vat)" value="Both (Contract + Vat)" />
+                <el-option label="Both (Vat + Commission)" value="Both (Vat + Commission)" />
+                <el-option label="ALL (Contract + Commission + Vat)" value="ALL (Contract + Commission + Vat)" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -277,15 +285,17 @@
         </div>
         <div class="amount-input-grid">
           <!-- Contract Amount -->
-          <div class="amount-card" :class="{ disabled: form.paymentCategory === 'Commission Amount' }">
+          <div class="amount-card"
+            :class="{ disabled: !['Contract Amount Only', 'Both (Contract + Commission)', 'Both (Contract + Vat)', 'ALL (Contract + Commission + Vat)'].includes(form.paymentCategory) }">
             <div class="amount-card-header">
               <span class="amount-label">Contract Amount</span>
               <el-tag size="small" type="info">Due: Tk. {{ formatCurrency(dueAmounts.dueContractAmount) }}</el-tag>
             </div>
             <el-form-item prop="contractAmountPaid">
               <el-input-number v-model="form.contractAmountPaid" :min="0" :max="dueAmounts.dueContractAmount"
-                :precision="2" :disabled="form.paymentCategory === 'Commission Amount'" controls-position="right"
-                class="w-full amount-input" @change="validateAmounts" />
+                :precision="2"
+                :disabled="!['Contract Amount Only', 'Both (Contract + Commission)', 'Both (Contract + Vat)', 'ALL (Contract + Commission + Vat)'].includes(form.paymentCategory)"
+                controls-position="right" class="w-full amount-input" @change="validateAmounts" />
             </el-form-item>
             <div class="amount-remaining">
               Remaining: Tk. {{ formatCurrency(dueAmounts.dueContractAmount - form.contractAmountPaid) }}
@@ -293,18 +303,37 @@
           </div>
 
           <!-- Commission Amount -->
-          <div class="amount-card" :class="{ disabled: form.paymentCategory === 'Contract Amount' }">
+          <div class="amount-card"
+            :class="{ disabled: !['Commission Amount Only', 'Both (Contract + Commission)', 'Both (Vat + Commission)', 'ALL (Contract + Commission + Vat)'].includes(form.paymentCategory) }">
             <div class="amount-card-header">
               <span class="amount-label">Commission Amount</span>
               <el-tag size="small" type="warning">Due: Tk. {{ formatCurrency(dueAmounts.dueCommissionAmount) }}</el-tag>
             </div>
             <el-form-item prop="commissionAmountPaid">
               <el-input-number v-model="form.commissionAmountPaid" :min="0" :max="dueAmounts.dueCommissionAmount"
-                :precision="2" :disabled="form.paymentCategory === 'Contract Amount'" controls-position="right"
-                class="w-full amount-input" @change="validateAmounts" />
+                :precision="2"
+                :disabled="!['Commission Amount Only', 'Both (Contract + Commission)', 'Both (Vat + Commission)', 'ALL (Contract + Commission + Vat)'].includes(form.paymentCategory)"
+                controls-position="right" class="w-full amount-input" @change="validateAmounts" />
             </el-form-item>
             <div class="amount-remaining">
               Remaining: Tk. {{ formatCurrency(dueAmounts.dueCommissionAmount - form.commissionAmountPaid) }}
+            </div>
+          </div>
+
+          <!-- VAT Amount -->
+          <div class="amount-card"
+            :class="{ disabled: !['Vat Amount Only', 'Both (Contract + Vat)', 'Both (Vat + Commission)', 'ALL (Contract + Commission + Vat)'].includes(form.paymentCategory) }">
+            <div class="amount-card-header">
+              <span class="amount-label">VAT Amount</span>
+              <el-tag size="small" type="success">Due: Tk. {{ formatCurrency(dueAmounts.dueVatAmount) }}</el-tag>
+            </div>
+            <el-form-item prop="vatAmountPaid">
+              <el-input-number v-model="form.vatAmountPaid" :min="0" :max="dueAmounts.dueVatAmount" :precision="2"
+                :disabled="!['Vat Amount Only', 'Both (Contract + Vat)', 'Both (Vat + Commission)', 'ALL (Contract + Commission + Vat)'].includes(form.paymentCategory)"
+                controls-position="right" class="w-full amount-input" @change="validateAmounts" />
+            </el-form-item>
+            <div class="amount-remaining">
+              Remaining: Tk. {{ formatCurrency(dueAmounts.dueVatAmount - form.vatAmountPaid) }}
             </div>
           </div>
 
@@ -352,6 +381,10 @@
           <div class="summary-row">
             <span>Commission Amount Paying:</span>
             <span>Tk. {{ formatCurrency(form.commissionAmountPaid) }}</span>
+          </div>
+          <div class="summary-row">
+            <span>VAT Amount Paying:</span>
+            <span>Tk. {{ formatCurrency(form.vatAmountPaid) }}</span>
           </div>
           <div class="summary-row total">
             <span>Total Payment:</span>
@@ -445,7 +478,7 @@ const filteredSearchResults = computed(() => {
   const query = searchQuery.value.toLowerCase().trim()
 
   // Search across all fields: contract number, client name, agency name
-  const results = contracts.value.filter(c =>
+  const results = contracts.value.filter((c: any) =>
     c.televisionContractNo?.toLowerCase().includes(query) ||
     c.contractedClient?.clintName?.toLowerCase().includes(query) ||
     c.contractedAgency?.agencyName?.toLowerCase().includes(query) ||
@@ -840,14 +873,14 @@ watch(() => props.modelValue, (visible) => {
   background: linear-gradient(135deg, #f8fafc, #f1f5f9);
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 12px;
-  padding: 20px;
+  padding: 15px;
   margin-top: 16px;
 }
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
   margin-bottom: 20px;
 }
 
@@ -944,7 +977,7 @@ watch(() => props.modelValue, (visible) => {
 /* Amount Input Grid */
 .amount-input-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.2fr;
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
 }
 

@@ -2,7 +2,14 @@
 
 // Type aliases for reusable payment enums
 export type PaymentType = "Cash" | "Bank Transfer" | "Check" | "Online" | "Mobile Banking" | "Other"
-export type PaymentCategory = "Contract Amount" | "Commission Amount" | "VAT Amount" | "Both" 
+export type PaymentCategory = 
+  | "Contract Amount Only" 
+  | "Commission Amount Only" 
+  | "Vat Amount Only" 
+  | "Both (Contract + Commission)" 
+  | "Both (Contract + Vat)" 
+  | "Both (Vat + Commission)" 
+  | "ALL (Contract + Commission + Vat)"
 export type PaymentMode = "Full Payment" | "Partial Payment"
 
 export interface IPayment {
@@ -102,13 +109,16 @@ export interface IContractPaymentSummary {
   contractNo: string
   totalContractAmount: number
   totalCommissionAmount: number
+  totalVatAmount: number
   totalAmount: number
   totalPaidAmount: number
   totalPaidContractAmount: number
   totalPaidCommissionAmount: number
+  totalPaidVatAmount: number
   totalDueAmount: number
   dueContractAmount: number
   dueCommissionAmount: number
+  dueVatAmount: number
   paymentStatus: "Not Started" | "Partial" | "Completed" | "Overpaid"
   payments: IPayment[]
 }

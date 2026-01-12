@@ -31,7 +31,7 @@ export const usePaymentStore = defineStore("payments", () => {
     paymentReference: "",
     paymentDate: new Date().toISOString().split("T")[0],
     paymentType: "Bank Transfer",
-    paymentCategory: "Both",
+    paymentCategory: "ALL (Contract + Commission + Vat)",
     paymentMode: "Partial Payment",
     contractAmountPaid: 0,
     commissionAmountPaid: 0,
@@ -68,15 +68,29 @@ export const usePaymentStore = defineStore("payments", () => {
   // Calculate contract totals from selected contract
   const contractTotals = computed(() => {
     if (!selectedContract.value) {
-      return { contractAmount: 0, commissionAmount: 0, vatAmount: 0, totalAmount: 0, commissionRate: 15 }
+      return { contractAmount: 0, commissionAmount: 0, vatAmount: 0, totalAmount: 0, commissionRate: 0 }
     }
 
-    const contractAmount = selectedContract.value.total || 0
-    const commissionRate = selectedContract.value.commissionRate || 0
-    const commissionAmount = selectedContract.value.commission || 0
-    // Derive VAT amount assuming total includes VAT
-    const vatAmount = Math.max(0, (selectedContract.value.total || 0) - contractAmount - commissionAmount)
-    const totalAmount = contractAmount + commissionAmount + vatAmount
+    const contract = selectedContract.value as any
+    const commissionRate = contract.commissionRate ?? 0
+    const commissionAmount = contract.commissionAmount ?? contract.commission ?? 0
+    const totalAmount = contract.grandTotal ?? contract.total ?? 0
+    
+    // Calculate VAT from products if not directly provided
+    // VAT is calculated as: (item.rate * item.vatRate / 100) for each item in each product
+    let vatAmount = contract.vatAmount ?? 0
+    if (!vatAmount && contract.products?.length) {
+      vatAmount = contract.products.reduce((productSum: number, product: any) => {
+        const itemsVat = (product.productItems || []).reduce((itemSum: number, item: any) => {
+          return itemSum + ((item.rate || 0) * (item.vatRate || 0) / 100)
+        }, 0)
+        const productLevelVat = (product.productItems || []).reduce((sum: number, item: any) => sum + (item.rate || 0), 0) * ((product.vatRate || 0) / 100)
+        return productSum + (itemsVat * (product.quantity || 1)) + productLevelVat + (product.vat || 0)
+      }, 0)
+    }
+    
+    // Contract Amount (Spot Total) = Total - Commission - VAT
+    const contractAmount = contract.spotTotal ?? (totalAmount - commissionAmount - vatAmount)
 
     return { contractAmount, commissionAmount, vatAmount, totalAmount, commissionRate }
   })
@@ -192,22 +206,34 @@ export const usePaymentStore = defineStore("payments", () => {
     const { paymentCategory, paymentMode } = currentPayment.value
 
     if (paymentMode === "Full Payment") {
-      if (paymentCategory === "Contract Amount") {
+      if (paymentCategory === "Contract Amount Only") {
         currentPayment.value.contractAmountPaid = Math.max(0, dueContractAmount)
         currentPayment.value.commissionAmountPaid = 0
         currentPayment.value.vatAmountPaid = 0
-      } else if (paymentCategory === "Commission Amount") {
+      } else if (paymentCategory === "Commission Amount Only") {
         currentPayment.value.contractAmountPaid = 0
         currentPayment.value.commissionAmountPaid = Math.max(0, dueCommissionAmount)
         currentPayment.value.vatAmountPaid = 0
-      } else if (paymentCategory === "VAT Amount") { // New category for VAT
+      } else if (paymentCategory === "Vat Amount Only") {
         currentPayment.value.contractAmountPaid = 0
         currentPayment.value.commissionAmountPaid = 0
         currentPayment.value.vatAmountPaid = Math.max(0, dueVatAmount)
-      } else { // "Both" or "All"
+      } else if (paymentCategory === "Both (Contract + Commission)") {
         currentPayment.value.contractAmountPaid = Math.max(0, dueContractAmount)
         currentPayment.value.commissionAmountPaid = Math.max(0, dueCommissionAmount)
-        currentPayment.value.vatAmountPaid = Math.max(0, dueVatAmount) // Include VAT
+        currentPayment.value.vatAmountPaid = 0
+      } else if (paymentCategory === "Both (Contract + Vat)") {
+        currentPayment.value.contractAmountPaid = Math.max(0, dueContractAmount)
+        currentPayment.value.commissionAmountPaid = 0
+        currentPayment.value.vatAmountPaid = Math.max(0, dueVatAmount)
+      } else if (paymentCategory === "Both (Vat + Commission)") {
+        currentPayment.value.contractAmountPaid = 0
+        currentPayment.value.commissionAmountPaid = Math.max(0, dueCommissionAmount)
+        currentPayment.value.vatAmountPaid = Math.max(0, dueVatAmount)
+      } else if (paymentCategory === "ALL (Contract + Commission + Vat)") {
+        currentPayment.value.contractAmountPaid = Math.max(0, dueContractAmount)
+        currentPayment.value.commissionAmountPaid = Math.max(0, dueCommissionAmount)
+        currentPayment.value.vatAmountPaid = Math.max(0, dueVatAmount)
       }
     } else { // Partial Payment - reset full payment amounts
       // Keep current values or reset to 0 based on desired behavior for partial
@@ -309,8 +335,30 @@ export const usePaymentStore = defineStore("payments", () => {
   }
 
   // Reset payment form
-
-
+  const resetPaymentForm = () => {
+    currentPayment.value = {
+      contractId: "",
+      invoiceId: null,
+      paymentReference: "",
+      paymentDate: new Date().toISOString().split("T")[0],
+      paymentType: "Bank Transfer",
+      paymentCategory: "ALL (Contract + Commission + Vat)",
+      paymentMode: "Partial Payment",
+      contractAmountPaid: 0,
+      commissionAmountPaid: 0,
+      vatAmountPaid: 0,
+      checkRef: "",
+      bankRef: "",
+      bankName: "",
+      branchName: "",
+      transactionId: "",
+      remarks: "",
+      receivedBy: "",
+    }
+    selectedContract.value = null
+    contractPaymentSummary.value = null
+    error.value = null
+  }
   // Set payment field
   const setPaymentField = <K extends keyof IPaymentCreateRequest>(field: K, value: IPaymentCreateRequest[K]) => {
     currentPayment.value[field] = value
