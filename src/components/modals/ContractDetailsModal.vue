@@ -107,12 +107,12 @@
               </td>
               <td>{{ formatCurrency(calculateVatTotal()) }}</td>
             </tr>
-            <tr>
+            <!-- <tr>
               <td colspan="5">
                 Plus Product VAT Amount
               </td>
               <td>{{ formatCurrency(calculateProductVatTotal()) }}</td>
-            </tr>
+            </tr> -->
             <tr>
               <td colspan="5">
                 Plus Commission Amount

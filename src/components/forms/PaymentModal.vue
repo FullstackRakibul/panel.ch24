@@ -109,7 +109,7 @@
               <span class="summary-label">VAT Amount</span>
               <span class="summary-value">Tk. {{ formatCurrency(contractTotals.vatAmount) }}</span>
             </div>
-            <div class="summary-item highlight primary">
+            <div class="summary-item highlight mark">
               <span class="summary-label">Total Amount</span>
               <span class="summary-value">Tk. {{ formatCurrency(contractTotals.totalAmount) }}</span>
             </div>
@@ -635,14 +635,21 @@ const handleSubmit = async () => {
 
   try {
     await formRef.value.validate()
-    const success = await store.createPayment()
+    let success = false
+
+    const f = form.value as any
+    if (props.isEdit && f.guid) {
+      success = await store.updatePayment(f.guid, form.value as any)
+    } else {
+      success = await store.createPayment()
+    }
 
     if (success) {
-      ElMessage.success('Payment recorded successfully!')
+      ElMessage.success(props.isEdit ? 'Payment updated successfully!' : 'Payment recorded successfully!')
       emit('save', true)
       handleClose()
     } else {
-      ElMessage.error(store.error || 'Failed to record payment')
+      ElMessage.error(store.error || (props.isEdit ? 'Failed to update payment' : 'Failed to record payment'))
     }
   } catch (error) {
     console.error('Form validation failed:', error)
@@ -902,7 +909,16 @@ watch(() => props.modelValue, (visible) => {
   color: white;
 }
 
-.summary-item.primary .summary-label {
+.summary-item.mark {
+  background: linear-gradient(135deg, #ec455b, #530202);
+  color: white;
+}
+
+.summary-item.mark .summary-label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.summary-item.mark .summary-value {
   color: rgba(255, 255, 255, 0.8);
 }
 

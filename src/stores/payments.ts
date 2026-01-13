@@ -43,7 +43,8 @@ export const usePaymentStore = defineStore("payments", () => {
     transactionId: "",
     remarks: "",
     receivedBy: "",
-  })
+    guid: undefined, // Add guid for editing
+  } as IPaymentCreateRequest & { guid?: string })
 
   // Getters
   const totalPaymentsAmount = computed(() => {
@@ -65,8 +66,18 @@ export const usePaymentStore = defineStore("payments", () => {
       .reduce((sum, p) => sum + (p.paidAmount || 0), 0)
   })
 
-  // Calculate contract totals from selected contract
+  // Calculate contract totals from summary (preferred) or selected contract
   const contractTotals = computed(() => {
+    if (contractPaymentSummary.value) {
+      return {
+        contractAmount: contractPaymentSummary.value.totalContractAmount || 0,
+        commissionAmount: contractPaymentSummary.value.totalCommissionAmount || 0,
+        vatAmount: contractPaymentSummary.value.totalVatAmount || 0,
+        totalAmount: contractPaymentSummary.value.totalAmount || 0,
+        commissionRate: (selectedContract.value as any)?.commissionRate ?? 0
+      }
+    }
+
     if (!selectedContract.value) {
       return { contractAmount: 0, commissionAmount: 0, vatAmount: 0, totalAmount: 0, commissionRate: 0 }
     }
@@ -76,8 +87,6 @@ export const usePaymentStore = defineStore("payments", () => {
     const commissionAmount = contract.commissionAmount ?? contract.commission ?? 0
     const totalAmount = contract.grandTotal ?? contract.total ?? 0
     
-    // Calculate VAT from products if not directly provided
-    // VAT is calculated as: (item.rate * item.vatRate / 100) for each item in each product
     let vatAmount = contract.vatAmount ?? 0
     if (!vatAmount && contract.products?.length) {
       vatAmount = contract.products.reduce((productSum: number, product: any) => {
@@ -89,7 +98,6 @@ export const usePaymentStore = defineStore("payments", () => {
       }, 0)
     }
     
-    // Contract Amount (Spot Total) = Total - Commission - VAT
     const contractAmount = contract.spotTotal ?? (totalAmount - commissionAmount - vatAmount)
 
     return { contractAmount, commissionAmount, vatAmount, totalAmount, commissionRate }
@@ -101,25 +109,31 @@ export const usePaymentStore = defineStore("payments", () => {
 
     let paidContractAmount = 0
     let paidCommissionAmount = 0
-    let paidVatAmount = 0 // Initialize paid VAT amount
+    let paidVatAmount = 0
 
-    payments.value
-      .filter((p) => p.contractId === currentPayment.value.contractId && p.status === "Completed")
-      .forEach((p) => {
-        paidContractAmount += p.contractAmount || 0
-        paidCommissionAmount += p.commissionAmount || 0
-        paidVatAmount += p.vatAmount || 0 // Accumulate paid VAT amount
-      })
+    if (contractPaymentSummary.value) {
+      paidContractAmount = contractPaymentSummary.value.totalPaidContractAmount || 0
+      paidCommissionAmount = contractPaymentSummary.value.totalPaidCommissionAmount || 0
+      paidVatAmount = contractPaymentSummary.value.totalPaidVatAmount || 0
+    } else {
+      payments.value
+        .filter((p) => p.contractId === currentPayment.value.contractId && p.status === "Completed")
+        .forEach((p) => {
+          paidContractAmount += p.contractAmount || 0
+          paidCommissionAmount += p.commissionAmount || 0
+          paidVatAmount += p.vatAmount || 0
+        })
+    }
 
     return {
       dueContractAmount: Math.max(0, contractAmount - paidContractAmount),
       dueCommissionAmount: Math.max(0, commissionAmount - paidCommissionAmount),
-      dueVatAmount: Math.max(0, vatAmount - paidVatAmount), // Compute due VAT amount
-      dueTotalAmount: Math.max(0, totalAmount - (paidContractAmount + paidCommissionAmount + paidVatAmount)), // Update total due
+      dueVatAmount: Math.max(0, vatAmount - paidVatAmount),
+      dueTotalAmount: Math.max(0, totalAmount - (paidContractAmount + paidCommissionAmount + paidVatAmount)),
       paidContractAmount,
       paidCommissionAmount,
-      paidVatAmount, // Include paid VAT amount
-      paidTotalAmount: paidContractAmount + paidCommissionAmount + paidVatAmount, // Update total paid
+      paidVatAmount,
+      paidTotalAmount: paidContractAmount + paidCommissionAmount + paidVatAmount,
     }
   })
 
@@ -190,10 +204,27 @@ export const usePaymentStore = defineStore("payments", () => {
   }
 
   // Select contract
-  const selectContract = (contractId: string) => {
+  const selectContract = async (contractId: string) => {
     const contract = contracts.value.find((c) => c.guid === contractId)
     selectedContract.value = contract || null
     currentPayment.value.contractId = contractId
+
+    if (contractId) {
+      isLoading.value = true
+      try {
+        const summary = await paymentService.getContractPaymentSummary(contractId)
+        contractPaymentSummary.value = summary
+        
+        // Also update local payments list if not already there
+        if (summary.payments) {
+           payments.value = summary.payments
+        }
+      } catch (err) {
+        console.warn("Failed to fetch contract summary:", err)
+      } finally {
+        isLoading.value = false
+      }
+    }
 
     if (contract) {
       updatePaymentAmounts()
@@ -351,13 +382,49 @@ export const usePaymentStore = defineStore("payments", () => {
       bankRef: "",
       bankName: "",
       branchName: "",
-      transactionId: "",
       remarks: "",
       receivedBy: "",
-    }
+      guid: undefined,
+    } as any
     selectedContract.value = null
     contractPaymentSummary.value = null
     error.value = null
+  }
+
+  // Set current payment for editing
+  const setCurrentPayment = (payment: IPayment) => {
+    currentPayment.value = {
+      contractId: payment.contractId,
+      invoiceId: payment.invoiceId || null,
+      paymentReference: payment.paymentReference,
+      paymentDate: payment.paymentDate.split("T")[0],
+      paymentType: payment.paymentType,
+      paymentCategory: payment.paymentCategory,
+      paymentMode: payment.paymentMode,
+      contractAmountPaid: payment.contractAmount || 0,
+      commissionAmountPaid: payment.commissionAmount || 0,
+      vatAmountPaid: payment.vatAmount || 0,
+      checkRef: payment.checkRef || "",
+      bankRef: payment.bankRef || "",
+      bankName: payment.bankName || "",
+      branchName: payment.branchName || "",
+      transactionId: payment.transactionId || "",
+      remarks: payment.remarks || "",
+      receivedBy: payment.receivedBy || "",
+      guid: payment.guid,
+    } as any
+    
+    // Set selected contract and load summary
+    const contract = contracts.value.find(c => c.guid === payment.contractId)
+    selectedContract.value = contract || null
+    
+    if (payment.contractId) {
+      paymentService.getContractPaymentSummary(payment.contractId).then(summary => {
+        contractPaymentSummary.value = summary
+      }).catch(err => {
+        console.warn("Failed to fetch summary for edit:", err)
+      })
+    }
   }
   // Set payment field
   const setPaymentField = <K extends keyof IPaymentCreateRequest>(field: K, value: IPaymentCreateRequest[K]) => {
@@ -410,6 +477,7 @@ export const usePaymentStore = defineStore("payments", () => {
     updatePayment,
     deletePayment,
     resetPaymentForm,
+    setCurrentPayment,
     setPaymentField,
     canEditPayment,
   }

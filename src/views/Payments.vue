@@ -195,7 +195,7 @@
     </el-card>
 
     <!-- Payment Modal -->
-    <PaymentModal v-model="showPaymentModal" :loading="isSubmitting" @save="handlePaymentSaved" />
+    <PaymentModal v-model="showPaymentModal" :is-edit="isEditMode" :loading="isSubmitting" @save="handlePaymentSaved" />
 
     <!-- Payment Receipt Modal -->
     <PaymentReceiptModal v-model="showReceiptModal" :payment="selectedPayment" />
@@ -239,7 +239,7 @@
           </div>
           <div class="amount-row">
             <span>VAT Amount:</span>
-            <span>Tk. {{ formatCurrency(selectedPayment.vatAmount) }}</span>
+            <span>Tk. {{ formatCurrency(selectedPayment.vatAmount || 0) }}</span>
           </div>
           <div class="amount-row total">
             <span>Total Paid:</span>
@@ -305,6 +305,7 @@ const showDetailsDialog = ref(false)
 const showReceiptModal = ref(false)
 const selectedPayment = ref<IPayment | null>(null)
 const isSubmitting = ref(false)
+const isEditMode = ref(false)
 
 // Filter state
 const searchQuery = ref('')
@@ -396,9 +397,13 @@ const getStatusType = (status: string) => {
 
 const getCategoryType = (category: string) => {
   const types: Record<string, string> = {
-    'Contract Amount': 'primary',
-    'VAT Amount': 'warning',
-    'Both': 'success'
+    'Contract Amount Only': 'primary',
+    'Commission Amount Only': 'warning',
+    'Vat Amount Only': 'success',
+    'Both (Contract + Commission)': 'primary',
+    'Both (Contract + Vat)': 'warning',
+    'Both (Vat + Commission)': 'success',
+    'ALL (Contract + Commission + Vat)': 'success'
   }
   return types[category] || 'info'
 }
@@ -436,8 +441,9 @@ const handlePageChange = (page: number) => {
 }
 
 const handleViewPayment = (payment: IPayment) => {
-  selectedPayment.value = payment
-  showDetailsDialog.value = true
+  store.setCurrentPayment(payment)
+  isEditMode.value = true
+  showPaymentModal.value = true
 }
 
 const handleViewReceipt = (payment: IPayment) => {
