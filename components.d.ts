@@ -78,7 +78,4 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     TransmissionCertificateModal: typeof import('./src/components/modals/TransmissionCertificateModal.vue')['default']
   }
-  export interface ComponentCustomProperties {
-    vLoading: typeof import('element-plus/es')['ElLoadingDirective']
-  }
 }
