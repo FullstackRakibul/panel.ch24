@@ -109,8 +109,8 @@
           </div>
 
           <nav class="nav-menu">
-            <router-link v-for="item in systemItems" :key="item.path" :to="item.path || '/'" class="nav-item"
-              :class="{ active: isActiveRoute(item.path) }">
+            <router-link v-for="item in systemItems" :key="item.path" :to="item.path || '/'" :target="item.target"
+              class="nav-item" :class="{ active: isActiveRoute(item.path) }">
               <el-tooltip v-if="themeStore.sidebarCollapsed" :content="item.name" placement="right" :show-after="300">
                 <div class="nav-content">
                   <el-icon class="nav-icon">
@@ -371,7 +371,7 @@ import {
   QuestionFilled,
   WindPower,
 } from '@element-plus/icons-vue'
-import { Upload, Earth } from 'lucide-vue-next'
+import { Upload, Earth, Target } from 'lucide-vue-next'
 
 const props = defineProps<{
   mobileSidebarOpen: boolean;
@@ -467,7 +467,8 @@ const systemItems = [
   },
   {
     name: 'Go to Channel 24',
-    route: 'https://www.channel24bd.tv',
+    path: 'https://www.channel24bd.tv',
+    target: '_blank',
     icon: Earth,
     badge: 'NEW',
     badgeType: 'alert'

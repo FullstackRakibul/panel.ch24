@@ -5,6 +5,7 @@ import type {
   IPaymentFilter,
   IPaymentListResponse,
   IContractPaymentSummary,
+  IAllContractsPaymentSummary,
 } from "@/interface/payment/payments.interface"
 import type { ITelevisionContract } from "@/interface/contract/contracts.interface"
 import { useHttp } from "@/utils/base.Http"
@@ -98,6 +99,12 @@ export const paymentService = {
   getContractPaymentSummary: async (contractId: string): Promise<IContractPaymentSummary> => {
     const response = await useHttp().get(`/payments/summary/${contractId}`)
     return response.data?.data || response.data
+  },
+
+  // Get all contracts payment summary (Aggregated)
+  getContractWiseSummary: async (): Promise<IAllContractsPaymentSummary[]> => {
+    const response = await useHttp().get("/payments/contract-wise-summary")
+    return response.data?.data || response.data || []
   },
 
   // Generate new payment reference

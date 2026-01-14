@@ -1,6 +1,6 @@
 import { defineStore } from "pinia"
 import { ref, computed } from "vue"
-import type { IPayment, IPaymentCreateRequest, IPaymentUpdateRequest, IContractPaymentSummary, IPaymentFilter } from "@/interface/payment/payments.interface"
+import type { IPayment, IPaymentCreateRequest, IPaymentUpdateRequest, IContractPaymentSummary, IPaymentFilter, IAllContractsPaymentSummary } from "@/interface/payment/payments.interface"
 import type { ITelevisionContract } from "@/interface/contract/contracts.interface"
 import { paymentService, paymentUtils, type IPaymentTypeMaster, type IPaymentCategoryMaster, type IPaymentModeMaster } from "@/services/Payments/payment.services"
 
@@ -10,6 +10,7 @@ export const usePaymentStore = defineStore("payments", () => {
   const contracts = ref<ITelevisionContract[]>([])
   const selectedContract = ref<ITelevisionContract | null>(null)
   const contractPaymentSummary = ref<IContractPaymentSummary | null>(null)
+  const contractWiseSummaries = ref<IAllContractsPaymentSummary[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -185,6 +186,21 @@ export const usePaymentStore = defineStore("payments", () => {
       console.warn("Failed to fetch contracts:", err)
       contracts.value = []
       error.value = null
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Fetch contract-wise payment summaries
+  const fetchContractWiseSummaries = async () => {
+    isLoading.value = true
+    error.value = null
+    try {
+      const response = await paymentService.getContractWiseSummary()
+      contractWiseSummaries.value = response || []
+    } catch (err: unknown) {
+      console.warn("Failed to fetch contract-wise summaries:", err)
+      contractWiseSummaries.value = []
     } finally {
       isLoading.value = false
     }
@@ -446,6 +462,7 @@ export const usePaymentStore = defineStore("payments", () => {
     contracts,
     selectedContract,
     contractPaymentSummary,
+    contractWiseSummaries,
     currentPayment,
     isLoading,
     error,
@@ -469,6 +486,7 @@ export const usePaymentStore = defineStore("payments", () => {
     fetchPaymentMasters,
     fetchPayments,
     fetchContracts,
+    fetchContractWiseSummaries,
     fetchPaymentsByContract,
     selectContract,
     updatePaymentAmounts,

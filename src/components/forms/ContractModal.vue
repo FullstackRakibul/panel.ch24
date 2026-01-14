@@ -42,11 +42,13 @@
             </el-form-item>
           </el-col>
           <el-col :span="14">
-            <!-- Radio group to toggle between Client Copy and Agency Copy -->
-            <el-form-item class="flex items-center ">
-              <el-switch v-model="isClientCopy" @change="handleContractTypeChange" />
-              <p v-if="isClientCopy">Client Copy (Advertiser)</p>
-              <p v-else>Agency Copy</p>
+            <!-- Radio group to select contract party -->
+            <el-form-item label="Contract Party">
+              <el-radio-group v-model="partyMode" @change="handlePartyModeChange">
+                <el-radio label="client">Client</el-radio>
+                <el-radio label="agency">Agency</el-radio>
+                <el-radio label="both">Both</el-radio>
+              </el-radio-group>
             </el-form-item>
           </el-col>
         </el-row>
@@ -71,8 +73,8 @@
         <!-- Conditional Client/Agency Selection based on isClientCopy -->
         <el-row :gutter="16">
           <!-- Client Selection - Only shown when isClientCopy is true -->
-          <el-col :span="16" v-if="isClientCopy">
-            <el-form-item label="Client (Advertiser)" prop="contractedClientId">
+          <el-col :span="16" v-if="store.isClientCopy">
+            <el-form-item label="Advertiser" prop="contractedClientId">
               <div class="select-with-action w-full">
                 <el-select v-model="form.contractedClientId" placeholder="Select Client/Advertiser" class="flex-1"
                   filterable clearable @change="handleFieldUpdate('contractedClientId', form.contractedClientId)">
@@ -90,8 +92,8 @@
           </el-col>
 
           <!-- Agency Selection - Only shown when isClientCopy is false -->
-          <el-col :span="16" v-else>
-            <el-form-item label="Agency (Contract Party)" prop="contractedAgencyId">
+          <el-col :span="16" v-if="store.isAgencyCopy">
+            <el-form-item label="Contract Party" prop="contractedAgencyId">
               <div class="select-with-action w-full">
                 <el-select v-model="form.contractedAgencyId" placeholder="Select Agency" class="flex-1" filterable
                   clearable @change="handleFieldUpdate('contractedAgencyId', form.contractedAgencyId)">
@@ -478,7 +480,17 @@ const showDrafts = ref(false)
 const lastSaved = ref<string>('')
 const isSubmitting = ref(false)
 
-const isClientCopy = ref(true)
+const partyMode = ref('client')
+
+const updatePartyModeFromStore = () => {
+  if (store.isClientCopy && store.isAgencyCopy) {
+    partyMode.value = 'both'
+  } else if (store.isAgencyCopy) {
+    partyMode.value = 'agency'
+  } else {
+    partyMode.value = 'client'
+  }
+}
 
 // Modal controls for creating new Client/Agency
 const showClientModal = ref(false)
@@ -534,10 +546,10 @@ const rules = computed(() => ({
     { required: true, message: 'Please enter commission rate', trigger: 'blur' }
   ],
   // Conditional validation based on contract type
-  contractedClientId: isClientCopy.value ? [
+  contractedClientId: store.isClientCopy ? [
     { required: true, message: 'Please select a client', trigger: 'change' }
   ] : [],
-  contractedAgencyId: !isClientCopy.value ? [
+  contractedAgencyId: store.isAgencyCopy ? [
     { required: true, message: 'Please select an agency', trigger: 'change' }
   ] : []
 }))
@@ -552,9 +564,22 @@ watch(() => props.contract, (newContract) => {
   if (newContract && props.isEdit) {
     const storeContract = convertToStoreFormat(newContract)
     store.setContract(storeContract)
-    isClientCopy.value = !!newContract.contractedClientId
+
+    // Set party mode based on values
+    if (newContract.contractedClientId && newContract.contractedAgencyId) {
+      store.toggleClientCopy(true)
+      store.toggleAgencyCopy(true)
+    } else if (newContract.contractedAgencyId) {
+      store.toggleClientCopy(false)
+      store.toggleAgencyCopy(true)
+    } else {
+      store.toggleClientCopy(true)
+      store.toggleAgencyCopy(false)
+    }
+    updatePartyModeFromStore()
   } else if (!props.isEdit) {
     store.initializeContract()
+    updatePartyModeFromStore()
   }
 }, { immediate: true })
 
@@ -564,30 +589,33 @@ watch(() => props.modelValue, (visible) => {
     if (stored) {
       const data = JSON.parse(stored)
       lastSaved.value = data.lastSaved
-      if (data.isClientCopy !== undefined) {
-        isClientCopy.value = data.isClientCopy
-      }
+      // Store already loads isClientCopy/isAgencyCopy in initializeContract -> loadFromLocalStorage
+      updatePartyModeFromStore()
     }
 
     if (!props.contract && !props.isEdit) {
       store.initializeContract()
+      updatePartyModeFromStore()
     }
   }
 })
 
-watch(isClientCopy, (value) => {
-  store.toggleClientCopy(value)
-})
-
 // Methods
-const handleContractTypeChange = (value: boolean) => {
-  isClientCopy.value = value
-  if (value) {
-    // Switching to Client Copy - clear agency
+
+const handlePartyModeChange = (value: string) => {
+  partyMode.value = value
+  if (value === 'client') {
+    store.toggleClientCopy(true)
+    store.toggleAgencyCopy(false)
     store.updateContractField('contractedAgencyId', null)
-  } else {
-    // Switching to Agency Copy - clear client
+  } else if (value === 'agency') {
+    store.toggleClientCopy(false)
+    store.toggleAgencyCopy(true)
     store.updateContractField('contractedClientId', null)
+  } else if (value === 'both') {
+    store.toggleClientCopy(true)
+    store.toggleAgencyCopy(true)
+    // keep both IDs as is (may be null)
   }
 }
 
@@ -661,8 +689,8 @@ const convertToApiFormat = (): ITelevisionContractCreateRequest | ITelevisionCon
     contractDate: contractData.contractDate,
     contractStartDate: contractData.contractStartDate,
     contractEndDate: contractData.contractEndDate,
-    contractedClientId: isClientCopy.value ? contractData.contractedClientId : null,
-    contractedAgencyId: !isClientCopy.value ? contractData.contractedAgencyId : null,
+    contractedClientId: store.isClientCopy ? contractData.contractedClientId : null,
+    contractedAgencyId: store.isAgencyCopy ? contractData.contractedAgencyId : null,
     commission: store.commissionAmount,
     commissionRate: contractData.commissionRate,
     total: store.grandTotal,
@@ -738,9 +766,7 @@ const handleAutoSave = () => {
       store.autoSave()
       const stored = localStorage.getItem('contractFormData')
       if (stored) {
-        const data = JSON.parse(stored)
-        data.isClientCopy = isClientCopy.value
-        localStorage.setItem('contractFormData', JSON.stringify(data))
+        store.autoSave()
       }
       lastSaved.value = new Date().toISOString()
     }, 1000)
@@ -753,6 +779,7 @@ const handleSaveDraft = () => {
 
 const handleLoadDraft = (index: number) => {
   store.loadDraft(index)
+  updatePartyModeFromStore()
   showDrafts.value = false
   ElMessage.success('Draft loaded successfully')
 }
@@ -764,7 +791,7 @@ const handleDeleteDraft = (index: number) => {
 
 const handleClearStorage = () => {
   store.clearLocalStorage()
-  isClientCopy.value = true
+  updatePartyModeFromStore()
   lastSaved.value = ''
   ElMessage.success('All local data cleared')
 }
@@ -892,7 +919,7 @@ const loadClientsAndAgencies = async () => {
 
 onMounted(() => {
   loadClientsAndAgencies()
-  isClientCopy.value = store.isClientCopy
+  updatePartyModeFromStore()
 })
 </script>
 

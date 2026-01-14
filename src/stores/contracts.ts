@@ -64,6 +64,7 @@ export const useContractStore = defineStore('contract', () => {
   const currentContract = ref<TelevisionContractRequestDto>(getDefaultContract())
   const draftContracts = ref<TelevisionContractRequestDto[]>([])
   const isClientCopy = ref(true)
+  const isAgencyCopy = ref(false)
   const isLoading = ref(false)
   const isEditMode = ref(false)
 
@@ -117,13 +118,15 @@ export const useContractStore = defineStore('contract', () => {
 
   const toggleClientCopy = (value: boolean) => {
     isClientCopy.value = value
-    if (value) {
-      currentContract.value.contractedAgencyId = null
-    } else {
-      currentContract.value.contractedClientId = null
-    }
     saveToLocalStorage()
   }
+
+  const toggleAgencyCopy = (value: boolean) => {
+    isAgencyCopy.value = value
+    saveToLocalStorage()
+  }
+
+
 
   // Product Management
   const addProduct = () => {
@@ -288,6 +291,7 @@ export const useContractStore = defineStore('contract', () => {
     const storageData = {
       currentContract: currentContract.value,
       isClientCopy: isClientCopy.value,
+      isAgencyCopy: isAgencyCopy.value,
       lastSaved: new Date().toISOString()
     }
     localStorage.setItem('contractFormData', JSON.stringify(storageData))
@@ -300,6 +304,7 @@ export const useContractStore = defineStore('contract', () => {
         const data = JSON.parse(stored)
         currentContract.value = data.currentContract || getDefaultContract()
         isClientCopy.value = data.isClientCopy !== undefined ? data.isClientCopy : true
+        isAgencyCopy.value = data.isAgencyCopy !== undefined ? data.isAgencyCopy : false
         
         // Load drafts
         const storedDrafts = localStorage.getItem('contractDrafts')
@@ -319,6 +324,7 @@ export const useContractStore = defineStore('contract', () => {
     currentContract.value = getDefaultContract()
     draftContracts.value = []
     isClientCopy.value = true
+    isAgencyCopy.value = false
   }
 
   const autoSave = () => {
@@ -441,6 +447,7 @@ export const useContractStore = defineStore('contract', () => {
     currentContract,
     draftContracts,
     isClientCopy,
+    isAgencyCopy,
     isLoading,
     isEditMode,
     
@@ -459,6 +466,7 @@ export const useContractStore = defineStore('contract', () => {
     setContract,
     updateContractField,
     toggleClientCopy,
+    toggleAgencyCopy,
     addProduct,
     removeProduct,
     updateProduct,

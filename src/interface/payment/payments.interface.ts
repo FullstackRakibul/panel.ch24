@@ -122,3 +122,14 @@ export interface IContractPaymentSummary {
   paymentStatus: "Not Started" | "Partial" | "Completed" | "Overpaid"
   payments: IPayment[]
 }
+
+export interface IAllContractsPaymentSummary {
+  contractId: string
+  contractNo: string
+  clientName?: string | null
+  agencyName?: string | null
+  totalAmount: number
+  totalPaidAmount: number
+  totalDueAmount: number
+  paymentStatus: string // NotStarted, Partial, Completed, Overpaid
+}

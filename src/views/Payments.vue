@@ -54,151 +54,164 @@
       </div>
     </div>
 
-    <!-- Filters & Search -->
-    <el-card class="filter-card" shadow="never">
-      <div class="filter-row">
-        <el-input v-model="searchQuery" placeholder="Search by contract no, reference, client..." clearable
-          class="search-input">
-          <template #prefix>
-            <Search class="w-4 h-4 text-gray-400" />
-          </template>
-        </el-input>
+    <!-- Tabs for Switching Views -->
+    <el-tabs v-model="activeTab" class="payment-tabs" @tab-click="handleTabClick">
+      <el-tab-pane label="Transaction History" name="transactions">
+        <!-- Filters & Search (Only for Transactions) -->
+        <el-card class="filter-card" shadow="never">
+          <div class="filter-row">
+            <el-input v-model="searchQuery" placeholder="Search by contract no, reference, client..." clearable
+              class="search-input">
+              <template #prefix>
+                <Search class="w-4 h-4 text-gray-400" />
+              </template>
+            </el-input>
 
-        <el-select style="width: 200px;" v-model="filterPaymentType" placeholder="Payment Type" clearable>
-          <el-option label="All Types" value="" />
-          <el-option label="Cash" value="Cash" />
-          <el-option label="Bank Transfer" value="Bank Transfer" />
-          <el-option label="Check" value="Check" />
-          <el-option label="Online" value="Online" />
-          <el-option label="Mobile Banking" value="Mobile Banking" />
-        </el-select>
+            <el-select style="width: 200px;" v-model="filterPaymentType" placeholder="Payment Type" clearable>
+              <el-option label="All Types" value="" />
+              <el-option label="Cash" value="Cash" />
+              <el-option label="Bank Transfer" value="Bank Transfer" />
+              <el-option label="Check" value="Check" />
+              <el-option label="Online" value="Online" />
+              <el-option label="Mobile Banking" value="Mobile Banking" />
+            </el-select>
 
-        <el-select style="width: 200px;" v-model="filterStatus" placeholder="Status" clearable>
-          <el-option label="All Status" value="" />
-          <el-option label="Completed" value="Completed" />
-          <el-option label="Pending" value="Pending" />
-          <el-option label="Cancelled" value="Cancelled" />
-        </el-select>
+            <el-select style="width: 200px;" v-model="filterStatus" placeholder="Status" clearable>
+              <el-option label="All Status" value="" />
+              <el-option label="Completed" value="Completed" />
+              <el-option label="Pending" value="Pending" />
+              <el-option label="Cancelled" value="Cancelled" />
+            </el-select>
 
-        <el-date-picker v-model="dateRange" type="daterange" range-separator="to" start-placeholder="Start date"
-          end-placeholder="End date" format="DD MMM, YYYY" value-format="YYYY-MM-DD" />
+            <el-date-picker v-model="dateRange" type="daterange" range-separator="to" start-placeholder="Start date"
+              end-placeholder="End date" format="DD MMM, YYYY" value-format="YYYY-MM-DD" />
 
-        <el-button :icon="RefreshCw" @click="handleRefresh">Refresh</el-button>
-      </div>
-    </el-card>
+            <el-button :icon="RefreshCw" @click="handleRefresh">Refresh</el-button>
+          </div>
+        </el-card>
 
-    <!-- Payments Table -->
-    <el-card class="table-card" shadow="never">
-      <el-table v-loading="isLoading" :data="filteredPayments" stripe border style="width: 100%"
-        :default-sort="{ prop: 'paymentDate', order: 'descending' }" @sort-change="handleSortChange">
-        <el-table-column type="index" label="SL" width="60" align="center" />
+        <!-- Payments Table -->
+        <el-card class="table-card" shadow="never">
+          <el-table v-loading="isLoading" :data="filteredPayments" stripe border style="width: 100%"
+            :default-sort="{ prop: 'paymentDate', order: 'descending' }" @sort-change="handleSortChange">
+            <el-table-column type="index" label="SL" width="60" align="center" />
 
-        <el-table-column prop="paymentReference" label="Reference" min-width="140" sortable>
-          <template #default="{ row }">
-            <div class="ref-cell">
-              <span class="ref-number">{{ row.paymentReference }}</span>
-              <el-tag size="small" :type="getStatusType(row.status)">
-                {{ row.status }}
-              </el-tag>
-            </div>
-          </template>
-        </el-table-column>
+            <el-table-column prop="paymentReference" label="Reference" min-width="140" sortable>
+              <template #default="{ row }">
+                <div class="ref-cell">
+                  <span class="ref-number">{{ row.paymentReference }}</span>
+                  <el-tag size="small" :type="getStatusType(row.status)">
+                    {{ row.status }}
+                  </el-tag>
+                </div>
+              </template>
+            </el-table-column>
 
-        <el-table-column prop="contractNo" label="Contract" min-width="180">
-          <template #default="{ row }">
-            <div class="contract-cell">
-              <span class="contract-no">{{ row.contractNo }}</span>
-              <span class="party-name">{{ row.clientName || row.agencyName || 'N/A' }}</span>
-            </div>
-          </template>
-        </el-table-column>
+            <el-table-column prop="contractNo" label="Contract" min-width="180">
+              <template #default="{ row }">
+                <div class="contract-cell">
+                  <span class="contract-no">{{ row.contractNo }}</span>
+                  <span class="party-name">{{ row.clientName || row.agencyName || 'N/A' }}</span>
+                </div>
+              </template>
+            </el-table-column>
 
-        <el-table-column prop="paymentDate" label="Date" width="120" sortable>
-          <template #default="{ row }">
-            {{ formatDate(row.paymentDate) }}
-          </template>
-        </el-table-column>
+            <el-table-column prop="paymentDate" label="Date" width="120" sortable>
+              <template #default="{ row }">
+                {{ formatDate(row.paymentDate) }}
+              </template>
+            </el-table-column>
 
-        <el-table-column prop="paymentType" label="Type" width="130">
-          <template #default="{ row }">
-            <div class="type-cell">
-              <component :is="getPaymentTypeIcon(row.paymentType)" class="w-4 h-4" />
-              <span>{{ row.paymentType }}</span>
-            </div>
-          </template>
-        </el-table-column>
+            <el-table-column prop="paymentType" label="Type" width="130">
+              <template #default="{ row }">
+                <div class="type-cell">
+                  <component :is="getPaymentTypeIcon(row.paymentType)" class="w-4 h-4" />
+                  <span>{{ row.paymentType }}</span>
+                </div>
+              </template>
+            </el-table-column>
 
-        <el-table-column prop="paymentCategory" label="Category" width="140">
-          <template #default="{ row }">
-            <el-tag :type="getCategoryType(row.paymentCategory)" size="small">
-              {{ row.paymentCategory }}
-            </el-tag>
-          </template>
-        </el-table-column>
+            <el-table-column prop="contractAmount" label="Contract Amt" width="140" align="right">
+              <template #default="{ row }">
+                <span class="amount-value">{{ formatCurrency(row.contractAmount) }}</span>
+              </template>
+            </el-table-column>
 
-        <el-table-column prop="contractAmount" label="Contract Amt" width="140" align="right">
-          <template #default="{ row }">
-            <span class="amount-value">{{ formatCurrency(row.contractAmount) }}</span>
-          </template>
-        </el-table-column>
+            <el-table-column prop="commissionAmount" label="Commission" align="right">
+              <template #default="{ row }">
+                <span class="amount-value">{{ formatCurrency(row.commissionAmount) }}</span>
+              </template>
+            </el-table-column>
 
-        <el-table-column prop="vatAmount" label="VAT Amt" width="120" align="right">
-          <template #default="{ row }">
-            <span class="amount-value">{{ formatCurrency(row.vatAmount) }}</span>
-          </template>
-        </el-table-column>
+            <el-table-column prop="vatAmount" label="VAT Amt" width="120" align="right">
+              <template #default="{ row }">
+                <span class="amount-value">{{ formatCurrency(row.vatAmount) }}</span>
+              </template>
+            </el-table-column>
 
-        <el-table-column prop="paidAmount" label="Total Paid" width="140" align="right">
-          <template #default="{ row }">
-            <span class="total-amount">Tk. {{ formatCurrency(row.paidAmount) }}</span>
-          </template>
-        </el-table-column>
+            <el-table-column prop="paidAmount" label="Total Paid" width="140" align="right">
+              <template #default="{ row }">
+                <span class="total-amount">Tk. {{ formatCurrency(row.paidAmount) }}</span>
+              </template>
+            </el-table-column>
 
-        <el-table-column prop="paymentMode" label="Mode" width="110">
-          <template #default="{ row }">
-            <el-tag :type="row.paymentMode === 'Full Payment' ? 'success' : 'warning'" size="small" effect="plain">
-              {{ row.paymentMode === 'Full Payment' ? 'Full' : 'Partial' }}
-            </el-tag>
-          </template>
-        </el-table-column>
+            <el-table-column prop="paymentMode" label="Mode" width="110">
+              <template #default="{ row }">
+                <el-tag :type="row.paymentMode === 'Full Payment' ? 'success' : 'warning'" size="small" effect="plain">
+                  {{ row.paymentMode === 'Full Payment' ? 'Full' : 'Partial' }}
+                </el-tag>
+              </template>
+            </el-table-column>
 
-        <el-table-column label="Actions" width="160" fixed="right" align="center">
-          <template #default="{ row }">
-            <div class="action-buttons">
-              <el-tooltip content="View Receipt" placement="top">
-                <el-button type="success" circle size="small" @click="handleViewReceipt(row)">
-                  <FileText class="w-4 h-4" />
-                </el-button>
-              </el-tooltip>
-              <el-tooltip :content="canEdit(row) ? 'Edit Payment' : 'Cannot edit completed payment'" placement="top">
-                <el-button type="primary" circle size="small" :disabled="!canEdit(row)" @click="handleViewPayment(row)">
-                  <Pencil class="w-4 h-4" />
-                </el-button>
-              </el-tooltip>
-              <el-tooltip content="Delete" placement="top">
-                <el-button type="danger" circle size="small" :disabled="!canEdit(row)"
-                  @click="handleDeletePayment(row)">
-                  <Trash2 class="w-4 h-4" />
-                </el-button>
-              </el-tooltip>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
+            <el-table-column label="Actions" width="160" fixed="right" align="center">
+              <template #default="{ row }">
+                <div class="action-buttons">
+                  <el-tooltip content="View Receipt" placement="top">
+                    <el-button type="success" circle size="small" @click="handleViewReceipt(row)">
+                      <FileText class="w-4 h-4" />
+                    </el-button>
+                  </el-tooltip>
+                  <el-tooltip :content="canEdit(row) ? 'Edit Payment' : 'Cannot edit completed payment'"
+                    placement="top">
+                    <el-button type="primary" circle size="small" :disabled="!canEdit(row)"
+                      @click="handleViewPayment(row)">
+                      <Pencil class="w-4 h-4" />
+                    </el-button>
+                  </el-tooltip>
+                  <el-tooltip content="Delete" placement="top">
+                    <el-button type="danger" circle size="small" :disabled="!canEdit(row)"
+                      @click="handleDeletePayment(row)">
+                      <Trash2 class="w-4 h-4" />
+                    </el-button>
+                  </el-tooltip>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
 
-      <!-- Pagination -->
-      <div class="pagination-container">
-        <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize" :page-sizes="[10, 20, 50, 100]"
-          :total="totalCount" layout="total, sizes, prev, pager, next, jumper" @size-change="handlePageSizeChange"
-          @current-change="handlePageChange" />
-      </div>
-    </el-card>
+          <!-- Pagination -->
+          <div class="pagination-container">
+            <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize"
+              :page-sizes="[10, 20, 50, 100]" :total="totalCount" layout="total, sizes, prev, pager, next, jumper"
+              @size-change="handlePageSizeChange" @current-change="handlePageChange" />
+          </div>
+        </el-card>
+      </el-tab-pane>
+
+      <el-tab-pane label="Contract-wise Summary" name="summary">
+        <ContractWisePaymentTable :summaries="contractWiseSummaries" :loading="isLoading"
+          @view-summary="handleViewSummary" @download-pdf="handleViewSummary" />
+      </el-tab-pane>
+    </el-tabs>
 
     <!-- Payment Modal -->
     <PaymentModal v-model="showPaymentModal" :is-edit="isEditMode" :loading="isSubmitting" @save="handlePaymentSaved" />
 
     <!-- Payment Receipt Modal -->
     <PaymentReceiptModal v-model="showReceiptModal" :payment="selectedPayment" />
+
+    <!-- Contract Summary Receipt Modal -->
+    <ContractSummaryReceiptModal v-model="showSummaryModal" :summary="selectedSummary" :payments="summaryPayments" />
 
     <!-- Payment Details Dialog -->
     <el-dialog v-model="showDetailsDialog" title="Payment Details" width="700px">
@@ -292,10 +305,12 @@ import {
   Building2, FileCheck, Globe, Smartphone, CreditCard
 } from 'lucide-vue-next'
 import { usePaymentStore } from '@/stores/payments'
-import { paymentUtils } from '@/services/Payments/payment.services'
+import { paymentService, paymentUtils } from '@/services/Payments/payment.services'
 import PaymentModal from '@/components/forms/PaymentModal.vue'
 import PaymentReceiptModal from '@/components/reports/PaymentReceiptModal.vue'
-import type { IPayment } from '@/interface/payment/payments.interface'
+import ContractWisePaymentTable from '@/components/tables/ContractWisePaymentTable.vue'
+import ContractSummaryReceiptModal from '@/components/reports/ContractSummaryReceiptModal.vue'
+import type { IPayment, IAllContractsPaymentSummary } from '@/interface/payment/payments.interface'
 
 const store = usePaymentStore()
 
@@ -303,9 +318,13 @@ const store = usePaymentStore()
 const showPaymentModal = ref(false)
 const showDetailsDialog = ref(false)
 const showReceiptModal = ref(false)
+const showSummaryModal = ref(false)
 const selectedPayment = ref<IPayment | null>(null)
+const selectedSummary = ref<IAllContractsPaymentSummary | null>(null)
+const summaryPayments = ref<IPayment[]>([])
 const isSubmitting = ref(false)
 const isEditMode = ref(false)
+const activeTab = ref('transactions')
 
 // Filter state
 const searchQuery = ref('')
@@ -321,6 +340,7 @@ const totalCount = ref(0)
 // Computed
 const payments = computed(() => store.payments)
 const isLoading = computed(() => store.isLoading)
+const contractWiseSummaries = computed(() => store.contractWiseSummaries)
 
 const filteredPayments = computed(() => {
   let result = [...payments.value]
@@ -328,7 +348,7 @@ const filteredPayments = computed(() => {
   // Search filter
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    result = result.filter(p =>
+    result = result.filter((p: IPayment) =>
       p.paymentReference?.toLowerCase().includes(query) ||
       p.contractNo?.toLowerCase().includes(query) ||
       p.clientName?.toLowerCase().includes(query) ||
@@ -338,18 +358,18 @@ const filteredPayments = computed(() => {
 
   // Payment type filter
   if (filterPaymentType.value) {
-    result = result.filter(p => p.paymentType === filterPaymentType.value)
+    result = result.filter((p: IPayment) => p.paymentType === filterPaymentType.value)
   }
 
   // Status filter
   if (filterStatus.value) {
-    result = result.filter(p => p.status === filterStatus.value)
+    result = result.filter((p: IPayment) => p.status === filterStatus.value)
   }
 
   // Date range filter
   if (dateRange.value && dateRange.value[0] && dateRange.value[1]) {
     const [start, end] = dateRange.value
-    result = result.filter(p => {
+    result = result.filter((p: IPayment) => {
       const paymentDate = new Date(p.paymentDate)
       return paymentDate >= new Date(start) && paymentDate <= new Date(end)
     })
@@ -364,16 +384,16 @@ const filteredPayments = computed(() => {
 
 const totalPayments = computed(() =>
   payments.value
-    .filter(p => p.status === 'Completed')
-    .reduce((sum, p) => sum + (p.paidAmount || 0), 0)
+    .filter((p: IPayment) => p.status === 'Completed')
+    .reduce((sum: number, p: IPayment) => sum + (p.paidAmount || 0), 0)
 )
 
 const completedCount = computed(() =>
-  payments.value.filter(p => p.status === 'Completed').length
+  payments.value.filter((p: IPayment) => p.status === 'Completed').length
 )
 
 const pendingCount = computed(() =>
-  payments.value.filter(p => p.status === 'Pending').length
+  payments.value.filter((p: IPayment) => p.status === 'Pending').length
 )
 
 // Helper functions
@@ -393,19 +413,6 @@ const getStatusType = (status: string) => {
     'Refunded': 'info'
   }
   return types[status] || 'info'
-}
-
-const getCategoryType = (category: string) => {
-  const types: Record<string, string> = {
-    'Contract Amount Only': 'primary',
-    'Commission Amount Only': 'warning',
-    'Vat Amount Only': 'success',
-    'Both (Contract + Commission)': 'primary',
-    'Both (Contract + Vat)': 'warning',
-    'Both (Vat + Commission)': 'success',
-    'ALL (Contract + Commission + Vat)': 'success'
-  }
-  return types[category] || 'info'
 }
 
 const getPaymentTypeIcon = (type: string) => {
@@ -449,6 +456,22 @@ const handleViewPayment = (payment: IPayment) => {
 const handleViewReceipt = (payment: IPayment) => {
   selectedPayment.value = payment
   showReceiptModal.value = true
+}
+
+const handleTabClick = (tab: any) => {
+  if (tab.props.name === 'summary') {
+    store.fetchContractWiseSummaries()
+  }
+}
+
+const handleViewSummary = async (summary: IAllContractsPaymentSummary) => {
+  selectedSummary.value = summary
+  try {
+    summaryPayments.value = await paymentService.getPaymentsByContractId(summary.contractId)
+    showSummaryModal.value = true
+  } catch (err) {
+    ElMessage.error('Failed to fetch detailed summary')
+  }
 }
 
 const canEdit = (payment: IPayment): boolean => {
