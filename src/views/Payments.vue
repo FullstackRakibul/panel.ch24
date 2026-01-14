@@ -430,7 +430,7 @@ const getPaymentTypeIcon = (type: string) => {
 // Handlers
 const handleRefresh = async () => {
   await store.fetchPayments()
-  ElMessage.success('Data refreshed')
+  // ElMessage.success('Data refreshed')
 }
 
 const handleSortChange = ({ prop, order }: { prop: string; order: string }) => {

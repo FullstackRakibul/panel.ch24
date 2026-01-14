@@ -1,5 +1,11 @@
 <template>
   <div class="ad-bookings-container">
+    <!-- Breadcrumb -->
+    <el-breadcrumb separator="/" class="mb-2">
+      <el-breadcrumb-item>Home</el-breadcrumb-item>
+      <el-breadcrumb-item>Booking</el-breadcrumb-item>
+      <el-breadcrumb-item>Ad Bookings</el-breadcrumb-item>
+    </el-breadcrumb>
     <!-- Page Header -->
     <div class="page-header">
       <div class="header-content">
@@ -100,7 +106,7 @@
     </div>
 
     <!-- Filters and Search -->
-    <el-card class="filters-card" shadow="never">
+    <el-card class="filters-ribbon" shadow="never">
       <div class="filters-content">
         <el-input v-model="searchQuery" placeholder="Search contracts by number, client, agency..."
           :prefix-icon="Search" clearable style="max-width: 600px;" @input="handleSearch" />
@@ -720,7 +726,7 @@ const exportToExcel = async () => {
 
 <style scoped>
 .ad-bookings-container {
-  padding: 24px;
+  padding: 8px;
   background: var(--el-bg-color-page);
   min-height: 100vh;
 }
@@ -755,7 +761,7 @@ const exportToExcel = async () => {
 
 .stats-card {
   background: var(--el-bg-color);
-  padding: 24px;
+  padding: 12px;
   border-radius: 12px;
   box-shadow: var(--el-box-shadow-light);
   transition: all 0.3s ease;

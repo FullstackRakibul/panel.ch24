@@ -24,8 +24,8 @@
           </div>
           <div class="company-info">
             <h1 class="company-name">Channel 24</h1>
-            <p class="company-address">28 Kazi Nazrul Islam Avenue, Kawran Bazar, Dhaka-1215</p>
-            <p class="company-contact">Phone: +880-2-8189999 | Email: info@channel24bd.tv</p>
+            <p class="company-address">Times Media Limited, 387 (South), Tejgaon I/A, Dhaka-1208</p>
+            <p class="company-contact">Phone: +8802 55029724 | Email: info@channel24bd.tv</p>
           </div>
         </div>
 
@@ -47,7 +47,7 @@
         <div class="info-section">
           <div class="info-row">
             <div class="info-group">
-              <span class="info-label">Customer:</span>
+              <span class="info-label">Advertiser : </span>
               <span class="info-value">{{ summary?.clientName || summary?.agencyName || 'N/A' }}</span>
             </div>
           </div>
@@ -231,7 +231,7 @@ const getStyles = () => `
 }
 
 .company-logo {
-  width: 50px;
+  width: 80px;
 }
 
 .header-actions {
@@ -239,7 +239,10 @@ const getStyles = () => `
   gap: 10px;
 }
 
-
+.info-label {
+  font-weight: bold;
+  padding: 0 5px;
+}
 
 .report-paper {
   padding: 20px;
@@ -255,7 +258,7 @@ const getStyles = () => `
 }
 
 .company-logo {
-  width: 20px;
+  width: 50px;
   margin-right: 15px;
 }
 
