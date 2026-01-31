@@ -46,6 +46,7 @@ const viewsMap = {
   CompanyGolas : () => import('@/views/Goals.vue'),
   MediaUpload : () => import('@/views/MediaUpload.vue'),
   TransmissionCertificates: () => import('@/views/TransmissionCertificate.vue'),
+  UserManagement: () => import('@/views/UserManagement.vue'),
 }
 
 const Dashboard = lazyLoadComponent('Dashboard')
@@ -62,6 +63,7 @@ const NotFound = lazyLoadComponent('NotFound')
 const CompanyGolas = lazyLoadComponent('CompanyGolas')
 const MediaUpload = lazyLoadComponent('MediaUpload')
 const TransmissionCertificates = lazyLoadComponent('TransmissionCertificates')
+const UserManagement = lazyLoadComponent('UserManagement')
 
 
 
@@ -205,6 +207,17 @@ const router = createRouter({
         requiresAuth: true,
         title: "Transmission Certificates - Channel 24",
         description: "View and generate transmission certificates",
+      },
+    },
+    {
+      path: "/user-management",
+      name: "UserManagement",
+      component: UserManagement,
+      meta: {
+        requiresAuth: true,
+        title: "User Management - Channel 24",
+        description: "Manage users and role permissions",
+        requiredPermission: "user.manage",
       },
     },
     // 404 Not Found - must be last
